@@ -5,9 +5,12 @@
 #ifndef WEBSERV_FOREACH_H
 #define WEBSERV_FOREACH_H
 template <typename T>
-void forEach(T *array, int size, void (*f)(T)) {
-    for (int i = 0; i < size; i++) {
-        f(array[i]);
+struct forEach {
+    T *data;
+    struct forEach *args;
+    forEach(T *data, struct forEach *args) : data(data), args(args) {}
+    void apply(int i) {
+        (*data)[i] = args->f(i, (*data)[i]);
     }
-}
+};
 #endif //WEBSERV_FOREACH_H

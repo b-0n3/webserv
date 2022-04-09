@@ -15,7 +15,7 @@ class Location {
 private:
     std::string route;
     std::vector<std::string> allowedMethods;
-    unsigned  long maxBodySize;
+
     std::string uploadDir;
     std::vector<std::string> indexFiles;
     std::vector<Page> errorPages;

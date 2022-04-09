@@ -14,6 +14,7 @@ private:
     std::string host;
     int port;
     std::string root;
+    unsigned  long maxBodySize;
     std::vector<Location> locations;
 public:
     Server(std::string host, int port, std::string root);

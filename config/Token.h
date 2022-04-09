@@ -7,13 +7,26 @@
 #include <string>
 
 typedef enum {
-
+    KEYWORD,
+    VALUE,
+    COMMENT,
+    BEFOR_CECK,
+    UNKNOWN
 } TokenType;
+
 class Token {
-public:
+private:
     std::string value;
     TokenType type;
+public:
+    Token(std::string value, TokenType type);
+    std::string getValue();
+    TokenType getType();
+    void setValue(std::string value);
+    void setType(TokenType type);
 };
+
+
 
 
 #endif //WEBSERV_TOKEN_H

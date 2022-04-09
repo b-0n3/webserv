@@ -8,17 +8,26 @@
 #include <vector>
 #include <string>
 #include <fstream>
+#include "../container/BinaryTree.h"
+#include "Token.h"
+#include <stack>
+
 class ConfigParser {
 private:
     std::string configFilePath;
-    int cursor;
-    std::ifstream *configFile;
+    std::ifstream configFile;
+    std::string currentLine;
     int lastCursor;
-    int curlyBracketCount;
+    int cursor;
+    int currentIndentation;
+    int lastIndentation;
+    std::stack<int> indentationStack;
+    Node<Token *> *currentToken;
+    BinaryTree<Node<Token* > > ast; // Abstract Syntax Tree
 public:
-    ConfigParser(std::string configDir);
-    void addConfigFile(std::string file);
+    ConfigParser(std::string configFilePath);
     std::vector<Server> parseConfigFiles();
+    Token *getNextToken(Token *token);
 };
 
 
