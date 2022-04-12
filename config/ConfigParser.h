@@ -23,11 +23,12 @@ private:
     int lastIndentation;
     std::stack<int> indentationStack;
     Node<Token *> *currentToken;
-    BinaryTree<Node<Token* > > ast; // Abstract Syntax Tree
+    BinaryTree<Node<Token* > *> ast; // Abstract Syntax Tree
 public:
     ConfigParser(std::string configFilePath);
-    std::vector<Server> parseConfigFiles();
-    Token *getNextToken(Token *token);
+    std::vector<Server> parseConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation);
+    Node<Token *> *getNextToken(Token *token);
+    int caluclateIndenetation();
 };
 
 
