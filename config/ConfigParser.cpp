@@ -68,15 +68,18 @@ std::vector<Server> ConfigParser::parseConfigFiles(Node<Token *> *root, int last
     if (std::getline(this->configFile, this->currentLine).eof())
         return std::vector<Server>();// @todo:  Change and call other function to convert ast into a vector of server;// @todo:  Change and call other function to convert ast into a vector of server
     if ( isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
-        this->cursor = 0;
-        this->lastCursor = 0;
+
         return this->parseConfigFiles(root, lastIndentation, currentIndentation);
+    }
+    if (this->currentLine.find_first_of(':') == std::string::npos) {
+    throw IllegalArgumentException("Config file is not valid");
     }
     indentation = this->caluclateIndenetation();
     if (currentIndentation < indentation)
     {
         root = this->getNextToken(nullptr);
         this->parseConfigFiles(root, currentIndentation, indentation);
+        currentNode->addChild(root);
     }
     if (currentIndentation == indentation)
     {
@@ -106,7 +109,20 @@ int ConfigParser::caluclateIndenetation() {
     return indentation;
 }
 Node<Token *> *ConfigParser::getNextToken(Token *token) {
+    Node<Token *> *node = new Node<Token *>();
 
+        Token *t = new Token();
+        t->setType(BEFOR_CECK);
+        t->setValue(this->currentLine.substr(0, this->currentLine.find_first_of(':')).trim());
+        node->setData(new Token(this->currentLine.substr(0, this->currentLine.find_first_of(':'))));
+        this->currentLine = this->currentLine.substr(this->currentLine.find_first_of(':') + 1);
+        if (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
+            return node;
+        }
+        token *child = new Token();
+        child->setType(AFTER_CECK);
+        child->setValue(this->currentLine);
+        return node;
 }
 
 
