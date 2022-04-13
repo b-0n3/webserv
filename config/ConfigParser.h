@@ -11,6 +11,7 @@
 #include "../container/BinaryTree.h"
 #include "Token.h"
 #include <stack>
+#include "../tools/Utils.h"
 
 class ConfigParser {
 private:
@@ -27,7 +28,7 @@ private:
 public:
     ConfigParser(std::string configFilePath);
     std::vector<Server> parseConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation);
-    Node<Token *> *getNextToken(Token *token);
+    Node<Token *> *getNextToken();
     int caluclateIndenetation();
 };
 

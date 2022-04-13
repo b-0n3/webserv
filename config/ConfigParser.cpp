@@ -72,24 +72,33 @@ std::vector<Server> ConfigParser::parseConfigFiles(Node<Token *> *root, int last
         return this->parseConfigFiles(root, lastIndentation, currentIndentation);
     }
     if (this->currentLine.find_first_of(':') == std::string::npos) {
-    throw IllegalArgumentException("Config file is not valid");
+        throw IllegalArgumentException("Config file is not valid");
     }
     indentation = this->caluclateIndenetation();
     if (currentIndentation < indentation)
     {
-        root = this->getNextToken(nullptr);
+        root = this->getNextToken();
         this->parseConfigFiles(root, currentIndentation, indentation);
-        currentNode->addChild(root);
+        if (currentNode == nullptr)
+            currentNode = root;
+        else
+         currentNode->addChild(root);
+        return std::vector<Server>();
     }
     if (currentIndentation == indentation)
     {
+        root = this->getNextToken();
+        if (currentNode == nullptr)
+            currentNode = root;
+        else
+            currentNode->addChild(root);
+        this->parseConfigFiles(currentNode, currentIndentation, indentation);
+        return std::vector<Server>();
     }
     if (currentIndentation > indentation)
     {
-        this->parseConfigFiles(root, currentIndentation, indentation);
     }
-
-    return std::vector<Server>();
+    return this->parseConfigFiles(currentNode, currentIndentation, indentation);
 }
 
 /**
@@ -108,20 +117,17 @@ int ConfigParser::caluclateIndenetation() {
     }
     return indentation;
 }
-Node<Token *> *ConfigParser::getNextToken(Token *token) {
-    Node<Token *> *node = new Node<Token *>();
-
-        Token *t = new Token();
-        t->setType(BEFOR_CECK);
-        t->setValue(this->currentLine.substr(0, this->currentLine.find_first_of(':')).trim());
-        node->setData(new Token(this->currentLine.substr(0, this->currentLine.find_first_of(':'))));
+Node<Token *> *ConfigParser::getNextToken() {
+        Node<Token *> *node = new Node<Token *>();
+        node->setData(new Token(this->currentLine.substr(0, this->currentLine.find_first_of(':')), KEYWORD));
         this->currentLine = this->currentLine.substr(this->currentLine.find_first_of(':') + 1);
         if (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
             return node;
         }
-        token *child = new Token();
-        child->setType(AFTER_CECK);
-        child->setValue(this->currentLine);
+        if (this->currentLine.find_first_of('#') != std::string::npos) {
+            this->currentLine = this->currentLine.substr(0, this->currentLine.find_first_of('#'));
+        }
+        node->addChild(new Node<Token *>(new Token(trim(this->currentLine), VALUE)));
         return node;
 }
 
