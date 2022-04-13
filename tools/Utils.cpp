@@ -3,7 +3,7 @@
 //
 
 #include "Utils.h"
-
+#define WHITESPACE " \t\n\r"
 std::string ltrim(const std::string &s)
 {
     size_t start = s.find_first_not_of(WHITESPACE);

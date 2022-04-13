@@ -7,12 +7,14 @@
 
 
 ConfigParser::ConfigParser(std::string configFilePath) {
-    std::ifstream file(configFilePath);
+    std::ifstream *file = new std::ifstream (configFilePath);
     if (!file->is_open()) {
         throw FileNotFoundException("Config file not found");
     }
     this->configFile = file;
     this->configFilePath  = configFilePath;
+    this->currentIndentation = -1;
+    this->lastIndentation = -1;
 }
 bool isEmptyLine(std::string &line)
 {
@@ -22,83 +24,66 @@ bool isEmptyLine(std::string &line)
 }
 bool isOnlyComment(std::string &line)
 {
-  for(int i = 0; i < line.length(); i++)
-  {
-      if(line[i] == ' ' || line[i] == '\t')
-          continue;
-      if (line[i] != '#')
-          return false;
-  }
-  return true;
+  int i = 0;
+  while (line[i] == ' ' || line[i] == '\t')
+    i++;
+  if (line[i] == '#')
+    return true;
+  return false;
+}
+bool isArrayElment(std::string &line)
+{
+    int i = 0;
+    while (line[i] == ' ' || line[i] == '\t')
+        i++;
+    if (line[i] == '-')
+        return true;
+    return false;
 }
 
-
-//std::vector<Server> ConfigParser::parseConfigFiles() {
-//
-////    if (this->configFile.is_open()) {
-////        std::string line;
-////        if (!std::getline(this->configFile,
-////                          this->configFileContent ,
-////                          this->configFile.widen(std::ifstream::traits_type::eof())))
-////        {
-////            this->configFile.close();
-////            throw IllegalArgumentException("Config file is empty");
-////        }
-////    }
-//
-//    if (this->currentLine.size() <= cursor) {
-//        if (  std::getline(this->configFile, this->currentLine).eof())
-//            return std::vector<Server>();// @todo:  Change and call other function to convert ast into a vector of server
-//    }
-//    if (this->currentLine.empty() || isEmptyLine(this->currentLine)) {
-//        this->cursor = 0;
-//        this->lastCursor = 0;
-//        return this->parseConfigFiles();
-//    }
-//    this->caluclateIndenetation();
-//    for (Token *t = this->getNextToken(t); t !=  nullptr;t  =this->getNextToken(t))
-//    {
-//
-//    }
-//}
-// todo : recuresivly parse the yaml file
-std::vector<Server> ConfigParser::parseConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation) {
+void ConfigParser::tokenizeConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation) {
     int indentation;
     Node<Token *> *currentNode = root;
-    if (std::getline(this->configFile, this->currentLine).eof())
-        return std::vector<Server>();// @todo:  Change and call other function to convert ast into a vector of server;// @todo:  Change and call other function to convert ast into a vector of server
-    if ( isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
+    if (std::getline(*this->configFile, this->currentLine).eof())
+        return;// @todo:  Change and call other function to convert ast into a vector of server;// @todo:  Change and call other function to convert ast into a vector of server
+    //std::cout << this->currentLine<<std::endl;
+    if  (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
 
-        return this->parseConfigFiles(root, lastIndentation, currentIndentation);
+        return this->tokenizeConfigFiles(root, lastIndentation, currentIndentation);
     }
-    if (this->currentLine.find_first_of(':') == std::string::npos) {
-        throw IllegalArgumentException("Config file is not valid");
+    if (this->currentLine.find_first_of(':') == std::string::npos && !isArrayElment(this->currentLine)) {
+        throw IllegalArgumentException("Config sdffile is not valid");
     }
     indentation = this->caluclateIndenetation();
     if (currentIndentation < indentation)
     {
         root = this->getNextToken();
-        this->parseConfigFiles(root, currentIndentation, indentation);
-        if (currentNode == nullptr)
+        root->getData()->indentation = indentation;
+        this->tokenizeConfigFiles(root, currentIndentation, indentation);
+        if (currentNode == nullptr) {
             currentNode = root;
+            this->ast.addRoote(root);
+        }
         else
          currentNode->addChild(root);
-        return std::vector<Server>();
+        return;
     }
-    if (currentIndentation == indentation)
-    {
+    if (currentIndentation == indentation) {
         root = this->getNextToken();
-        if (currentNode == nullptr)
+        root->getData()->indentation = indentation;
+        if (currentNode != nullptr &&currentNode->getData() != nullptr)
+            if (currentNode->getParent() != nullptr)
+                currentNode = currentNode->getParent();
+        if (currentNode == nullptr) {
             currentNode = root;
+            this->ast.addRoote(root);
+        }
         else
             currentNode->addChild(root);
-        this->parseConfigFiles(currentNode, currentIndentation, indentation);
-        return std::vector<Server>();
+        this->tokenizeConfigFiles(currentNode, lastIndentation, lastIndentation);
+        return ;
     }
-    if (currentIndentation > indentation)
-    {
-    }
-    return this->parseConfigFiles(currentNode, currentIndentation, indentation);
+    return this->tokenizeConfigFiles(currentNode, currentIndentation, indentation);
 }
 
 /**
@@ -117,6 +102,7 @@ int ConfigParser::caluclateIndenetation() {
     }
     return indentation;
 }
+
 Node<Token *> *ConfigParser::getNextToken() {
         Node<Token *> *node = new Node<Token *>();
         node->setData(new Token(this->currentLine.substr(0, this->currentLine.find_first_of(':')), KEYWORD));
@@ -132,3 +118,19 @@ Node<Token *> *ConfigParser::getNextToken() {
 }
 
 
+
+int main()
+{
+    ConfigParser *configParser = new ConfigParser("./config/default.yml");
+    try {
+    configParser->tokenizeConfigFiles(nullptr, -1, -1);
+
+        Node<Token *> *root = configParser->ast.get(0);
+        if (root != nullptr)
+            root->printNode(root);
+    }catch (IllegalArgumentException &e) {
+        std::cout <<"sdfsd"  << e.what() << std::endl;
+    }
+    //system("leaks webserv");
+    return 0;
+}

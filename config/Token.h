@@ -19,13 +19,15 @@ private:
     std::string value;
     TokenType type;
 public:
+    int indentation;
     Token(std::string value, TokenType type);
-    std::string getValue();
+    std::string getValue() const;
     TokenType getType();
     void setValue(std::string value);
     void setType(TokenType type);
 };
 
+std::ostream &operator<<(std::ostream &os, const Token &token);
 
 
 

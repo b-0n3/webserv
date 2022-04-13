@@ -16,7 +16,7 @@
 class ConfigParser {
 private:
     std::string configFilePath;
-    std::ifstream configFile;
+    std::ifstream *configFile;
     std::string currentLine;
     int lastCursor;
     int cursor;
@@ -24,10 +24,11 @@ private:
     int lastIndentation;
     std::stack<int> indentationStack;
     Node<Token *> *currentToken;
-    BinaryTree<Node<Token* > *> ast; // Abstract Syntax Tree
+     // Abstract Syntax Tree
 public:
+    BinaryTree<Token*> ast;
     ConfigParser(std::string configFilePath);
-    std::vector<Server> parseConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation);
+    void  tokenizeConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation);
     Node<Token *> *getNextToken();
     int caluclateIndenetation();
 };
