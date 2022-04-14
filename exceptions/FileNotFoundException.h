@@ -11,6 +11,7 @@ class FileNotFoundException : public std::exception {
 private:
     std::string _message;
 public:
+    ~FileNotFoundException() throw() {}
     FileNotFoundException(const char *message);
     const char *what();
 

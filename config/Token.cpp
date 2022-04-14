@@ -26,9 +26,10 @@ void Token::setValue(std::string value) {
 void Token::setType(TokenType type) {
     this->type = type;
 }
-std::ostream &operator<<(std::ostream &os,const  Token &token) {
-    os  << token.getValue();
+
+
+
+std::ostream &operator<<(std::ostream &os, const Token &token) {
+    os  << token.getValue() ;
     return os;
 }
-
-

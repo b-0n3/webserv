@@ -10,8 +10,9 @@ class IllegalArgumentException: public std::exception {
 private :
     std::string message;
 public:
+  virtual  ~IllegalArgumentException() throw() {};
     IllegalArgumentException(const std::string message);
-     const char* what()  ;
+    const char* what()  ;
 };
 
 

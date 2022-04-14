@@ -41,7 +41,7 @@ bool isArrayElment(std::string &line)
     return false;
 }
 
-void ConfigParser::tokenizeConfigFiles(Node<Token *> *root, int lastIndentation, int currentIndentation) {
+void ConfigParser::tokenizeConfigFiles(Node<Token *> *parent,Node<Token *> *root, int lastIndentation, int currentIndentation) {
     int indentation;
     Node<Token *> *currentNode = root;
     if (std::getline(*this->configFile, this->currentLine).eof())
@@ -49,7 +49,7 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *root, int lastIndentation,
     //std::cout << this->currentLine<<std::endl;
     if  (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
 
-        return this->tokenizeConfigFiles(root, lastIndentation, currentIndentation);
+        return this->tokenizeConfigFiles(parent, root, lastIndentation, currentIndentation);
     }
     if (this->currentLine.find_first_of(':') == std::string::npos && !isArrayElment(this->currentLine)) {
         throw IllegalArgumentException("Config sdffile is not valid");
@@ -59,9 +59,9 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *root, int lastIndentation,
     {
         root = this->getNextToken();
         root->getData()->indentation = indentation;
-        this->tokenizeConfigFiles(root, currentIndentation, indentation);
+        currentIndentation = indentation;
+        this->tokenizeConfigFiles(currentNode, root, currentIndentation, indentation);
         if (currentNode == nullptr) {
-            currentNode = root;
             this->ast.addRoote(root);
         }
         else
@@ -71,19 +71,20 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *root, int lastIndentation,
     if (currentIndentation == indentation) {
         root = this->getNextToken();
         root->getData()->indentation = indentation;
-        if (currentNode != nullptr &&currentNode->getData() != nullptr)
-            if (currentNode->getParent() != nullptr)
+        if (currentNode != nullptr &&currentNode->getParent() != nullptr){
+                std::cout<< "parent" << std::endl;
                 currentNode = currentNode->getParent();
-        if (currentNode == nullptr) {
-            currentNode = root;
+            }
+        if (parent == nullptr) {
+            parent = root;
             this->ast.addRoote(root);
         }
         else
-            currentNode->addChild(root);
-        this->tokenizeConfigFiles(currentNode, lastIndentation, lastIndentation);
+            parent->addChild(root);
+        this->tokenizeConfigFiles(parent, root, currentIndentation, indentation);
         return ;
     }
-    return this->tokenizeConfigFiles(currentNode, currentIndentation, indentation);
+    return this->tokenizeConfigFiles(parent, currentNode, currentIndentation, indentation);
 }
 
 /**
@@ -123,13 +124,13 @@ int main()
 {
     ConfigParser *configParser = new ConfigParser("./config/default.yml");
     try {
-    configParser->tokenizeConfigFiles(nullptr, -1, -1);
+    configParser->tokenizeConfigFiles(nullptr, nullptr, -1, -1);
 
         Node<Token *> *root = configParser->ast.get(0);
         if (root != nullptr)
             root->printNode(root);
     }catch (IllegalArgumentException &e) {
-        std::cout <<"sdfsd"  << e.what() << std::endl;
+        std::cout <<"sdfsd"  << e.   what() << std::endl;
     }
     //system("leaks webserv");
     return 0;
