@@ -17,14 +17,12 @@ servers:   # list of servers
                 - index.html
                 - index.htm
                 - index.php
-            - / :
-                error_page:
-                - 404 /404.html
+           - / :
                 error_page:
                  - code: 500
-                  content: /500.html
-                - code: 502
-                  content: /502.html
+                   content: /500.html
+                 - code: 502
+                   content: /502.html
                 upload_directory: /var/www/html/public/uploads
                 allowed_method:
                  - POST
@@ -42,7 +40,3 @@ servers:   # list of servers
                   - .php4
                   - .php5
                   - .php6
-                index:
-                 - index.html
-                 - index.htm
-                 - index.php

@@ -47,7 +47,7 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *parent,Node<Token *> *root
     if (std::getline(*this->configFile, this->currentLine).eof())
         return;// @todo:  Change and call other function to convert ast into a vector of server;// @todo:  Change and call other function to convert ast into a vector of server
     //std::cout << this->currentLine<<std::endl;
-    if  (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
+    if (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
 
         return this->tokenizeConfigFiles(parent, root, lastIndentation, currentIndentation);
     }
@@ -55,34 +55,51 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *parent,Node<Token *> *root
         throw IllegalArgumentException("Config sdffile is not valid");
     }
     indentation = this->caluclateIndenetation();
-    if (currentIndentation < indentation)
-    {
+    if (indentation > lastIndentation) {
         root = this->getNextToken();
         root->getData()->indentation = indentation;
-        currentIndentation = indentation;
-        this->tokenizeConfigFiles(currentNode, root, currentIndentation, indentation);
+        root->setParent(currentNode);
+
+        this->tokenizeConfigFiles(currentNode, root, indentation, indentation);
         if (currentNode == nullptr) {
-            this->ast.addRoote(root);
-        }
-        else
-         currentNode->addChild(root);
+            currentNode = root;
+            this->ast.addRoote(currentNode);
+        }else
+            currentNode->addChild(root);
         return;
     }
-    if (currentIndentation == indentation) {
+    if (indentation == lastIndentation) {
         root = this->getNextToken();
         root->getData()->indentation = indentation;
-        if (currentNode != nullptr &&currentNode->getParent() != nullptr){
-                std::cout<< "parent" << std::endl;
-                currentNode = currentNode->getParent();
-            }
-        if (parent == nullptr) {
-            parent = root;
-            this->ast.addRoote(root);
+        if (currentNode == nullptr) {
+            currentNode = root;
+            this->ast.addRoote(currentNode);
         }
-        else
-            parent->addChild(root);
-        this->tokenizeConfigFiles(parent, root, currentIndentation, indentation);
-        return ;
+        else if (currentNode != nullptr && currentNode->getParent() != nullptr) {
+            currentNode = currentNode->getParent();
+            root->setParent(currentNode);
+        }
+        this->tokenizeConfigFiles(root, root, indentation, indentation);
+        currentNode->addChild(root);
+        return;
+    }
+    if (indentation < lastIndentation)
+    {
+        if (currentNode == nullptr) {
+            currentNode = root;
+        }
+        else {
+            while (indentation <= lastIndentation && currentNode != nullptr && currentNode->getParent() != nullptr) {
+                currentNode = currentNode->getParent();
+                lastIndentation = currentNode->getData()->indentation;
+            }
+        }
+        root = this->getNextToken();
+        root->getData()->indentation = indentation;
+        root->setParent(currentNode);
+        this->tokenizeConfigFiles(currentNode, root, indentation, indentation);
+        currentNode->addChild(root);
+        return;
     }
     return this->tokenizeConfigFiles(parent, currentNode, currentIndentation, indentation);
 }
@@ -106,7 +123,12 @@ int ConfigParser::caluclateIndenetation() {
 
 Node<Token *> *ConfigParser::getNextToken() {
         Node<Token *> *node = new Node<Token *>();
-        node->setData(new Token(this->currentLine.substr(0, this->currentLine.find_first_of(':')), KEYWORD));
+        std::string value;
+        value = this->currentLine.substr(0, this->currentLine.find_first_of(':'));
+        if (value.find_first_of('-') != std::string::npos) {
+            value = value.substr(value.find_first_of('-'), value.size());
+        }
+        node->setData(new Token(value, KEYWORD));
         this->currentLine = this->currentLine.substr(this->currentLine.find_first_of(':') + 1);
         if (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
             return node;
@@ -118,6 +140,15 @@ Node<Token *> *ConfigParser::getNextToken() {
         return node;
 }
 
+std::vector<Server *> ConfigParser::validateAst() {
+    std::vector<Server *> servers;
+    if (this->ast.getSize() ==0 || this->ast.get(0) == nullptr) {
+        throw IllegalArgumentException("Config sdffile is not valid");
+    }
+    Node<Token *> *root = this->ast.get(0);
+
+    return servers;
+}
 
 
 int main()

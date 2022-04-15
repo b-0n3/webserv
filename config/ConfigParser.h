@@ -31,6 +31,7 @@ public:
     void  tokenizeConfigFiles(Node<Token *> *parent, Node<Token *> *root, int lastIndentation, int currentIndentation);
     Node<Token *> *getNextToken();
     int caluclateIndenetation();
+    std::vector<Server *> validateAst();
 };
 
 
