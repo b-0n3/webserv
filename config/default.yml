@@ -24,7 +24,7 @@ servers:   # list of servers
                  - code: 502
                    content: /502.html
                 upload_directory: /var/www/html/public/uploads
-                allowed_method:
+                allowed_methods:
                  - POST
                  - GET
                  - DELETE
