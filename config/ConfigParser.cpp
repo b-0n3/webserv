@@ -146,6 +146,14 @@ std::vector<Server *> ConfigParser::validateAst() {
         throw IllegalArgumentException("Config sdffile is not valid");
     }
     Node<Token *> *root = this->ast.get(0);
+    if (root->getData()->getValue() != "servers") {
+        throw IllegalArgumentException("Config file is not valid");
+    }
+    if (root->getChildren().empty())
+        throw IllegalArgumentException("no servers found");
+    for (int i = 0; i < root->getChildren().size(); i++) {
+        Server *s  = Server::fromNode(root->getChildren()[i]);
+    }
 
     return servers;
 }

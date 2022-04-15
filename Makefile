@@ -1,5 +1,6 @@
-SRC=./config/ConfigParser.cpp  ./config/Token.cpp \
- ./exceptions/IllegalArgumentException.cpp ./exceptions/FileNotFoundException.cpp  tools/Utils.cpp
+#SRC=./config/ConfigParser.cpp  ./config/Token.cpp \
+# ./exceptions/IllegalArgumentException.cpp ./exceptions/FileNotFoundException.cpp  tools/Utils.cpp
+SRC = $(shell find . -name "*.cpp")
 NAME=webserv
 
 all: $(NAME)

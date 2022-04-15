@@ -11,6 +11,9 @@
 #include "Page.h"
 #include "Cgi.h"
 #include "../tools/filter.h"
+#include "../container/Node.h"
+#include "Token.h"
+
 class Location {
 private:
     std::string route;
@@ -18,12 +21,10 @@ private:
 
     std::string uploadDir;
     std::vector<std::string> indexFiles;
-    std::vector<Page> errorPages;
-    std::vector<Cgi> cgis;
+    std::vector<Page*> errorPages;
+    std::vector<Cgi*> cgis;
 public:
-    Location(std::string route, std::vector<std::string> allowedMethods, unsigned long maxBodySize,
-             std::string uploadDir, std::vector<std::string> indexFiles, std::vector<Page> errorPages,
-             std::vector<Cgi> cgis);
+
 
     std::string getRout() const;
 
@@ -33,10 +34,6 @@ public:
 
     void setAllowedMethods(const std::vector<std::string> &allowedMethods);
 
-    unsigned long getMaxBodySize() const;
-
-    void setMaxBodySize(unsigned long maxBodySize);
-
     const std::string &getUploadDir() const;
 
     void setUploadDir(const std::string &uploadDir);
@@ -44,14 +41,15 @@ public:
     const std::vector<std::string> &getIndexFiles() const;
 
     void setIndexFiles(const std::vector<std::string> &indexFiles);
-    const std::vector<Page> &getErrorPages() const;
-    void setErrorPages(const std::vector<Page> &errorPages);
-    const std::vector<Cgi> &getCgis() const;
-    void setCgis(const std::vector<Cgi> &cgis);
+    const std::vector<Page *> &getErrorPages() const;
+    void setErrorPages(const std::vector<Page *> &errorPages);
+    const std::vector<Cgi *> &getCgis() const;
+    void setCgis(const std::vector<Cgi *> &cgis);
     bool isAllowedMethod(const std::string &method) const;
     bool isInLocation(const std::string &path) const;
     Cgi  *getCgiIfExists(const std::string &path) const;
 
+    static Location *fromNode(Node<Token *> *root);
 };
 
 

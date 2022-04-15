@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 #include "Location.h"
+#include "../container/Node.h"
+#include "Token.h"
 
 
 class Server {
@@ -15,8 +17,9 @@ private:
     int port;
     std::string root;
     unsigned  long maxBodySize;
-    std::vector<Location> locations;
+    std::vector<Location*> locations;
 public:
+    Server();
     Server(std::string host, int port, std::string root);
     std::string getHost();
     int getPort();
@@ -25,6 +28,7 @@ public:
     bool requestBelongToThisServer(std::string host, int port);
     Location *getLocation(std::string path);
 
+    static Server *fromNode(Node<Token *> *root);
 };
 
 
