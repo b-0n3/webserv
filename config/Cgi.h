@@ -6,7 +6,9 @@
 #define WEBSERV_CGI_H
 #include "../exceptions/FileNotFoundException.h"
 #include "../exceptions/IllegalArgumentException.h"
+#include "../container/Node.h"
 #include <vector>
+#include "Token.h"
 #include <iostream>
 
 
@@ -20,6 +22,8 @@ public:
     std::string getBinaryPath();
     std::vector<std::string> getExt();
     bool isCgi(std::string path) const;
+
+    static Cgi *fromNode(Node<Token *> *root);
 };
 
 

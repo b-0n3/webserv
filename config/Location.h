@@ -52,6 +52,8 @@ public:
     static Location *fromNode(Node<Token *> *root);
 
     void addAllowedMethod(String method);
+
+    void addCgi(Cgi *cgi);
 };
 
 

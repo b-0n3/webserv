@@ -59,11 +59,11 @@ void Location::setCgis(const std::vector<Cgi *> &cgis) {
 }
 // @todo: verify if the sepecified method is allowed in this location
 bool Location::isAllowedMethod(const std::string &method) const {
-//    if(std::find(this->allowedMethods.begin(),
-//                 this->allowedMethods.end(),
-//                 method) != this->allowedMethods.end()) {
-//        return true;
-//    }
+    if(std::find(this->allowedMethods.begin(),
+                 this->allowedMethods.end(),
+                 method) != this->allowedMethods.end()) {
+        return true;
+    }
     return false;
 }
 
@@ -94,17 +94,18 @@ Location  *Location::fromNode(Node<Token *> *root) {
     l->setRoute(root->getData()->getValue());
     for (int i = 0 ;i < root->getChildren().size(); i++)
     {
-        if(root->getChildren()[i]->getData()->getValue() == "auto_index")
+        String value = root->getChildren()[i]->getData()->getValue();
+        if(value == "auto_index")
             l->setAutoIndex(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        else if (root->getChildren()[i]->getData()->getValue() == "index") {
+        else if (value == "index") {
             if (root->getChildren()[i]->getChildren().size() == 0)
                 throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
             for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
                 l->addIndexFile(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
         }
-        else if (root->getChildren()[i]->getData()->getValue() == "allowed_methods")
+        else if (value == "allowed_methods")
         {
-            if (l->getAllowedMethods().size() != 0)
+            if (!l->getAllowedMethods().empty())
                 throw IllegalArgumentException(" redecalaration of allowed methods");
             if (root->getChildren()[i]->getChildren().size() == 0)
                 throw IllegalArgumentException(
@@ -114,7 +115,24 @@ Location  *Location::fromNode(Node<Token *> *root) {
                 l->addAllowedMethod(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
             }
         }
-        else if (root->getChildren()[i]->getData()->getValue() == "client_max")
+        else if (value == "cgi")
+        {
+            if( root->getChildren()[i]->getChildren().size() == 0)
+                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+            l->addCgi(Cgi::fromNode(root->getChildren()[i]));
+        }
+        else if (value == "error_page")
+        {
+            if( root->getChildren()[i]->getChildren().size() == 0)
+                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+            l->addErrorPage(Page::fromNode(root->getChildren()[i]));
+        }
+        else if (value == "upload_directory")
+        {
+            if( root->getChildren()[i]->getChildren().size() == 0)
+                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+            l->setUploadDir(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
+        }
         else
             throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
     }
@@ -158,4 +176,9 @@ void Location::addAllowedMethod(String method) {
     }
     throw IllegalArgumentException(method + " : unexpected value");
 }
+
+void Location::addCgi(Cgi *cgi) {
+    this->cgis.push_back(cgi);
+}
+
 

@@ -143,7 +143,7 @@ Node<Token *> *ConfigParser::getNextToken() {
 std::vector<Server *> ConfigParser::validateAst() {
     std::vector<Server *> servers;
     if (this->ast.getSize() ==0 || this->ast.get(0) == nullptr) {
-        throw IllegalArgumentException("Config sdffile is not valid");
+        throw IllegalArgumentException("Config file is not valid");
     }
     Node<Token *> *root = this->ast.get(0);
     if (root->getData()->getValue() != "servers") {

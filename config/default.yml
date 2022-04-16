@@ -11,6 +11,7 @@ servers:   # list of servers
         server_name: localhost
         listen: 80
         root: /var/www/html/public
+        client_max_body_size: 1000
         locations:
            - /ssr:
                index:
@@ -28,7 +29,7 @@ servers:   # list of servers
                  - POST
                  - GET
                  - DELETE
-                client_max_body_size: 1000
+
                 cgi:
                  path: /bin/php
                  ext:
