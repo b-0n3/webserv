@@ -11,7 +11,7 @@ Page::Page(int errorCode,  std::string contentPath) {
     if (errorCode <= 0 || errorCode >= 599)
         throw IllegalArgumentException("errorCode must be between 100 and 599");
     this->errorCode = errorCode;
-    std::ofstream file(contentPath);
+    std::ofstream file(contentPath,std::ios::in |std::ios::app);
     if (!file.is_open())
         throw IllegalArgumentException("bad content file :" + contentPath + " File not found");
     file.close();

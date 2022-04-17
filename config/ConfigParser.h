@@ -24,9 +24,10 @@ private:
     int lastIndentation;
     std::stack<int> indentationStack;
     Node<Token *> *currentToken;
-     // Abstract Syntax Tree
-public:
     BinaryTree<Token*> ast;
+    // Abstract Syntax Tree
+public:
+    BinaryTree<Token *> getAst();
     ConfigParser(std::string configFilePath);
     void  tokenizeConfigFiles(Node<Token *> *parent, Node<Token *> *root, int lastIndentation, int currentIndentation);
     Node<Token *> *getNextToken();

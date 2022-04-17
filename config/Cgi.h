@@ -10,7 +10,7 @@
 #include <vector>
 #include "Token.h"
 #include <iostream>
-
+#include <algorithm>
 
 class Cgi {
 private:

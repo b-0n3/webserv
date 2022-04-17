@@ -53,7 +53,7 @@
 //     return rt;
 // }
 
-int main()
+int old_main()
 {
     char *buff;
     struct pollfd fds[100];

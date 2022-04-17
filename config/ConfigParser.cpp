@@ -7,14 +7,12 @@
 
 
 ConfigParser::ConfigParser(std::string configFilePath) {
-    std::ifstream *file = new std::ifstream (configFilePath);
+    std::ifstream *file = new std::ifstream (configFilePath, std::ios::app);
     if (!file->is_open()) {
         throw FileNotFoundException("Config file not found");
     }
     this->configFile = file;
     this->configFilePath  = configFilePath;
-    this->currentIndentation = -1;
-    this->lastIndentation = -1;
 }
 bool isEmptyLine(std::string &line)
 {
@@ -159,6 +157,10 @@ std::vector<Server *> ConfigParser::validateAst() {
     return servers;
 }
 
+BinaryTree<Token *> ConfigParser::getAst() {
+    return this->ast;
+}
+
 
 int main()
 {
@@ -166,10 +168,10 @@ int main()
     try {
     configParser->tokenizeConfigFiles(nullptr, nullptr, -1, -1);
 
-        Node<Token *> *root = configParser->ast.get(0);
+        Node<Token *> *root = configParser->getAst().get(0);
      std::vector<Server *> servers =    configParser->validateAst();
-//        if (root != nullptr)
-//            root->printNode(root);
+        if (root != nullptr)
+            root->printNode(root);
     }catch (IllegalArgumentException &e) {
         std::cout <<"sdfsd"  << e.   what() << std::endl;
     }

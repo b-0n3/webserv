@@ -7,7 +7,7 @@
 
 
 Cgi::Cgi(std::string  path, std::vector<std::string>  ext) {
-  std::ifstream file(path.c_str());
+  std::ifstream file(path.c_str(), std::ios::in |std::ios::app);
   if (!file.is_open()) {
       throw FileNotFoundException("cgi File not found");
   }
