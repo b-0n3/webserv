@@ -54,6 +54,8 @@ public:
     void addAllowedMethod(String method);
 
     void addCgi(Cgi *cgi);
+
+    void addErrorPage(Page *page);
 };
 
 

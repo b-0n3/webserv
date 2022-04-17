@@ -9,6 +9,7 @@
 #include "Location.h"
 #include "../container/Node.h"
 #include "Token.h"
+#include "../tools/Utils.h"
 
 
 class Server {
@@ -24,7 +25,7 @@ public:
     std::string getHost();
     int getPort();
     std::string getRoot();
-    std::vector<Location> getLocations();
+    std::vector<Location *> getLocations();
     bool requestBelongToThisServer(std::string host, int port);
     Location *getLocation(std::string path);
 

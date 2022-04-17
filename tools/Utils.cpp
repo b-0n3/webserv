@@ -19,3 +19,9 @@ std::string rtrim(const std::string &s)
 std::string trim(const std::string &s) {
     return rtrim(ltrim(s));
 }
+
+
+bool is_digits(const std::string &str)
+{
+    return str.find_first_not_of("0123456789") == std::string::npos;
+}

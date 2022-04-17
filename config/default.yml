@@ -21,17 +21,16 @@ servers:   # list of servers
            - / :
                 error_page:
                  - code: 500
-                   content: /500.html
+                   content: ./Networking/index.html
                  - code: 502
-                   content: /502.html
+                   content: ./Networking/index.html
                 upload_directory: /var/www/html/public/uploads
                 allowed_methods:
                  - POST
                  - GET
                  - DELETE
-
                 cgi:
-                 path: /bin/php
+                 path: ./webserv
                  ext:
                   - .php
                   - .php5

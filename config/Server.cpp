@@ -23,7 +23,7 @@ std::string Server::getRoot() {
     return std::string();
 }
 
-std::vector<Location> Server::getLocations() {
+std::vector<Location *> Server::getLocations() {
     return this->locations;
 }
 
@@ -48,23 +48,31 @@ Server *Server::fromNode(Node<Token *> *root) {
 
     if (root->getData()->getValue() != "server")
         throw IllegalArgumentException("unexpected token" + root->getData()->getValue());
+    if (root->getChildren().empty())
+        throw IllegalArgumentException("empty server not allowed");
+    s = new Server();
     for(int i = 0; i < root->getChildren().size(); i++)
     {
-        s = new Server();
-        if (root->getChildren()[i]->getData()->getValue() == "host") {
+        if (root->getChildren()[i]->getData()->getValue() == "server_name") {
             s->host = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
-        } else if (root->getChildren()[i]->getData()->getValue() == "port") {
+        } else if (root->getChildren()[i]->getData()->getValue() == "listen") {
             s->port = std::stoi(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
         } else if (root->getChildren()[i]->getData()->getValue() == "root") {
             s->root = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
-        } else if (root->getChildren()[i]->getData()->getValue() == "location") {
+        } else if (root->getChildren()[i]->getData()->getValue() == "locations") {
             for (int j = 0; j < root->getChildren()[i]->getChildren().size();j ++) {
                 s->locations.push_back(Location::fromNode(root->getChildren()[i]->getChildren()[j]));
             }
-        }else
+        }
+        else if (root->getChildren()[i]->getData()->getValue() == "client_max_body_size") {
+            if (!is_digits(root->getChildren()[i]->getChildren()[0]->getData()->getValue()))
+                throw IllegalArgumentException("client_max_body_size must be a number");
+            s->maxBodySize = std::stoi(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
+        }
+        else
             throw IllegalArgumentException("unexpected token" + root->getChildren()[i]->getData()->getValue());
     }
-    return nullptr;
+    return s;
 }
 
 Server::Server() {

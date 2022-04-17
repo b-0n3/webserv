@@ -14,10 +14,10 @@
 
 class Cgi {
 private:
-    std::string const binaryPath;
-    const std::vector<std::string> ext;
+    std::string  binaryPath;
+     std::vector<std::string> ext;
 public:
-    Cgi(std::string const path, std::vector<std::string> ext);
+    Cgi(std::string  path, std::vector<std::string> ext);
     ~Cgi();
     std::string getBinaryPath();
     std::vector<std::string> getExt();

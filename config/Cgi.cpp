@@ -6,7 +6,7 @@
 #include "Cgi.h"
 
 
-Cgi::Cgi(std::string const path, std::vector<std::string> ext) {
+Cgi::Cgi(std::string  path, std::vector<std::string>  ext) {
   std::ifstream file(path.c_str());
   if (!file.is_open()) {
       throw FileNotFoundException("cgi File not found");
@@ -15,6 +15,7 @@ Cgi::Cgi(std::string const path, std::vector<std::string> ext) {
    if (ext.size() == 0)
        throw  IllegalArgumentException("extension not found");
     this->binaryPath = path;
+    this->ext = ext;
 }
 
 Cgi::~Cgi() {
@@ -49,7 +50,7 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
                 throw IllegalArgumentException("path node must have 1 child");
             path = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
         }
-        if (root->getChildren()[i]->getData()->getValue() == "ext") {
+       else if (root->getChildren()[i]->getData()->getValue() == "ext") {
             if (root->getChildren()[i]->getChildren().empty())
                 throw IllegalArgumentException("ext node must have at least 1 child");
             for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {

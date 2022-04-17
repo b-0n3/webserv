@@ -88,55 +88,50 @@ Cgi *Location::getCgiIfExists(const std::string &path) const {
 
 Location  *Location::fromNode(Node<Token *> *root) {
     Location *l;
-    if(root == nullptr)
+    if (root == nullptr)
         throw IllegalArgumentException("unexpected token");
     l = new Location();
     l->setRoute(root->getData()->getValue());
-    for (int i = 0 ;i < root->getChildren().size(); i++)
-    {
+    for (int i = 0; i < root->getChildren().size(); i++) {
         String value = root->getChildren()[i]->getData()->getValue();
-        if(value == "auto_index")
+        if (value == "auto_index")
             l->setAutoIndex(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
         else if (value == "index") {
             if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+                throw IllegalArgumentException(
+                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
             for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
                 l->addIndexFile(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
-        }
-        else if (value == "allowed_methods")
-        {
+        } else if (value == "allowed_methods") {
             if (!l->getAllowedMethods().empty())
                 throw IllegalArgumentException(" redecalaration of allowed methods");
             if (root->getChildren()[i]->getChildren().size() == 0)
                 throw IllegalArgumentException(
                         root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
-            {
+            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {
                 l->addAllowedMethod(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
             }
-        }
-        else if (value == "cgi")
-        {
-            if( root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+        } else if (value == "cgi") {
+            if (root->getChildren()[i]->getChildren().size() == 0)
+                throw IllegalArgumentException(
+                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
             l->addCgi(Cgi::fromNode(root->getChildren()[i]));
-        }
-        else if (value == "error_page")
-        {
-            if( root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            l->addErrorPage(Page::fromNode(root->getChildren()[i]));
-        }
-        else if (value == "upload_directory")
-        {
-            if( root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+        } else if (value == "error_page") {
+            if (root->getChildren()[i]->getChildren().size() == 0)
+                throw IllegalArgumentException(
+                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
+            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
+                l->addErrorPage(Page::fromNode(root->getChildren()[i]->getChildren()[j]));
+        } else if (value == "upload_directory") {
+            if (root->getChildren()[i]->getChildren().size() == 0)
+                throw IllegalArgumentException(
+                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
             l->setUploadDir(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        }
-        else
+        } else
             throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
     }
 
+    return l;
 }
 
 void Location::setAutoIndex(String autoIndex) throw(IllegalArgumentException) {
@@ -157,7 +152,7 @@ void Location::addIndexFile(String indexFile) throw(IllegalArgumentException) {
 }
 
 Location::Location() {
-    this->route = nullptr;
+    this->route = "";
     this->autoIndex = true;
     this->indexFiles = std::vector<std::string>();
     this->allowedMethods = std::vector<std::string>();
@@ -180,5 +175,12 @@ void Location::addAllowedMethod(String method) {
 void Location::addCgi(Cgi *cgi) {
     this->cgis.push_back(cgi);
 }
+
+void Location::addErrorPage(Page *page) {
+    if (page == nullptr)
+        throw IllegalArgumentException("unexpected value");
+    this->errorPages.push_back(page);
+}
+
 
 

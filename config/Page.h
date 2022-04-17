@@ -5,17 +5,19 @@
 #ifndef WEBSERV_PAGE_H
 #define WEBSERV_PAGE_H
 #include <string>
+#include "../container/Node.h"
+#include "Token.h"
 
 class Page {
 private:
     int errorCode;
-    std::string errorMessage;
     std::string contentPath;
 public:
-    Page(int errorCode, std::string errorMessage, std::string contentPath);
+    Page(int errorCode, std::string contentPath);
     int getErrorCode();
-    std::string getErrorMessage();
     std::string getContentPath();
+
+    static Page *fromNode(Node<Token *> *root);
 };
 
 
