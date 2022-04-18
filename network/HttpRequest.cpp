@@ -14,6 +14,18 @@ HttpRequest::HttpRequest(int fd) :  Socketfd(fd),
     Parse();
 }
 
+bool HTTPRequest::IsHeaderFinished()
+{
+    int i = 0;
+    while (Raw[i] != '\0')
+    {
+        if (Raw[i] == '\r' && Raw[i + 1] == '\n' && Raw[i + 2] == '\r' && Raw[i + 3] == '\n')
+            return true;
+        i++;
+    }
+    return false;
+}
+
 void HttpRequest::ContinueParse()
 {
     //Read And Concatinate The Raw Buffer
