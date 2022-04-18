@@ -14,7 +14,7 @@ HttpRequest::HttpRequest(int fd) :  Socketfd(fd),
     Parse();
 }
 
-bool HTTPRequest::IsHeaderFinished()
+bool HttpRequest::IsHeaderFinished()
 {
     int i = 0;
     while (Raw[i] != '\0')
