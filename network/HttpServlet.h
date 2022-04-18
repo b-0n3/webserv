@@ -13,7 +13,7 @@
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "../config/Server.h"
-
+#include "StatusCode.h"
 
 class HttpServlet {
 private:

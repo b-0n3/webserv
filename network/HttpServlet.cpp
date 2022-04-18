@@ -6,6 +6,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "HttpServlet.h"
+#include <cstring>
 #include "../exceptions/IllegalStateException.h"
 
 void HttpServlet::addServer(std::string name, Server *server) {
@@ -119,7 +120,24 @@ void HttpServlet::handleRequests() {
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
+    Server *s = this->servers[server];
+   Location *l =  s->getLocation(request->getPath());
+    if (l == nullptr) {
+        response->setStatusCode(NOT_FOUND);
+        response->setBody("404 Not Found");
+        return;
+    }
+   if (l->isAllowedMethod(request->getMethod())) {
+        if (l->getCgiIfExists(request->getPath()))
+            l->handleCgi(request, response);
+        else
+            l->handleStatic(request, response);
 
+   }
+   else {
+       response->setStatusCode(METHOD_NOT_ALLOWED);
+       response->setBody("405 Method Not Allowed");
+   }
 }
 
 

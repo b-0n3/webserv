@@ -14,6 +14,10 @@
 #include "../tools/filter.h"
 #include "../container/Node.h"
 #include "Token.h"
+#include "../network/HttpRequest.h"
+#include "../network/HttpResponse.h"
+#include "../network/StatusCode.h"
+
 typedef std::string String;
 class Location {
 private:
@@ -56,6 +60,10 @@ public:
     void addCgi(Cgi *cgi);
 
     void addErrorPage(Page *page);
+
+    void handleStatic(HttpRequest *pRequest, HttpResponse *pResponse);
+
+    void handleCgi(HttpRequest *pRequest, HttpResponse *pResponse);
 };
 
 

@@ -130,7 +130,12 @@ Location  *Location::fromNode(Node<Token *> *root) {
         } else
             throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
     }
-
+        if (l->getAllowedMethods().empty())
+        {
+            l->addAllowedMethod("GET");
+            l->addAllowedMethod("POST");
+            l->addAllowedMethod("DELETE");
+        }
     return l;
 }
 
@@ -180,6 +185,26 @@ void Location::addErrorPage(Page *page) {
     if (page == nullptr)
         throw IllegalArgumentException("unexpected value");
     this->errorPages.push_back(page);
+}
+
+void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
+    for (int i = 0; i < this->cgis.size(); i++) {
+        if (this->cgis[i]->isCgi(pRequest->getPath())) {
+            // @todo exectute cgi
+
+            return ;
+        }
+    }
+}
+
+void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
+    // check if method is Get
+    // if route is a file and file exists return file
+    // else if the route is a directory and autoIndex is true and indexFile exists return file in the directory
+    // if the method is Post save the file
+
+    //  if the method is delete do nothing
+
 }
 
 
