@@ -20,7 +20,7 @@ int Server::getPort() {
 }
 
 std::string Server::getRoot() {
-    return std::string();
+    return this->root;
 }
 
 std::vector<Location *> Server::getLocations() {
@@ -59,6 +59,7 @@ Server *Server::fromNode(Node<Token *> *root) {
             s->port = std::stoi(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
         } else if (root->getChildren()[i]->getData()->getValue() == "root") {
             s->root = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
+            std::cout << "fsdf" << s->root << std::endl;
         } else if (root->getChildren()[i]->getData()->getValue() == "locations") {
             for (int j = 0; j < root->getChildren()[i]->getChildren().size();j ++) {
                 s->locations.push_back(Location::fromNode(root->getChildren()[i]->getChildren()[j]));

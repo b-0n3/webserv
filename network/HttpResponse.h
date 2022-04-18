@@ -26,8 +26,12 @@ public:
     void setStatusCode(int statusCode);
     void setStatusMessage(std::string statusMessage);
     void setContentType(std::string contentType);
-    void setBody(std::string body);
+
+    void setBody(std::string &body);
+
     void setHeaders(std::map<std::string, std::string> headers);
+
+    void addHeader(std::string &key, std::string &value);
 
     void writeToFd(int i);
 };

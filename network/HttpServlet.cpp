@@ -13,7 +13,7 @@ void HttpServlet::addServer(std::string name, Server *server) {
     if (server == nullptr  || name != server->getHost())
         throw IllegalArgumentException("invalid server");
     this->servers[name] = server;
-    for( int i = 0; i< 100; i++)
+    for( int i = 99; i>= 0; i--)
         this->free_sock.push(i);
 }
 
@@ -42,7 +42,7 @@ HttpServlet::HttpServlet(int port) {
 }
 
 void HttpServlet::handleRequests() {
-
+    static int nfds;
         struct sockaddr_in client;
         socklen_t client_len = sizeof(client);
         int client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
@@ -64,80 +64,106 @@ void HttpServlet::handleRequests() {
                 this->free_sock.pop();
                 this->pollfds[id].fd = s;
                 this->pollfds[id].events = POLLIN;
-                this->pollfds[id].revents = 0;
+                this->pollfds[id].revents = POLLIN;
+                nfds++;
                 this->used_sock.push_back(id);
             }
             if (!this->free_sock.empty()) {
-
+            nfds++;
                 int id = this->free_sock.top();
                 this->free_sock.pop();
                 this->used_sock.push_back(id);
                 this->pollfds[id].fd = client_sock;
                 this->pollfds[id].events = POLLIN;
-                this->pollfds[id].revents = 0;
+                this->pollfds[id].revents = POLLIN;
             }
             else
             {
                 this->wait_sock.push(client_sock);
             }
         }
-        int sd = poll(this->pollfds, 100, -1);
+
+    int sd = poll(this->pollfds,nfds , -1);
         if (sd == -1)
             return;
         for (int i = 0; i < this->used_sock.size(); i++) {
+            std::cout << "used_sock : " << this->used_sock[i] << std::endl;
             int index = this->used_sock[i];
+            HttpRequest *request;
+            HttpResponse *response;
             if (this->pollfds[index].revents & POLLIN) {
                 if (this->requests.find(this->pollfds[index].fd) == this->requests.end()) {
-                    this->requests[this->pollfds[index].fd] = HttpRequest::fromFd(this->pollfds[index].fd);
+                    std::cout << "create Request" << std::endl;
+                    this->requests[this->pollfds[index].fd] = new HttpRequest(this->pollfds[index].fd);
+                    std::cout << "create Request" << std::endl;
                     this->responses[this->pollfds[index].fd] = new HttpResponse();
                 }
                 if (this->requests.find(this->pollfds[index].fd) != this->requests.end()) {
-                    HttpRequest *request = this->requests[this->pollfds[index].fd];
-                    HttpResponse *response = this->responses[this->pollfds[index].fd];
-                    if (request->isFinished()) {
-                        this->handleRequest(request, response, request->getHeader("Host"));
-                    }
-                    else{
-                        request->continueReadFromFd(this->pollfds[index].fd);
-                        if (request->isFinished())
+                    request = this->requests[this->pollfds[index].fd];
+                    response = this->responses[this->pollfds[index].fd];
+                    ///     std::cout<<"Handle request : "<<request->GetMethod()<<std::endl;
+                    if (request->IsHeaderParsed()) {
+                        std::cout << "HeaderFinished" << std::endl;
+                        this->handleRequest(request, response,
+                                            "127.0.0.1");
+                        this->pollfds[index].events = POLLOUT;
+                        this->pollfds[index].revents = POLLOUT;
+                        //      response->writeToFd(this->pollfds[index].fd);
+                    } else {
+                        request->ContinueParse();
+                        if (request->IsHeaderParsed())
                             this->pollfds[index].events = POLLOUT;
                     }
+                    std::cout << "request : " << request->GetMethod() << std::endl;
                 }
-            }else if (this->pollfds[i].revents & POLLOUT) {
+            }
+            if (this->pollfds[index].revents & POLLOUT) {
                 // todo: write response
-                HttpResponse *response = this->responses[this->pollfds[index].fd];
+                std::cout << "write response" << std::endl;
                 response->writeToFd(this->pollfds[index].fd);
                 /// todo: clean up
-                close(this->pollfds[i].fd);
+
                 this->free_sock.push(index);
                 this->used_sock.erase(this->used_sock.begin() + i);
                 this->requests.erase(this->pollfds[index].fd);
                 this->responses.erase(this->pollfds[index].fd);
+//                this->requests[this->pollfds[index].fd] = nullptr;
+                //              this->responses[this->pollfds[index].fd] = nullptr;
+                this->pollfds[index].fd = -1;
+                this->pollfds[index].events = 0;
+                this->pollfds[index].revents = 0;
+                close(this->pollfds[index].fd);
+                nfds--;
 
             }
-
         }
+
+
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
     Server *s = this->servers[server];
-   Location *l =  s->getLocation(request->getPath());
+    Location *l = s->getLocation(request->GetPath());
     if (l == nullptr) {
         response->setStatusCode(NOT_FOUND);
-        response->setBody("404 Not Found");
+        std::string body = "<html><body><h1>404 Not Found</h1></body></html>";
+        response->setBody(body);
         return;
     }
-   if (l->isAllowedMethod(request->getMethod())) {
-        if (l->getCgiIfExists(request->getPath()))
+    if (l->isAllowedMethod(request->GetMethod())) {
+//        request->SetPath(s->getRoot() + request->GetPath());
+std::cout << "root path : " << s->getRoot() << std::endl;
+        l->setRootRir(s->getRoot());
+        if (l->getCgiIfExists(request->GetPath()))
             l->handleCgi(request, response);
         else
             l->handleStatic(request, response);
 
-   }
-   else {
-       response->setStatusCode(METHOD_NOT_ALLOWED);
-       response->setBody("405 Method Not Allowed");
-   }
+    } else {
+        response->setStatusCode(METHOD_NOT_ALLOWED);
+        std::string body = "<html><body><h1>405 Method Not Allowed</h1></body></html>";
+        response->setBody(body);
+    }
 }
 
 

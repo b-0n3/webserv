@@ -2,6 +2,10 @@
 // Created by Abdelouahad Ait hamd on 4/7/22.
 //
 
+#include <dirent.h>
+#include <fstream>
+
+#include <fcntl.h>
 #include "Location.h"
 
 
@@ -189,22 +193,86 @@ void Location::addErrorPage(Page *page) {
 
 void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
     for (int i = 0; i < this->cgis.size(); i++) {
-        if (this->cgis[i]->isCgi(pRequest->getPath())) {
+        if (this->cgis[i]->isCgi(pRequest->GetPath())) {
             // @todo exectute cgi
 
-            return ;
+            return;
         }
     }
 }
 
 void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
     // check if method is Get
+    if (pRequest->GetMethod() == "GET") {
+        std::cout << "root dir " <<this->getRootRir()<< std::endl;
+        std::string filePath = this->getRootRir()+ pRequest->GetPath();
+        std::cout << filePath << std::endl;
+        if (is_directory(filePath)) {
+            if (this->autoIndex) {
+                DIR *dir;
+                struct dirent *diread;
+              //  std::vector<char *> files;
+                std::string content = "<html><body>";
+                if ((dir = opendir("/")) != nullptr) {
+                    while ((diread = readdir(dir)) != nullptr) {
+
+                        //  files.push_back(diread->d_name);
+                        content.append("<a href=");
+                        content.append(diread->d_name);
+                        content.append("> ");
+                        content.append(diread->d_name);
+                        content.append("</a></br>");
+                    }
+                    closedir(dir);
+                }
+                pResponse->setContentType("text/html");
+
+
+                content.append("</pre></body></html>");
+                pResponse->setBody(content);
+                //    std::cout<< content << std::endl;
+                return;
+            }
+            pResponse->setStatusCode(UNAUTHORIZED);
+            pResponse->setBody((std::string &) "<h1>Unauthorized</h1>");
+            pResponse->setContentType("text/html");
+            return;
+        }
+        std::string file;
+        int fd  = open(filePath.c_str(), O_RDONLY);
+        if (fd < 0) {
+            pResponse->setStatusCode(NOT_FOUND);
+            std::string body = "<h1>Not Found</h1>";
+            pResponse->setBody(body);
+            pResponse->setContentType("text/html");
+            return;
+        }
+        int ret = 0;
+        char buf[1024];
+        while ((ret = read(fd, buf, 1024)) > 0) {
+            file .append(buf , ret);
+        }
+
+        pResponse->setBody(file);
+        pResponse->setContentType(getConentTypeFromFileName(filePath));
+        return;
+    }
+    return;
+
     // if route is a file and file exists return file
     // else if the route is a directory and autoIndex is true and indexFile exists return file in the directory
     // if the method is Post save the file
 
     //  if the method is delete do nothing
 
+}
+
+const std::string &Location::getRootRir() const {
+    return rootRir;
+}
+
+void Location::setRootRir(const std::string &rootRir) {
+   this->rootRir = rootRir;
 }
 
 

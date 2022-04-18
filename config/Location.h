@@ -11,7 +11,7 @@
 #include "Page.h"
 #include <algorithm>
 #include "Cgi.h"
-#include "../tools/filter.h"
+#include "../tools/Utils.h"
 #include "../container/Node.h"
 #include "Token.h"
 #include "../network/HttpRequest.h"
@@ -28,6 +28,7 @@ private:
     std::vector<std::string> indexFiles;
     std::vector<Page*> errorPages;
     std::vector<Cgi*> cgis;
+    std::string rootRir;
 public:
     Location();
     std::string getRout() const;
@@ -35,6 +36,10 @@ public:
     void setRoute(const std::string &rout);
 
     const std::vector<std::string> &getAllowedMethods() const;
+
+    const std::string &getRootRir() const;
+
+    void setRootRir(const std::string &rootRir);
 
     void setAllowedMethods(const std::vector<std::string> &allowedMethods);
 

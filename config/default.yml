@@ -1,25 +1,19 @@
 servers:   # list of servers
         # sdfsdaf
    - server: # server
-        server_name : localhost # name of the server
-        listen : 8080 # listen port
-        root : /var/www/html/public # root directory
-        locations: # list of locations
-            - /ssr: # location
-                auto_index: true # auto index
-   - server: # server
         server_name: 127.0.0.1
-        listen: 80
-        root: /var/www/html/public
+        listen: 8080
+        root: /home/b0n3/Desktop/cursus/webserv/Networking
         client_max_body_size: 1000
         locations:
-          - / :
-                error_page:
-                 - code: 500
-                   content: ./Networking/index.html
-                 - code: 502
-                   content: ./Networking/index.html
-                upload_directory: /var/www/html/public/uploads
+          - /:
+              auto_index: true
+              error_page:
+                - code: 500
+                  content: ./Networking/index.html
+                - code: 502
+                  content: ./Networking/index.html
+              upload_directory: /var/www/html/public/uploads
                 allowed_methods:
                  - POST
                  - GET
@@ -35,8 +29,3 @@ servers:   # list of servers
                   - .php4
                   - .php5
                   - .php6
-          - /ssr:
-                 index:
-                   - index.html
-                   - index.htm
-                   - index.php

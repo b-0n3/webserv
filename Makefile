@@ -7,9 +7,9 @@ NAME=webserv
 all: $(NAME)
 
 $(NAME): $(SRC)
-	c++ -g -o $(NAME) $(SRC)
+	c++ -g -fsanitize=address  -o $(NAME) $(SRC)
 clean:
-	rm -f *.o
-fclean: clean
-	rm -f $(NAME)
+	rm -rf *.o
+fclean:
+	rm -rf $(NAME)
 re: fclean all
