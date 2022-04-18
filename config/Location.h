@@ -35,11 +35,11 @@ public:
     void setAllowedMethods(const std::vector<std::string> &allowedMethods);
 
     const std::string &getUploadDir() const;
-    void setAutoIndex(String uploadDir) noexcept(false);
+    void setAutoIndex(String uploadDir) ;
     void setUploadDir(const std::string &uploadDir);
 
     const std::vector<std::string> &getIndexFiles() const;
-    void addIndexFile(String indexFile) noexcept(false);
+    void addIndexFile(String indexFile) ;
     void setIndexFiles(const std::vector<std::string> &indexFiles);
     const std::vector<Page *> &getErrorPages() const;
     void setErrorPages(const std::vector<Page *> &errorPages);

@@ -6,7 +6,7 @@
 #define WEBSERV_ILLEGALARGUMENTEXCEPTION_H
 #include <string>
 
-class IllegalArgumentException: public std::exception {
+class IllegalArgumentException:virtual public std::exception {
 private :
     std::string message;
 public:

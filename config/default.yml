@@ -2,18 +2,18 @@ servers:   # list of servers
         # sdfsdaf
    - server: # server
         server_name : localhost # name of the server
-        listen : 80 # listen port
+        listen : 8080 # listen port
         root : /var/www/html/public # root directory
         locations: # list of locations
             - /ssr: # location
                 auto_index: true # auto index
    - server: # server
-        server_name: localhost
+        server_name: 127.0.0.1
         listen: 80
         root: /var/www/html/public
         client_max_body_size: 1000
         locations:
-           - / :
+          - / :
                 error_page:
                  - code: 500
                    content: ./Networking/index.html

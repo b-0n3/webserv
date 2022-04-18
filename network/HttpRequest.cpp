@@ -85,13 +85,27 @@ std::map<std::string, std::string> HttpRequest::getParams() {
 HttpRequest *HttpRequest::fromFd(int fd) {
     unsigned char buffer[5000];
     int ret;
-    while  ( (ret = read(fd, buffer, 5000)) >= 0)
+    std::string request;
+    while  ((ret = read(fd, buffer, 5000)) > 0)
     {
-
+        request.append((char *)buffer, ret);
     }
-    return nullptr;
+    HttpRequest *httpRequest = new HttpRequest();
+    httpRequest->parse(request);
+    return httpRequest;
 }
 
 void HttpRequest::setPath(std::string path) {
 
+}
+
+void HttpRequest::continueReadFromFd(int fd) {
+    unsigned char buffer[5000];
+    int ret;
+    std::string request;
+    while  ((ret = read(fd, buffer, 5000)) > 0)
+    {
+        request.append((char *)buffer, ret);
+    }
+    this->parse(request);
 }

@@ -60,7 +60,7 @@ int old_main()
     nfds_t nfds = 1;
     int i;
     int new_socket = -1, valread ;
-    Socket sock(AF_INET, SOCK_STREAM, 0, 1338, INADDR_ANY); 
+    Socket sock(AF_INET, SOCK_STREAM, 0, 1338, INADDR_ANY);
     char buffer[1000] = {0};
     struct sockaddr_in remote_address;
     socklen_t len =  sizeof(sockaddr_in);
@@ -88,14 +88,14 @@ int old_main()
                     new_socket = accept(fds[i].fd, (struct sockaddr *)&remote_address, &len);
                     fcntl(new_socket, F_SETFL, O_NONBLOCK);
                     if (new_socket < 0)
-                    {
+                     {
                         perror("accept");
                         exit(EXIT_FAILURE);
                     }
                     fds[nfds].fd = new_socket;
                     fds[nfds].events = POLLIN;
                     nfds++;
-                    continue; ;
+                    continue;
                 }
                 
                 valread = read(fds[i].fd, buffer, 1000);

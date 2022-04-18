@@ -7,22 +7,33 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <sys/poll.h>
+#include <netinet/in.h>
+#include <stack>
 #include "HttpRequest.h"
 #include "HttpResponse.h"
+#include "../config/Server.h"
 
 
 class HttpServlet {
 private:
     int port;
-    std::map<std::string, std::string> servers;
-    void handleRequest(HttpRequest request, HttpResponse response);
-    void handleRequest(HttpRequest request, HttpResponse response, std::string server);
+    pollfd pollfds[100];
+    struct sockaddr_in address;
+    int sock;
+    std::stack<int> free_sock;
+    std::vector<int> used_sock;
+    std::stack<int> wait_sock;
+    std::map<std::string,  Server * > servers;
+    std::map<int , HttpRequest *> requests;
+    std::map<int , HttpResponse *> responses;
+    void handleRequest(HttpRequest *request, HttpResponse *response);
+    void handleRequest(HttpRequest *request, HttpResponse *response, std::string server);
 public:
     HttpServlet(int port);
-    void addServer(std::string name, std::string ip);
-    void removeServer(std::string name);
+    void addServer(std::string name, Server * server);
     void start();
-    void stop();
+    void handleRequests();
 
 };
 

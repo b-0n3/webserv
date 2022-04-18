@@ -134,7 +134,7 @@ Location  *Location::fromNode(Node<Token *> *root) {
     return l;
 }
 
-void Location::setAutoIndex(String autoIndex) noexcept(false) {
+void Location::setAutoIndex(String autoIndex)  {
     if (autoIndex == "true") {
         this->autoIndex = true;
     } else if (autoIndex == "false") {
@@ -144,7 +144,7 @@ void Location::setAutoIndex(String autoIndex) noexcept(false) {
     }
 }
 
-void Location::addIndexFile(String indexFile) noexcept(false) {
+void Location::addIndexFile(String indexFile) {
     if (indexFile == "") {
         throw IllegalArgumentException("unexpected value");
     }

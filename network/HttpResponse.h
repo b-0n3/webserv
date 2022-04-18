@@ -10,7 +10,7 @@
 class HttpResponse {
 private:
     int statusCode;
-    std::string statusMessage;
+    unsigned  long contentLength;
     std::string contentType;
     std::string body;
     std::map<std::string, std::string> headers;
@@ -28,6 +28,8 @@ public:
     void setContentType(std::string contentType);
     void setBody(std::string body);
     void setHeaders(std::map<std::string, std::string> headers);
+
+    void writeToFd(int i);
 };
 
 

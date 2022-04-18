@@ -7,7 +7,8 @@
 
 
 ConfigParser::ConfigParser(std::string configFilePath) {
-    std::ifstream *file = new std::ifstream (configFilePath, std::ios::app);
+    std::cout << configFilePath << std::endl;
+    std::ifstream *file = new std::ifstream (configFilePath);
     if (!file->is_open()) {
         throw FileNotFoundException("Config file not found");
     }
@@ -141,11 +142,11 @@ Node<Token *> *ConfigParser::getNextToken() {
 std::vector<Server *> ConfigParser::validateAst() {
     std::vector<Server *> servers;
     if (this->ast.getSize() == 0 || this->ast.get(0) == nullptr) {
-        throw IllegalArgumentException("Config file is not valid");
+        throw IllegalArgumentException("Config file  is not valid");
     }
     Node<Token *> *root = this->ast.get(0);
     if (root->getData()->getValue() != "servers") {
-        throw IllegalArgumentException("Config file is not valid");
+        throw IllegalArgumentException("Config file  sda is not valid");
     }
     if (root->getChildren().empty())
         throw IllegalArgumentException("no servers found");
@@ -162,19 +163,19 @@ BinaryTree<Token *> ConfigParser::getAst() {
 }
 
 
-int main()
-{
-    ConfigParser *configParser = new ConfigParser("./config/default.yml");
-    try {
-    configParser->tokenizeConfigFiles(nullptr, nullptr, -1, -1);
-
-        Node<Token *> *root = configParser->getAst().get(0);
-     std::vector<Server *> servers =    configParser->validateAst();
-        if (root != nullptr)
-            root->printNode(root);
-    }catch (IllegalArgumentException &e) {
-        std::cout <<"sdfsd"  << e.   what() << std::endl;
-    }
-    //system("leaks webserv");
-    return 0;
-}
+//int main()
+//{
+//    ConfigParser *configParser = new ConfigParser("./config/default.yml");
+//    try {
+//    configParser->tokenizeConfigFiles(nullptr, nullptr, -1, -1);
+//
+//        Node<Token *> *root = configParser->getAst().get(0);
+//     std::vector<Server *> servers =    configParser->validateAst();
+//        if (root != nullptr)
+//            root->printNode(root);
+//    }catch (IllegalArgumentException &e) {
+//        std::cout <<"sdfsd"  << e.   what() << std::endl;
+//    }
+//    //system("leaks webserv");
+//    return 0;
+//}

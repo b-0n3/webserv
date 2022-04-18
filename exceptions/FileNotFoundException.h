@@ -7,7 +7,7 @@
 #include <string>
 
 
-class FileNotFoundException : public std::exception {
+class FileNotFoundException : virtual public std::exception {
 private:
     std::string _message;
 public:
