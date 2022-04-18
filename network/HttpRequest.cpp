@@ -42,7 +42,11 @@ void    HttpRequest::Parse()
     {
         //parse header
         Method = strtok(Raw, " ");
+    
         Path = strtok(NULL, " ");
+
+        //ToParse Params
+
         strtok(NULL, "/"); //skip "HTTP/""
         Version = strtok(NULL, "\r\n");
 
