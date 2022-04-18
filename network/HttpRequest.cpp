@@ -1,111 +1,68 @@
-//
-// Created by b0n3 on 4/17/22.
-//
 
-#include <unistd.h>
 #include "HttpRequest.h"
 
-HttpRequest::HttpRequest() {
-    this->contentLength = 0;
-    this->finished = false;
+HttpRequest::HttpRequest(int fd) :  Socketfd(fd),
+                                    Raw(""),
+                                    Method(""),
+                                    Path(""),
+                                    Version(""),
+                                    Body(""),
+                                    HeaderParsed(false),
+                                    BodyParsed(false)
+{
+    Headers.clear(), Params.clear();
+    Parse();
 }
 
-void HttpRequest::parse(std::string request) {
-
-}
-
-void HttpRequest::setHeader(std::string key, std::string value) {
-
-}
-
-void HttpRequest::setBody(std::string body) {
-
-}
-
-void HttpRequest::setFinished(bool finished) {
-
-}
-
-void HttpRequest::setContentLength(unsigned long contentLength) {
-
-}
-
-void HttpRequest::setMethod(std::string method) {
-
-}
-
-void HttpRequest::setVersion(std::string version) {
-
-}
-
-void HttpRequest::readFromFd(int fd) {
-
-}
-
-std::string HttpRequest::getMethod() {
-    return std::string();
-}
-
-std::string HttpRequest::getPath() {
-    return std::string();
-}
-
-std::string HttpRequest::getVersion() {
-    return std::string();
-}
-
-std::string HttpRequest::getBody() {
-    return std::string();
-}
-
-bool HttpRequest::isFinished() {
+bool HTTPRequest::IsHeaderFinished()
+{
+    int i = 0;
+    while (Raw[i] != '\0')
+    {
+        if (Raw[i] == '\r' && Raw[i + 1] == '\n' && Raw[i + 2] == '\r' && Raw[i + 3] == '\n')
+            return true;
+        i++;
+    }
     return false;
 }
 
-unsigned long HttpRequest::getContentLength() {
-    return 0;
+void HttpRequest::ContinueParse()
+{
+    //Read And Concatinate The Raw Buffer
 }
 
-std::string HttpRequest::getHeader(std::string key) {
-    return std::string();
-}
-
-std::string HttpRequest::getParam(std::string key) {
-    return std::string();
-}
-
-std::map<std::string, std::string> HttpRequest::getHeaders() {
-    return std::map<std::string, std::string>();
-}
-
-std::map<std::string, std::string> HttpRequest::getParams() {
-    return std::map<std::string, std::string>();
-}
-
-HttpRequest *HttpRequest::fromFd(int fd) {
-    unsigned char buffer[5000];
-    int ret;
-    std::string request;
-    while  ((ret = read(fd, buffer, 5000)) > 0)
+void    HttpRequest::Parse()
+{
+    // To Check if this correct
+    if (read(Socketfd, Raw, 5000) < 0)
+        throw std::runtime_error("Error while reading from socket");
+    
+    //if header is finished and not parsed
+    if (IsHeaderFinished() && !IsHeaderParsed())
     {
-        request.append((char *)buffer, ret);
+        //parse header
+        Method = strtok(Raw, " ");
+        Path = strtok(NULL, " ");
+        strtok(NULL, "/"); //skip "HTTP/""
+        Version = strtok(NULL, "\r\n");
+
+        //parse headers
+        while (1)
+        {
+            std::string token =  strtok(NULL, "\r\n");
+            if (token[0] == '\r' || token[1] == '\n')
+                break;
+            //Need Syntax check !!
+            SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
+        }
+        SetHeaderParsed(true);
     }
-    HttpRequest *httpRequest = new HttpRequest();
-    httpRequest->parse(request);
-    return httpRequest;
-}
-
-void HttpRequest::setPath(std::string path) {
-
-}
-
-void HttpRequest::continueReadFromFd(int fd) {
-    unsigned char buffer[5000];
-    int ret;
-    std::string request;
-    while  ((ret = read(fd, buffer, 5000)) > 0)
+    //if has body and not parsed
+    if (IsHasBody() && !IsBodyParsed())
     {
-        request.append((char *)buffer, ret);
+        //parse body
+        SetBodyParsed(true);
     }
-    this->parse(request);
 }
+
+
