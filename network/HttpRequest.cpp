@@ -14,9 +14,43 @@ HttpRequest::HttpRequest(int fd) :  Socketfd(fd),
     Parse();
 }
 
+void HttpRequest::ContinueParse()
+{
+    //Read And Concatinate The Raw Buffer
+}
+
 void    HttpRequest::Parse()
 {
+    // To Check if this correct
+    if (read(Socketfd, Raw, 5000) < 0)
+        throw std::runtime_error("Error while reading from socket");
     
+    //if header is finished and not parsed
+    if (IsHeaderFinished() && !IsHeaderParsed())
+    {
+        //parse header
+        Method = strtok(Raw, " ");
+        Path = strtok(NULL, " ");
+        strtok(NULL, "/"); //skip "HTTP/""
+        Version = strtok(NULL, "\r\n");
+
+        //parse headers
+        while (1)
+        {
+            std::string token =  strtok(NULL, "\r\n");
+            if (token[0] == '\r' || token[1] == '\n')
+                break;
+            //Need Syntax check !!
+            SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
+        }
+        SetHeaderParsed(true);
+    }
+    //if has body and not parsed
+    if (IsHasBody() && !IsBodyParsed())
+    {
+        //parse body
+        SetBodyParsed(true);
+    }
 }
 
 
