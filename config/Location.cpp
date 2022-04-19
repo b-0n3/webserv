@@ -250,7 +250,7 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
         int ret = 0;
         char buf[1024];
         while ((ret = read(fd, buf, 1024)) > 0) {
-            file .append(buf , ret);
+            file.append(buf , ret);
         }
 
         pResponse->setBody(file);

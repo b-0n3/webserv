@@ -25,8 +25,8 @@ void HttpResponse::writeToFd(int i) {
           std::to_string(this->contentLength).length());
     write(i, "\r\n", 2);
     write(i, "\r\n", 2);
-    write(i, body.c_str(), body.length());
-
+  int ret =   write(i, body.c_str(), body.length());
+    std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
 }
 
 void HttpResponse::addHeader(std::string &key, std::string &value) {

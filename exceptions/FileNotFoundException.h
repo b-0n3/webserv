@@ -13,7 +13,7 @@ private:
 public:
     ~FileNotFoundException() throw() {}
     FileNotFoundException(const char *message);
-    const char *what();
+  virtual  const char *what();
 
 };
 

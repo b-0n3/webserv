@@ -30,6 +30,7 @@ private:
     void handleRequest(HttpRequest *request, HttpResponse *response);
     void handleRequest(HttpRequest *request, HttpResponse *response, std::string server);
 public:
+    ~HttpServlet();
     HttpServlet(int port);
     void addServer(std::string name, Server * server);
     void start();

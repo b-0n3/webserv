@@ -34,7 +34,7 @@ void HttpRequest::ContinueParse() {
     //Read And Concatinate The Raw Buffer
     if ((ret = read(Socketfd, buffer, 5000)) < 0)
         throw std::runtime_error("Error while reading from socket");
-    std::cout << "read: " << ret << std::endl;
+  //  std::cout << "read: " << ret << std::endl;
     this->request.append(buffer, ret);
 }
 
@@ -44,7 +44,7 @@ void    HttpRequest::Parse() {
     // To Check if this correct
     if ((ret = read(Socketfd, buffer, 5000)) < 0)
         throw std::runtime_error("Error while reading from socket");
-    std::cout << "read: " << ret << std::endl;
+  //  std::cout << "read: " << ret << std::endl;
     this->request.append(buffer, ret);
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
@@ -52,7 +52,7 @@ void    HttpRequest::Parse() {
         std::cout << request << std::endl;
         Method = strtok((char *) request.c_str(), " ");
         Path = strtok(NULL, " ");
-        std::cout << "path: " << Path << std::endl;
+      //  std::cout << "path: " << Path << std::endl;
 //        if (Path.find_first_of('http://') != std::string::npos) {
 //            Path = Path.substr(7);
 //        }
@@ -61,7 +61,7 @@ void    HttpRequest::Parse() {
 
         //parse headers
         while (1) {
-            std::cout << "Header Parsing" << std::endl;
+           // std::cout << "Header Parsing" << std::endl;
 
             std::string token = strtok(NULL, "\n");
             std::cout << token << std::endl;

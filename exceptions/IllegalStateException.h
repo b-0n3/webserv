@@ -12,7 +12,7 @@ private:
 public:
     virtual  ~IllegalStateException() throw() {};
     IllegalStateException(std::string message);
-    const char *what();
+   virtual const char *what();
 };
 
 

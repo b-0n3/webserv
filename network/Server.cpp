@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
         std::cout<< "Usage: " << argv[0] << " configFile Path" << std::endl;
         exit(1);
     }
-//    try {
+    try {
         ConfigParser configFileParser(argv[1]);
         configFileParser.tokenizeConfigFiles(nullptr, nullptr, -1, -1);
         std::vector<Server *> servers = configFileParser.validateAst();
@@ -49,9 +49,9 @@ int main(int argc, char *argv[]) {
                 servlets[i].handleRequests();
             }
         }
-//    } catch (IllegalStateException &e) {
-//        std::cout << "Error while parsing the config file :" << std::endl << e.what() << std::endl;
-//        exit(1);
-//    }
+    } catch (std::exception &e) {
+        std::cout << "Error while parsing the config file :" << std::endl << e.what() << std::endl;
+        exit(1);
+    }
     return 0;
 }
