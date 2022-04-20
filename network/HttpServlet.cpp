@@ -52,122 +52,73 @@ HttpServlet::HttpServlet(int port) {
 
 void HttpServlet::handleRequests() {
     static int nfds;
-        struct sockaddr_in client;
-        socklen_t client_len = sizeof(client);
+    struct sockaddr_in client;
+    socklen_t client_len = sizeof(client);
 
-//    int sd = poll(this->pollfds,1 , -1);
-//    if (sd == -1)
-//        return;
-//    if (this->pollfds[0].revents & POLLIN) {
-        int client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
+    int client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
 
-        if (client_sock == -1) {
-            return;
-        }
-        std::string host = inet_ntoa(client.sin_addr);
-        std::cout << "host : " << host << std::endl;
-        if (this->free_sock.empty()) {
-            this->wait_sock.push(client_sock);
-        } else {
-            if (!this->wait_sock.empty()) {
-                int s = this->wait_sock.top();
-                this->wait_sock.pop();
-                int id = this->free_sock.top();
-                this->free_sock.pop();
-                this->pollfds[id].fd = s;
-                this->pollfds[id].events = POLLIN;
-             //   this->pollfds[id].revents = POLLIN;
-                nfds++;
-                this->used_sock.push_back(id);
-            }
-            if (!this->free_sock.empty()) {
-                nfds++;
-                int id = this->free_sock.top();
-                this->free_sock.pop();
-                this->used_sock.push_back(id);
-                this->pollfds[id].fd = client_sock;
-                this->pollfds[id].events = POLLIN;
-              //  this->pollfds[id].revents = POLLIN;
-            } else {
-                this->wait_sock.push(client_sock);
-            }
-        }
+    if (client_sock == -1) {
+        return;
+    }
+    fcntl(client_sock, F_SETFL, O_NONBLOCK);
+    std::string host = inet_ntoa(client.sin_addr);
+    std::cout << "host : " << host << std::endl;
 
-        // }
-        int size = this->used_sock.size();
-    int s = poll(this->pollfds,size , -1);
+    if (std::count(this->used_sock.begin(), this->used_sock.end(), client_sock) == 0) {
+        pollfd pollf;
+        pollf.fd = client_sock;
+        pollf.events = POLLIN;
+        this->used_pollfds.push_back(pollf);
+        this->used_sock.push_back(client_sock);
+    }
+
+
+    int size = this->used_pollfds.size();
+    pollfd *pollf = this->used_pollfds.data();
+  //  std::copy(this->used_pollfds.begin(), this->used_pollfds.end(), pollf);
+    int s = poll(pollf, size, -1);
     if (s == -1)
         return;
     std::vector<int> deletedSocket;
-        for (int i = 0; i < this->used_sock.size(); i++) {
-           // std::cout << "used_sock : " << this->used_sock[i] << std::endl;
+//    for (int i = 0; i < size; i++) {
+//        deletedSocket.push_back(this->used_sock[i]);
+//    }
 
-            int index = this->used_sock[i];
+    for (int i = 0; i < size; i++) {
+        if (pollf[i].revents & POLLIN) {
+           // todo parse Request;
+           if (this->requests.find(pollf[i].fd)== this->requests.end()) {
+               this->requests[pollf[i].fd] = new HttpRequest(pollf[i].fd);
+               this->responses[pollf[i].fd] = new HttpResponse();
+            //   continue;
+           }
+           if(!this->requests[pollf[i].fd]->IsHeaderFinished())
+           {
+               this->requests[pollf[i].fd]->ContinueParse();
+             //  continue;
+           }
+           if (this->requests[pollf[i].fd]->IsHeaderFinished())
+           {
+               this->handleRequest(this->requests[pollf[i].fd], this->responses[pollf[i].fd], "127.0.0.1");
+              std::cout << this->used_pollfds[i].fd << " sdf " << pollf[i].fd << std::endl;
+               this->used_pollfds[i].events = POLLOUT;
+              // continue;
+           }
 
-            if (this->pollfds[index].revents & POLLIN) {
-                if (this->requests.find(this->pollfds[index].fd) == this->requests.end()) {
-                    std::cout << "create Request" << std::endl;
-                    this->requests[this->pollfds[index].fd] = new HttpRequest(this->pollfds[index].fd);
-                    std::cout << "create Request" << std::endl;
-                    this->responses[this->pollfds[index].fd] = new HttpResponse();
-                }
-                if (this->requests.find(this->pollfds[index].fd) != this->requests.end()) {
-                    HttpRequest *request;
-                    HttpResponse *response;
-                    request = this->requests[this->pollfds[index].fd];
-                    response = this->responses[this->pollfds[index].fd];
-                    ///     std::cout<<"Handle request : "<<request->GetMethod()<<std::endl;
-                    if (request->IsHeaderParsed()) {
-                        this->handleRequest(request, response,
-                                            "127.0.0.1");
-                        this->pollfds[index].events = POLLOUT;
-                        //this->pollfds[index].revents = POLLOUT;
-                        //      response->writeToFd(this->pollfds[index].fd);
-                    } else {
-                        request->ContinueParse();
-                        if (request->IsHeaderParsed()) {
-                            this->pollfds[index].events = POLLOUT;
-                           // this->pollfds[index].revents = POLLOUT;
-                        }
-                    }
-                    std::cout << "request : " << request->GetMethod() << std::endl;
-                }
-            }
-            else if (this->pollfds[index].revents & POLLOUT) {
-                if (this->responses.find(this->pollfds[index].fd) != this->responses.end()){
-                HttpResponse *response;
-                response = this->responses[this->pollfds[index].fd];
-                // todo: write response
-                std::cout << "write response" << std::endl;
-                response->writeToFd(this->pollfds[index].fd);
-                /// todo: clean up
-
-                this->free_sock.push(index);
-               // this->used_sock.erase(this->used_sock.begin() + i);
-                deletedSocket.push_back(index);
-
-//             delete request;
-//             delete response;
-//             this->requests[this->pollfds[index].fd] = nullptr;
-//             this->responses[this->pollfds[index].fd] = nullptr;
-             this->requests.erase(this->pollfds[index].fd);
-             this->requests.erase(this->pollfds[index].fd);
-//                this->requests[this->pollfds[index].fd] = nullptr;
-                //              this->responses[this->pollfds[index].fd] = nullptr;
-                close(this->pollfds[index].fd);
-                this->pollfds[index].fd = -1;
-                this->pollfds[index].events = POLLIN;
-
-                nfds--;
-
-            }
-            }
+        }else if (pollf[i].revents & POLLOUT){
+            // todo write message to client;
+            this->responses[pollf[i].fd]->writeToFd(pollf[i].fd);
+            close(this->used_pollfds[i].fd);
+            this->used_pollfds[i].fd = -1;
+            deletedSocket.push_back(i);
         }
-        for (int i = 0; i < deletedSocket.size();i++)
-            this->used_sock.erase(this->used_sock.begin() + deletedSocket[i]);
+    }
 
-
+    for (int i = 0; i < deletedSocket.size(); i++)
+        this->used_pollfds.erase(this->used_pollfds.begin() + deletedSocket[i]);
 }
+
+
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
     Server *s = this->servers[server];

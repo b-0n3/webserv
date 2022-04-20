@@ -22,6 +22,7 @@ private:
     struct sockaddr_in address;
     int sock;
     std::stack<int> free_sock;
+    std::vector<pollfd> used_pollfds;
     std::vector<int> used_sock;
     std::stack<int> wait_sock;
     std::map<std::string,  Server * > servers;
