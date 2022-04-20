@@ -13,8 +13,11 @@ void HttpServlet::addServer(std::string name, Server *server) {
     if (server == nullptr  || name != server->getHost())
         throw IllegalArgumentException("invalid server");
     this->servers[name] = server;
-    for( int i = 99; i>= 0; i--)
+    for( int i = 99; i >= 0; i--) {
         this->free_sock.push(i);
+        this->pollfds[i].fd = -1;
+        this->pollfds[i].events = POLLIN;
+    }
 }
 HttpServlet::~HttpServlet() {
  close(this->sock);
@@ -34,12 +37,8 @@ void HttpServlet::start() {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
     }
     std::cout << "HttpServlet started on port :" << this->port << std::endl;
-    for (int i = 0; i < 100; i++){
-        this->pollfds[i].fd = -1;
-        this->pollfds[i].events = POLLIN;
-    }
-//    this->pollfds[0].fd = this->sock;
-//    this->pollfds[0].events = POLLIN;
+
+
  //   this->pollfds[0].revents = POLLIN;
 
 
@@ -49,73 +48,32 @@ HttpServlet::HttpServlet(int port) {
     this->port = port;
 
 }
+bool checkRead(int sock){
+    pollfd pfd[1];
+    pfd[0].fd = sock;
+    pfd[0].events = POLLIN;
+    int r = poll(pfd, 1, 0);
+    if (r == -1)
+        return false;
+    return pfd[0].revents & POLLIN;
+}
+
+
 
 void HttpServlet::handleRequests() {
     static int nfds;
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
+    int client_sock;
 
-    int client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
+        if (checkRead(sock)){
+            client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
+            if (client_sock >=0) {
+                fcntl(client_sock, F_SETFL, O_NONBLOCK);
+                std::string host = inet_ntoa(client.sin_addr);
+                std::cout << "host : " << host << "fd" << client_sock << std::endl;
+            }
 
-    if (client_sock == -1) {
-        return;
-    }
-    fcntl(client_sock, F_SETFL, O_NONBLOCK);
-    std::string host = inet_ntoa(client.sin_addr);
-    std::cout << "host : " << host << std::endl;
-
-    if (std::count(this->used_sock.begin(), this->used_sock.end(), client_sock) == 0) {
-        pollfd pollf;
-        pollf.fd = client_sock;
-        pollf.events = POLLIN;
-        this->used_pollfds.push_back(pollf);
-        this->used_sock.push_back(client_sock);
-    }
-
-
-    int size = this->used_pollfds.size();
-    pollfd *pollf = this->used_pollfds.data();
-  //  std::copy(this->used_pollfds.begin(), this->used_pollfds.end(), pollf);
-    int s = poll(pollf, size, -1);
-    if (s == -1)
-        return;
-    std::vector<int> deletedSocket;
-//    for (int i = 0; i < size; i++) {
-//        deletedSocket.push_back(this->used_sock[i]);
-//    }
-
-    for (int i = 0; i < size; i++) {
-        if (pollf[i].revents & POLLIN) {
-           // todo parse Request;
-           if (this->requests.find(pollf[i].fd)== this->requests.end()) {
-               this->requests[pollf[i].fd] = new HttpRequest(pollf[i].fd);
-               this->responses[pollf[i].fd] = new HttpResponse();
-            //   continue;
-           }
-           if(!this->requests[pollf[i].fd]->IsHeaderFinished())
-           {
-               this->requests[pollf[i].fd]->ContinueParse();
-             //  continue;
-           }
-           if (this->requests[pollf[i].fd]->IsHeaderFinished())
-           {
-               this->handleRequest(this->requests[pollf[i].fd], this->responses[pollf[i].fd], "127.0.0.1");
-              std::cout << this->used_pollfds[i].fd << " sdf " << pollf[i].fd << std::endl;
-               this->used_pollfds[i].events = POLLOUT;
-              // continue;
-           }
-
-        }else if (pollf[i].revents & POLLOUT){
-            // todo write message to client;
-            this->responses[pollf[i].fd]->writeToFd(pollf[i].fd);
-            close(this->used_pollfds[i].fd);
-            this->used_pollfds[i].fd = -1;
-            deletedSocket.push_back(i);
-        }
-    }
-
-    for (int i = 0; i < deletedSocket.size(); i++)
-        this->used_pollfds.erase(this->used_pollfds.begin() + deletedSocket[i]);
 }
 
 
