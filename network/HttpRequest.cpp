@@ -28,7 +28,7 @@ void    HttpRequest::Parse() {
     
     int ret = 0;
     // To Check if this correct
-    if ((ret = read(Socketfd, buffer, 1024)) < 0)
+    if ((ret = read(Socketfd, buffer, 5000)) < 0)
         StatusCode = 400;
 
     this->request.append(buffer, ret);
@@ -81,7 +81,7 @@ void    HttpRequest::Parse() {
     }
 
     //if has body and header parsed and body not parsed yet
-    if (IsHasBody() && IsHeaderParsed() && !IsBodyParsed())
+    if (IsHasBody() && IsHeaderParsed && !IsBodyParsed())
     {
         if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
         {
