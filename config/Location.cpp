@@ -204,7 +204,7 @@ void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
 void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
     // check if method is Get
     if (pRequest->GetMethod() == "GET") {
-        std::cout << "root dir " <<this->getRootRir()<< std::endl;
+      //  std::cout << "root dir " <<this->getRootRir()<< std::endl;
         std::string filePath = this->getRootRir()+ pRequest->GetPath();
         std::cout << filePath << std::endl;
         if (is_directory(filePath)) {
@@ -213,7 +213,7 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
                 struct dirent *diread;
               //  std::vector<char *> files;
                 std::string content = "<html><body>";
-                if ((dir = opendir("/")) != nullptr) {
+                if ((dir = opendir(filePath.c_str())) != nullptr) {
                     while ((diread = readdir(dir)) != nullptr) {
 
                         //  files.push_back(diread->d_name);
@@ -248,8 +248,8 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
             return;
         }
         int ret = 0;
-        char buf[1024];
-        while ((ret = read(fd, buf, 1024)) > 0) {
+        char buf[10000];
+        while ((ret = read(fd, buf, 10000)) > 0) {
             file.append(buf , ret);
         }
 
