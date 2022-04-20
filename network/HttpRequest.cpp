@@ -85,7 +85,7 @@ void    HttpRequest::Parse() {
     {
         if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
         {
-            //extract chunk and negliate hexa length [*!work with stringstream] 
+            //extract chunk and negliate hexa length [*!work with stringstream] [*!work with %] 
             
         }
         else
