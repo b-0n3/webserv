@@ -11,8 +11,9 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    Version(""),
                                    Body(""),
                                    HeaderParsed(false),
-                                   BodyParsed(false)
-{
+                                   BodyParsed(false),
+                                   StatusCode(200) {
+
     Headers.clear(), Params.clear();
     Parse();
 }
@@ -33,8 +34,7 @@ void HttpRequest::ContinueParse() {
     int ret = 0;
     //Read And Concatinate The Raw Buffer
     if ((ret = read(Socketfd, buffer, 5000)) < 0)
-        throw std::runtime_error("Error while reading from socket");
-  //  std::cout << "read: " << ret << std::endl;
+        StatusCode = 400;
     this->request.append(buffer, ret);
 }
 
@@ -44,17 +44,18 @@ void    HttpRequest::Parse() {
     int ret = 0;
     // To Check if this correct
     if ((ret = read(Socketfd, buffer, 5000)) < 0)
-        throw std::runtime_error("Error while reading from socket");
+        StatusCode = 400;
 
     this->request.append(buffer, ret);
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
-        //parse header
-        std::cout << request << std::endl;
+        
+        //std::cout << request << std::endl;
+    
         Method = strtok((char *) request.c_str(), " ");
         Path = strtok(NULL, " ");
 
-        //If there is Host with path
+        //If there is Host with path "GET http://wwww.1337.ma/index.html HTTP/1.1"
         if (Path.find("http://") != std::string::npos) {
             Path = Path.substr(7);//to skip http://
             //set Host: 
@@ -62,10 +63,11 @@ void    HttpRequest::Parse() {
             Path = Path.substr(Path.find(" "));
         }
         
-        //If there is Params with path
+        //If there is Params with path "GET http://wwww.1337.ma/index.html?user=razaha&promo=2019 HTTP/1.1"
         if (Path.find("?") != std::string::npos){
             std::string params = Path.substr(Path.find("?") + 1);
             Path = Path.substr(0, Path.find("?"));
+            //parse params
             while (1)
             {
                 std::string token = params.substr(0, params.find("&"));
@@ -79,7 +81,6 @@ void    HttpRequest::Parse() {
             }
         }
 
-        /// GET http://web.hlll.com/index.html?dklndw=jdnwn  HTTP/1.1
         strtok(NULL, "/"); //skip "HTTP/""
         Version = strtok(NULL, "\r\n");
 
@@ -96,6 +97,7 @@ void    HttpRequest::Parse() {
         }
         SetHeaderParsed(true);
     }
+
     //if has body and not parsed
     if (IsHasBody() && !IsBodyParsed())
     {

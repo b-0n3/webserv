@@ -27,6 +27,8 @@ private:
     bool HeaderParsed;
     bool BodyParsed;
 
+    int StatusCode;
+
     HttpRequest();
 
     void SetHeaderParsed(bool parsed) { HeaderParsed = parsed; }
