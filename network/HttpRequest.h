@@ -27,6 +27,8 @@ private:
     bool HeaderParsed;
     bool BodyParsed;
 
+    int StatusCode;
+
     HttpRequest();
 
     void SetHeaderParsed(bool parsed) { HeaderParsed = parsed; }
@@ -45,12 +47,12 @@ private:
         Params.insert(std::pair<std::string, std::string>(key, value));
     }
 
-    void Parse();
 
 public:
     HttpRequest(int fd);
 
-    void ContinueParse();
+    void Parse();
+    // void ContinueParse(); REMOVED
 
     //Getters
     std::string GetMethod() { return Method; }
@@ -68,7 +70,7 @@ public:
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-    bool IsBodyFinished();
+    bool IsBodyFinished(){ std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length(); }
 
     bool IsBodyParsed() { return BodyParsed; }
 
