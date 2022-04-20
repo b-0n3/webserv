@@ -23,6 +23,11 @@ bool HttpRequest::IsHeaderFinished()
     return ((request.find("\r\n\r\n") != std::string::npos) ? true : false) ;
 }
 
+bool HttpRequest::IsBodyFinished()
+{
+    return ((request.find("0\r\n\r\n", request.find("\r\n\r\n") + 4) != std::string::npos) ? true : false) ;
+}
+
 void    HttpRequest::Parse() {
     
     
@@ -81,18 +86,24 @@ void    HttpRequest::Parse() {
     }
 
     //if has body and header parsed and body not parsed yet
-    if (IsHasBody() && IsHeaderParsed && !IsBodyParsed())
+    if (IsHeaderParsed() && IsHasBody() && IsBodyFinished()  && !IsBodyParsed())
     {
         if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
         {
-            //extract chunk and negliate hexa length [*!work with stringstream] [*!work with %] 
-            
+			std::string body = request.substr(request.find("\r\n\r\n") + 2);
+			strtok((char *)body.c_str(), "\r\n");
+			for (size_t i = 0; true; i++)
+			{
+				std::string token = strtok(NULL, "\r\n");
+				if (!(i % 2))
+					Body.append(token.substr(0, token.find("\r\n")));
+				if (token[0] == '\r' && token[1] == '\r' && token[2] == '\n')
+					break;
+			}        
         }
         else
-            Body.append(request.substr(request.find("\r\n\r\n") + 4, Body.length()));
-        if(IsBodyFinished())
-            SetBodyParsed(true);
+            Body.append(request.substr(request.find("\r\n\r\n") + 4));
+
+		IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
     }
 }
-
-
