@@ -53,6 +53,23 @@ void    HttpRequest::Parse() {
         Method = strtok((char *) request.c_str(), " ");
         Path = strtok(NULL, " ");
 
+        //if path has params
+        if (Path.find("?") != std::string::npos) {
+            std::string params = Path.substr(Path.find("?") + 1);
+            Path = Path.substr(0, Path.find("?"));
+            std::string key, value;
+            int i = 0;
+            while (params[i] != '\0') {
+                if (params[i] == '=') {
+                    key = params.substr(0, i);
+                    value = params.substr(i + 1);
+                    SetParams(key, value);
+                    break;
+                }
+                i++;
+            }
+        }
+
       //  std::cout << "path: " << Path << std::endl;
 //        if (Path.find_first_of('http://') != std::string::npos) {
 //            Path = Path.substr(7);
