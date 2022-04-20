@@ -18,7 +18,8 @@ void HttpResponse::writeToFd(int i) {
 //    std::cout << "Body: " << this->body << std::endl;
 
     write(i, "HTTP/1.1 ", 9);
-    write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
+    write(i, std::to_string(this->statusCode).c_str(),
+          std::to_string(this->statusCode).length());
     write(i, " OK\r\n", 5);
     write(i, "Content-Length: ", 16);
     write(i, std::to_string(this->contentLength).c_str(),

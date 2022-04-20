@@ -15,7 +15,7 @@ class HttpRequest {
 private:
     int Socketfd;
     std::string request;
-    char buffer[5000];//Used char* for strtok compatibility
+    char buffer[1024];//Used char* for strtok compatibility
     std::string Method;
     std::string Path;
     std::string Version;
@@ -70,7 +70,9 @@ public:
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-    bool IsBodyFinished(){ std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length(); }
+    bool IsBodyFinished(){
+   return     std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length();
+    }
 
     bool IsBodyParsed() { return BodyParsed; }
 
