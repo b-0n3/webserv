@@ -20,22 +20,7 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
 
 bool HttpRequest::IsHeaderFinished()
 {
-    int i = 0;
-    while (request[i] != '\0') {
-        if (request[i] == '\r' && request[i + 1] == '\n'
-            && request[i + 2] == '\r' && request[i + 3] == '\n')
-            return true;
-        i++;
-    }
-    return false;
-}
-
-void HttpRequest::ContinueParse() {
-    int ret = 0;
-    //Read And Concatinate The Raw Buffer
-    if ((ret = read(Socketfd, buffer, 5000)) < 0)
-        StatusCode = 400;
-    this->request.append(buffer, ret);
+    return ((request.find("\r\n\r\n") != std::string::npos) ? true : false) ;
 }
 
 void    HttpRequest::Parse() {
@@ -86,23 +71,27 @@ void    HttpRequest::Parse() {
 
         //parse headers
         while (1) {
-           // std::cout << "Header Parsing" << std::endl;
-
             std::string token = strtok(NULL, "\n");
             std::cout << token << std::endl;
             if (token[0] == '\r' || token[1] == '\n')
                 break;
-            //Need Syntax check !!
             SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
         }
         SetHeaderParsed(true);
     }
 
-    //if has body and not parsed
-    if (IsHasBody() && !IsBodyParsed())
+    //if has body and header parsed and body not parsed yet
+    if (IsHasBody() && IsHeaderParsed && !IsBodyParsed())
     {
-        //parse body
-        SetBodyParsed(true);
+        if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
+        {
+            //extract chunk and negliate hexa length [*!work with stringstream] 
+            
+        }
+        else
+            Body.append(request.substr(request.find("\r\n\r\n") + 4, Body.length()));
+        if(IsBodyFinished())
+            SetBodyParsed(true);
     }
 }
 
