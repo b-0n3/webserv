@@ -52,6 +52,7 @@ void    HttpRequest::Parse() {
         std::cout << request << std::endl;
         Method = strtok((char *) request.c_str(), " ");
         Path = strtok(NULL, " ");
+
       //  std::cout << "path: " << Path << std::endl;
 //        if (Path.find_first_of('http://') != std::string::npos) {
 //            Path = Path.substr(7);

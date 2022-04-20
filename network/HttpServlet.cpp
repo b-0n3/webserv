@@ -93,15 +93,17 @@ void HttpServlet::handleRequests() {
             }
         }
 
-   // }
-    int s = poll(this->pollfds,this->used_sock.size() , -1);
+        // }
+        int size = this->used_sock.size();
+    int s = poll(this->pollfds,size , -1);
     if (s == -1)
         return;
+    std::vector<int> deletedSocket;
         for (int i = 0; i < this->used_sock.size(); i++) {
-            std::cout << "used_sock : " << this->used_sock[i] << std::endl;
+           // std::cout << "used_sock : " << this->used_sock[i] << std::endl;
+
             int index = this->used_sock[i];
-            HttpRequest *request;
-            HttpResponse *response;
+
             if (this->pollfds[index].revents & POLLIN) {
                 if (this->requests.find(this->pollfds[index].fd) == this->requests.end()) {
                     std::cout << "create Request" << std::endl;
@@ -110,6 +112,8 @@ void HttpServlet::handleRequests() {
                     this->responses[this->pollfds[index].fd] = new HttpResponse();
                 }
                 if (this->requests.find(this->pollfds[index].fd) != this->requests.end()) {
+                    HttpRequest *request;
+                    HttpResponse *response;
                     request = this->requests[this->pollfds[index].fd];
                     response = this->responses[this->pollfds[index].fd];
                     ///     std::cout<<"Handle request : "<<request->GetMethod()<<std::endl;
@@ -130,17 +134,22 @@ void HttpServlet::handleRequests() {
                 }
             }
             else if (this->pollfds[index].revents & POLLOUT) {
+                if (this->responses.find(this->pollfds[index].fd) != this->responses.end()){
+                HttpResponse *response;
+                response = this->responses[this->pollfds[index].fd];
                 // todo: write response
                 std::cout << "write response" << std::endl;
                 response->writeToFd(this->pollfds[index].fd);
                 /// todo: clean up
 
                 this->free_sock.push(index);
-                this->used_sock.erase(this->used_sock.begin() + i);
-             delete request;
-             delete response;
-             this->requests[this->pollfds[index].fd] = nullptr;
-             this->responses[this->pollfds[index].fd] = nullptr;
+               // this->used_sock.erase(this->used_sock.begin() + i);
+                deletedSocket.push_back(index);
+
+//             delete request;
+//             delete response;
+//             this->requests[this->pollfds[index].fd] = nullptr;
+//             this->responses[this->pollfds[index].fd] = nullptr;
              this->requests.erase(this->pollfds[index].fd);
              this->requests.erase(this->pollfds[index].fd);
 //                this->requests[this->pollfds[index].fd] = nullptr;
@@ -152,7 +161,10 @@ void HttpServlet::handleRequests() {
                 nfds--;
 
             }
+            }
         }
+        for (int i = 0; i < deletedSocket.size();i++)
+            this->used_sock.erase(this->used_sock.begin() + deletedSocket[i]);
 
 
 }
