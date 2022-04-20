@@ -70,13 +70,17 @@ public:
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-    bool IsBodyFinished(){ std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length(); }
+    bool IsBodyFinished();
 
     bool IsBodyParsed() { return BodyParsed; }
 
     bool IsFinished() { return IsHeaderFinished() && IsBodyFinished(); }
 
     bool IsHasBody() { return Method == "POST" ? true : false; }
+
+	bool IsBodyEqualContentLenght() { 
+		return (std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length()) ? true : false ; 
+	}
 
     void SetPath(std::string path) { Path = path; }
 };
