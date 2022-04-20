@@ -39,12 +39,13 @@ void HttpRequest::ContinueParse() {
 }
 
 void    HttpRequest::Parse() {
-    int ret;
-
+    
+    
+    int ret = 0;
     // To Check if this correct
     if ((ret = read(Socketfd, buffer, 5000)) < 0)
         throw std::runtime_error("Error while reading from socket");
-  //  std::cout << "read: " << ret << std::endl;
+
     this->request.append(buffer, ret);
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
@@ -53,7 +54,15 @@ void    HttpRequest::Parse() {
         Method = strtok((char *) request.c_str(), " ");
         Path = strtok(NULL, " ");
 
-        //if path has params
+        //If there is Host with path
+        if (Path.find("http://") != std::string::npos) {
+            Path = Path.substr(7);//to skip http://
+            //set Host: 
+            SetHeaders("Host", Path.substr(0, Path.find("/")));
+            Path = Path.substr(Path.find(" "));
+        }
+        
+        //If there is Params with path
         if (Path.find("?") != std::string::npos){
             std::string params = Path.substr(Path.find("?") + 1);
             Path = Path.substr(0, Path.find("?"));
@@ -67,8 +76,10 @@ void    HttpRequest::Parse() {
                     break;
                 }
                 params = params.substr(Path.find("&") + 1);
+            }
         }
 
+        /// GET http://web.hlll.com/index.html?dklndw=jdnwn  HTTP/1.1
         strtok(NULL, "/"); //skip "HTTP/""
         Version = strtok(NULL, "\r\n");
 
