@@ -41,6 +41,7 @@ void    HttpRequest::Parse() {
 
   //  std::cout << "buffer: " << buffer << std::endl;
     this->request.append(buffer, ret);
+    std::cout << "request: " << request << std::endl;
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
         
@@ -92,6 +93,7 @@ void    HttpRequest::Parse() {
     //if has body and header parsed and body not parsed yet
     if (IsHeaderParsed() && IsHasBody() && IsBodyFinished()  && !IsBodyParsed())
     {
+        std::cout << "heeeeel: " << Body << std::endl;
         if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
         {
 			std::string body = request.substr(request.find("\r\n\r\n") + 2);
@@ -105,9 +107,14 @@ void    HttpRequest::Parse() {
 					break;
 			}        
         }
+        if (GetHeadersValueOfKey("Transfer-Encoding") == "gzip" && GetHeadersValueOfKey("Content-Encoding") == "gzip")
+        {
+            ;
+        }
         else
             Body.append(request.substr(request.find("\r\n\r\n") + 4));
 
+        std::cout << std::endl << std::endl << "Body: " << Body << std::endl;
 		IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
     }
 }
