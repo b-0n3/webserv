@@ -25,7 +25,10 @@ bool HttpRequest::IsHeaderFinished()
 
 bool HttpRequest::IsBodyFinished()
 {
-    return ((request.find("0\r\n\r\n", request.find("\r\n\r\n") + 4) != std::string::npos) ? true : false) ;
+    if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
+        return ((request.find("0\r\n\r\n", request.find("\r\n\r\n") + 4) != std::string::npos) ? true : false) ;
+    return ((request.find('\0', request.find("\r\n\r\n") + 4) != std::string::npos) ? true : false) ;
+    
 }
 
 void    HttpRequest::Parse() {
@@ -89,11 +92,11 @@ void    HttpRequest::Parse() {
         }
         SetHeaderParsed(true);
     }
-
+    
+    //Use form data postman
     //if has body and header parsed and body not parsed yet
     if (IsHeaderParsed() && IsHasBody() && IsBodyFinished()  && !IsBodyParsed())
     {
-        std::cout << "heeeeel: " << Body << std::endl;
         if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
         {
 			std::string body = request.substr(request.find("\r\n\r\n") + 2);
