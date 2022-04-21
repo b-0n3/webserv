@@ -34,14 +34,18 @@ void    HttpRequest::Parse() {
     int ret = 0;
     // To Check if this correct
     if ((ret = read(Socketfd, buffer, 5000)) < 0)
+    {
         StatusCode = 400;
+        return;
+    }
 
+  //  std::cout << "buffer: " << buffer << std::endl;
     this->request.append(buffer, ret);
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
         
         //std::cout << request << std::endl;
-    
+
         Method = strtok((char *) request.c_str(), " ");
         Path = strtok(NULL, " ");
 
@@ -77,7 +81,7 @@ void    HttpRequest::Parse() {
         //parse headers
         while (1) {
             std::string token = strtok(NULL, "\n");
-            std::cout << token << std::endl;
+          //  std::cout << token << std::endl;
             if (token[0] == '\r' || token[1] == '\n')
                 break;
             SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));

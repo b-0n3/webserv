@@ -2,8 +2,8 @@ servers:   # list of servers
         # sdfsdaf
   - server: # server
         server_name: 127.0.0.1
-        listen: 80
-        root: /Users/aait-ham/Desktop/webserv/Networking
+        listen: 8081
+        root: ./Networking
         client_max_body_size: 1000
         locations:
           - /:

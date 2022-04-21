@@ -74,7 +74,7 @@ public:
 
     bool IsBodyParsed() { return BodyParsed; }
 
-    bool IsFinished() { return IsHeaderFinished() && IsBodyFinished(); }
+    bool IsFinished() { return (IsHeaderFinished() && IsBodyParsed()) || (!IsHasBody() && IsHeaderParsed()); }
 
     bool IsHasBody() { return Method == "POST" ? true : false; }
 

@@ -51,7 +51,7 @@ int main(int argc, char *argv[]) {
         }
     } catch (std::exception &e) {
         std::cout << "Error while parsing the config file :" << std::endl << e.what() << std::endl;
-        exit(1);
+        throw e;
     }
-    return 0;
+   return 0;
 }
