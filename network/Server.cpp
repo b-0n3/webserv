@@ -21,11 +21,12 @@ int main(int argc, char *argv[]) {
         std::cout<< "Usage: " << argv[0] << " configFile Path" << std::endl;
         exit(1);
     }
+    std::vector<Server *> servers;
+    std::vector<HttpServlet > servlets;
     try {
         ConfigParser configFileParser(argv[1]);
         configFileParser.tokenizeConfigFiles(nullptr, nullptr, -1, -1);
-        std::vector<Server *> servers = configFileParser.validateAst();
-        std::vector<HttpServlet > servlets;
+        servers = configFileParser.validateAst();
         if (servers.empty())
             throw IllegalArgumentException("No server found in the config file");
         // @Todo: init The httpServlets and add A loop to handle all the requests
@@ -45,8 +46,13 @@ int main(int argc, char *argv[]) {
             servlets[i].start();
         }
         while (true) {
+            try{
             for (int i = 0; i < servlets.size(); i++) {
                 servlets[i].handleRequests();
+            }
+        }
+            catch (std::exception &e) {
+                std::cout << e.what() << std::endl;
             }
         }
     } catch (std::exception &e) {

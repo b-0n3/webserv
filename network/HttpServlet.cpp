@@ -33,7 +33,7 @@ void HttpServlet::start() {
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) == -1) {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
     }
-    if (listen(sock, 100) == -1) { // to change to max connection
+    if (listen(sock, 128) == -1) { // to change to max connection
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
     }
     std::cout << "HttpServlet started on port :" << this->port << std::endl;
@@ -51,35 +51,45 @@ HttpServlet::HttpServlet(int port) {
 }
 bool checkRead(int sock)
 {
-    fd_set read_set, err_set;
-    struct timeval timeout;
-    FD_ZERO(&read_set);
-    FD_SET(sock, &read_set);
-    FD_ZERO(&err_set);
-    FD_SET(sock, &err_set);
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-
-    int select_return = select(sock + 1, &read_set,
-                               NULL, &err_set, &timeout);
-    return (select_return > 0 && (FD_ISSET(sock, &read_set) || FD_ISSET(sock, &err_set)));
+    pollfd pfd[1];
+    pfd[0].fd = sock;
+    pfd[0].events = POLLIN;
+    int r = poll(pfd, 1, 0);
+    return r > 0 && pfd[0].revents & POLLIN;
+//    fd_set read_set, err_set;
+//    struct timeval timeout;
+//    FD_ZERO(&read_set);
+//    FD_SET(sock, &read_set);
+//    FD_ZERO(&err_set);
+//    FD_SET(sock, &err_set);
+//    timeout.tv_sec = 0;
+//    timeout.tv_usec = 0;
+//
+//    int select_return = select(sock + 1, &read_set,
+//                               NULL, &err_set, &timeout);
+//    return (select_return > 0 && (FD_ISSET(sock, &read_set) || FD_ISSET(sock, &err_set)));
 
 }
 bool checkWrite(int sock)
 {
-    fd_set writeSet, err_set;
-    struct timeval timeout;
-    FD_ZERO(&writeSet);
-    FD_SET(sock, &writeSet);
-    FD_ZERO(&err_set);
-    FD_SET(sock, &err_set);
-    timeout.tv_sec = 0;
-    timeout.tv_usec = 0;
-
-   int select_return = select(sock + 1, NULL,
-                              &writeSet, &err_set, &timeout);
-   return (select_return > 0 && (FD_ISSET(sock, &writeSet) ||
-   FD_ISSET(sock, &err_set)));
+//    fd_set writeSet, err_set;
+//    struct timeval timeout;
+//    FD_ZERO(&writeSet);
+//    FD_SET(sock, &writeSet);
+//    FD_ZERO(&err_set);
+//    FD_SET(sock, &err_set);
+//    timeout.tv_sec = 0;
+//    timeout.tv_usec = 0;
+//
+//   int select_return = select(sock + 1, NULL,
+//                              &writeSet, &err_set, &timeout);
+//   return (select_return > 0 && (FD_ISSET(sock, &writeSet) ||
+//   FD_ISSET(sock, &err_set)));
+    pollfd pfd[1];
+    pfd[0].fd = sock;
+    pfd[0].events = POLLOUT;
+    int r = poll(pfd, 1, 0);
+    return r > 0 && pfd[0].revents & POLLOUT;
 }
 
 
@@ -93,23 +103,34 @@ void HttpServlet::handleRequests() {
 //        return;
         if (checkRead(this->sock)) {
             client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
-            if (client_sock >=0) {
+            if (client_sock >= 0) {
                 fcntl(client_sock, F_SETFL, O_NONBLOCK);
                 std::string host = inet_ntoa(client.sin_addr);
-             //   std::cout << "host : " << host << "fd" << client_sock << std::endl;
-                if (this->requests.find(client_sock) == this->requests.end())
-                {
+                //   std::cout << "host : " << host << "fd" << client_sock << std::endl;
+                if (this->requests.size() >= 50)
+                    this->wait_sock.push(client_sock);
+                else {
+
+                    if (this->requests.find(client_sock) == this->requests.end()) {
 //                    int id = this->free_sock.top();
 //                    this->free_sock.pop();
-                    this->used_sock.push_back(client_sock);
+                        this->used_sock.push_back(client_sock);
 //                    this->pollfds[id].fd = client_sock;
 //                    this->pollfds[id].events = POLLIN;
+                    }
                 }
             }
+        }
+            if (this->requests.size() < 50 && !this->wait_sock.empty())
+            {
+                int s = this->wait_sock.top();
+                this->wait_sock.pop();
+                this->used_sock.push_back(s);
             }
+
         if (this->used_sock.empty())
             return;
-
+       std:: cout << "used sock size : " << this->used_sock.size() << std::endl;
         std::vector<int> to_delete;
      //   std::cout <<"used_sock size : " << nfds << std::endl;
         for (int i = 0; i < this->used_sock.size(); i++) {

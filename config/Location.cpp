@@ -206,8 +206,7 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
     if (pRequest->GetMethod() == "GET") {
       //  std::cout << "root dir " <<this->getRootRir()<< std::endl;
         std::string filePath = this->getRootRir()+ pRequest->GetPath();
-        std::cout << filePath << std::endl;
-        if (is_directory(filePath)) {
+    if  (is_directory(filePath)) {
             if (this->autoIndex) {
                 DIR *dir;
                 struct dirent *diread;
