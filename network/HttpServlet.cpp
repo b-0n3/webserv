@@ -167,9 +167,9 @@ void HttpServlet::handleRequests() {
                    //this->free_sock.push(this->used_sock[j]);
                    // int fd = this->pollfds[this->used_sock[j]].fd;
                     int fd = to_delete[i];
-                    std::_Rb_tree_iterator<std::pair<const int, HttpResponse *>>
+                   std::map<int , HttpResponse *>::iterator
                     response = this->responses.find(fd);
-                    std::_Rb_tree_iterator<std::pair<const int, HttpRequest *>>
+                    std::map<int , HttpRequest *>::iterator
                             req = this->requests.find(fd);
                     this->requests.erase(req);
                     this->responses.erase(response);
