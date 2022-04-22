@@ -18,7 +18,7 @@
 class HttpServlet {
 private:
     int port;
-    pollfd pollfds[100];
+    pollfd pollfds[1024];
     struct sockaddr_in address;
     int sock;
     std::stack<int> free_sock;
@@ -27,6 +27,7 @@ private:
     std::map<std::string,  Server * > servers;
     std::map<int , HttpRequest *> requests;
     std::map<int , HttpResponse *> responses;
+    void acceptNewClient();
     void handleRequest(HttpRequest *request, HttpResponse *response);
     void handleRequest(HttpRequest *request, HttpResponse *response, std::string server);
 public:

@@ -48,16 +48,20 @@ int main(int argc, char *argv[]) {
         while (true) {
             try{
             for (int i = 0; i < servlets.size(); i++) {
+
                 servlets[i].handleRequests();
+               // perror("step1");
             }
         }
-            catch (std::exception &e) {
-                std::cout << e.what() << std::endl;
+            catch (const char *str) {
+                std::cout << str << std::endl;
+                perror(str);
             }
         }
     } catch (std::exception &e) {
         std::cout << "Error while parsing the config file :" << std::endl << e.what() << std::endl;
-        throw e;
+
     }
+    perror("sdfd");
    return 0;
 }
