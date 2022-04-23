@@ -191,10 +191,11 @@ void Location::addErrorPage(Page *page) {
     this->errorPages.push_back(page);
 }
 
+// @todo : write a function that will execute cgi and return the result
 void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
     for (int i = 0; i < this->cgis.size(); i++) {
         if (this->cgis[i]->isCgi(pRequest->GetPath())) {
-            // @todo exectute cgi
+            this->cgis[i]->execute(pRequest, pResponse);
 
             return;
         }

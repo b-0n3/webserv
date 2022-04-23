@@ -14,20 +14,23 @@
 #include "HttpResponse.h"
 #include "../config/Server.h"
 #include "StatusCode.h"
+#include <cstring>
+#include <fcntl.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include "../exceptions/IllegalStateException.h"
+#include "../tools/Utils.h"
 
 class HttpServlet {
 private:
     int port;
-    pollfd pollfds[1024];
+    std::vector<struct pollfd> pollfd_list;
     struct sockaddr_in address;
     int sock;
-    std::stack<int> free_sock;
-    std::vector<int> used_sock;
-    std::stack<int> wait_sock;
     std::map<std::string,  Server * > servers;
     std::map<int , HttpRequest *> requests;
     std::map<int , HttpResponse *> responses;
-    void acceptNewClient();
+    void acceptNewClient(struct pollfd pfd);
     void handleRequest(HttpRequest *request, HttpResponse *response);
     void handleRequest(HttpRequest *request, HttpResponse *response, std::string server);
 public:

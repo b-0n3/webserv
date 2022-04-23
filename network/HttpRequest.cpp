@@ -86,6 +86,9 @@ void    HttpRequest::Parse() {
                 break;
             SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
         }
+        std::string host = GetHeadersValueOfKey("Host");
+        if (host.find_last_of(":") != std::string::npos)
+            host = host.substr(0, host.find_last_of(":"));
         SetHeaderParsed(true);
     }
 

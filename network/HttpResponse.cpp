@@ -62,7 +62,7 @@ void HttpResponse::setHeaders(std::map<std::string, std::string> headers) {
     this->headers = headers;
 }
 
-void HttpResponse::setBody(std::string &body) {
+void HttpResponse::setBody(std::string const &body) {
     this->body = body;
     this->contentLength = body.length();
 }

@@ -11,6 +11,8 @@
 #include "Token.h"
 #include <iostream>
 #include <algorithm>
+#include "../network/HttpRequest.h"
+#include "../network/HttpResponse.h"
 
 class Cgi {
 private:
@@ -24,6 +26,8 @@ public:
     bool isCgi(std::string path) const;
 
     static Cgi *fromNode(Node<Token *> *root);
+
+    void execute(HttpRequest *pRequest, HttpResponse *pResponse);
 };
 
 

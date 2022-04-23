@@ -54,3 +54,14 @@ std::string getConentTypeFromFileName(std::string fileName) {
     contentTypes["mp4"] = "video/mp4";
     return contentTypes[fileName.substr(fileName.find_last_of(".") + 1)];
 }
+
+struct pollfd *convertToArray(std::vector< struct pollfd>  vec) {
+    struct  pollfd *array = new struct pollfd[vec.size()];
+    for (int i = 0; i < vec.size(); i++) {
+        struct pollfd pfd;
+        pfd.fd = vec[i].fd;
+        pfd.events = vec[i].events;
+        array[i] = pfd;
+    }
+    return array;
+}

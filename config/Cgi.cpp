@@ -6,6 +6,7 @@
 #include "Cgi.h"
 
 
+
 Cgi::Cgi(std::string  path, std::vector<std::string>  ext) {
   std::ifstream file(path.c_str(), std::ios::in |std::ios::app);
   if (!file.is_open()) {
@@ -22,7 +23,7 @@ Cgi::~Cgi() {
 
 }
  bool Cgi::isCgi(std::string const path) const {
-    std::string e = path.substr(path.find_last_of('.') + 1);
+    std::string e = path.substr(path.find_last_of('.') );
     if (std::find(this->ext.begin(), this->ext.end(), e) != this->ext.end())
         return true;
     return false;
@@ -65,5 +66,11 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
     if (ext.empty())
         throw IllegalArgumentException("cgi node must have ext child");
     return new Cgi(path, ext);
+}
+
+// @todo: write a function that will return a Cgi object from a node
+void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
+    std::string *env = new std::string[pRequest->GetHeaders().size()];
+    for ()
 }
 
