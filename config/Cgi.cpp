@@ -70,7 +70,6 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
 
 // @todo: write a function that will return a Cgi object from a node
 void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
-    std::string *env = new std::string[pRequest->GetHeaders().size()];
-    for ()
+    std::string *args = new std::string[pRequest->GetHeaders().size()];
 }
 
