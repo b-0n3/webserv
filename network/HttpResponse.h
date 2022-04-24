@@ -14,10 +14,21 @@ private:
     std::string contentType;
     std::string body;
     std::map<std::string, std::string> headers;
+    int cgiReadFd;
+public:
+    unsigned long getContentLength() const;
+
+    void setContentLength(unsigned long contentLength);
+
+    int getCgiReadFd() const;
+
+    void setCgiReadFd(int cgiReadFd);
+
 public:
     HttpResponse();
     HttpResponse(int statusCode, std::string statusMessage, std::string contentType, std::string body);
     HttpResponse(int statusCode, std::string statusMessage, std::string contentType, std::string body, std::map<std::string, std::string> headers);
+    void readFromCgi(int cgiReadFd);
     int getStatusCode();
     std::string getStatusMessage();
     std::string getContentType();
@@ -34,6 +45,8 @@ public:
     void addHeader(std::string const &key, std::string  const &value);
 
     void writeToFd(int i);
+
+    void parseHeaders(std::string &headers);
 };
 
 

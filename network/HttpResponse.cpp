@@ -4,7 +4,10 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <cstring>
 #include "HttpResponse.h"
+#include "StatusCode.h"
+
 HttpResponse::HttpResponse() {
     this->statusCode = 200;
     this->contentLength = 0;
@@ -79,6 +82,61 @@ void HttpResponse::setStatusCode(int statusCode) {
 void HttpResponse::setContentType(std::string contentType) {
     this->contentType = contentType;
 }
+
+unsigned long HttpResponse::getContentLength() const {
+    return contentLength;
+}
+
+void HttpResponse::setContentLength(unsigned long contentLength) {
+    HttpResponse::contentLength = contentLength;
+}
+
+int HttpResponse::getCgiReadFd() const {
+    return cgiReadFd;
+}
+
+void HttpResponse::setCgiReadFd(int cgiReadFd) {
+    HttpResponse::cgiReadFd = cgiReadFd;
+}
+
+void HttpResponse::readFromCgi(int cgiReadFd) {
+    char buf[1024];
+    int ret;
+    std::string bd;
+    while ((ret = read(cgiReadFd, buf, 1024)) > 0) {
+        bd.append(buf, ret);
+    }
+    this->setStatusCode(OK);
+    std::string headers = bd.substr(0, bd.find("\r\n\r\n") + 4);
+    this->parseHeaders(headers);
+    this->setBody( bd.substr(headers.length() + 4));
+}
+
+void HttpResponse::parseHeaders(std::string &headers) {
+ std::string firstLine = headers.substr(0, headers.find("\r\n"));
+    std::string header = headers.substr(headers.find("\r\n") + 2);
+    std::string key;
+    std::string value;
+    if (firstLine.find("Status") != std::string::npos) {
+        std::string statusCode = firstLine.substr(firstLine.find(' ') + 1,
+                                                   firstLine.find(' ') + 3);
+        this->setStatusCode(std::stoi(statusCode));
+    } else {
+        key = firstLine.substr(0, firstLine.find(':'));
+       value = firstLine.substr(firstLine.find(':') + 1);
+        this->addHeader(key, value);
+        this->setStatusCode(OK);
+    }
+
+    while (header.length() > 0) {
+        std::string nextHeader = header.substr(0, header.find("\r\n"));
+        header = header.substr(header.find("\r\n") + 2);
+        key = nextHeader.substr(0, nextHeader.find(':'));
+        value = nextHeader.substr(nextHeader.find(':') + 1);
+        this->addHeader(key, value);
+    }
+}
+
 
 
 

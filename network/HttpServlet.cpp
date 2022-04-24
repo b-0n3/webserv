@@ -3,6 +3,7 @@
 //
 
 
+#include <csignal>
 #include "HttpServlet.h"
 
 
@@ -30,7 +31,8 @@ void HttpServlet::start() {
     int i = 1;
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int));
     int set = 1;
-    setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    signal(SIGPIPE, SIG_IGN);
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) == -1) {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
@@ -82,9 +84,17 @@ void HttpServlet::handleRequests() {
     }
     this->acceptNewClient(pfds[0]);
     std::vector<int> to_delete;
-    std::cout << this->pollfd_list.size() << std::endl;
+ //   std::cout << this->pollfd_list.size() << std::endl;
     for (int i = 1; i < size; i++) {
         int fd = this->pollfd_list[i].fd;
+        if (this->requests.find(fd)!= this->requests.end() && this->requests[fd]->cgiRunning) {
+            this->handleRequest(this->requests[fd],
+                                this->responses[fd]);
+            if (!requests[fd]->cgiRunning)
+                this->pollfd_list[i].events = POLLOUT;
+            continue;
+        }
+
         if (pfds[i].revents & POLLIN) {
             if (this->requests.find(fd) == this->requests.end()) {
                 this->requests[fd] = new HttpRequest(fd);
@@ -92,7 +102,8 @@ void HttpServlet::handleRequests() {
                 if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd]);
-                    this->pollfd_list[i].events = POLLOUT;
+                    if (!requests[fd]->cgiRunning)
+                       this->pollfd_list[i].events = POLLOUT;
                 }
                 continue;
             }
@@ -100,6 +111,7 @@ void HttpServlet::handleRequests() {
             if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd]);
+                if (!requests[fd]->cgiRunning)
                     this->pollfd_list[i].events = POLLOUT;
                     continue;
                 }
@@ -110,7 +122,8 @@ void HttpServlet::handleRequests() {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd],
                                         "127.0.0.1");
-                    this->pollfd_list[i].events = POLLOUT;
+                    if (!requests[fd]->cgiRunning)
+                        this->pollfd_list[i].events = POLLOUT;
                     continue;
                 }
             }
@@ -161,6 +174,9 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
         response->setBody(body);
         return;
     }
+    request->root  = s->getRoot();
+//    request->SetPath(request->GetPath().substr(l->getRout().size()));
+    request->location = l->getRout();
     if (l->isAllowedMethod(request->GetMethod())) {
         l->setRootRir(s->getRoot());
         if (l->getCgiIfExists(request->GetPath()))

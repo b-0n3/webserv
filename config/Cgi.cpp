@@ -3,16 +3,22 @@
 //
 
 #include <fstream>
+#include <sstream>
+#include <cstring>
+#include <sys/wait.h>
+#include <fcntl.h>
 #include "Cgi.h"
 #include "../network/StatusCode.h"
 
 
+std::string getParams(std::map<std::string, std::string> params);
+
 Cgi::Cgi(std::string  path, std::vector<std::string>  ext) {
-  std::ifstream file(path.c_str(), std::ios::in |std::ios::app);
-  if (!file.is_open()) {
+int fd = open(path.c_str(), O_RDONLY);
+  if (fd == -1) {
       throw FileNotFoundException("cgi File not found");
   }
-  file.close();
+  close(fd);
    if (ext.size() == 0)
        throw  IllegalArgumentException("extension not found");
     this->binaryPath = path;
@@ -70,12 +76,12 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
         throw IllegalArgumentException("cgi node must have ext child");
     return new Cgi(path, ext);
 }
-std::string headerToEnv(std::pair<std::string, std::string > header)
+std::string headerToEnv(std::pair<std::string, std::string> header)
 {
     std::string env = "HTTP_";
-    for (int i = 0; i < header.first.size(); i++)
+    for (int i = 0; i < (header).first.size(); i++)
     {
-        if (header.first[i] == '-')
+        if ((header).first[i] == '-')
             env += '_';
         else
             env += toupper(header.first[i]);
@@ -84,20 +90,28 @@ std::string headerToEnv(std::pair<std::string, std::string > header)
     env += header.second;
     return env;
 }
-const char **createEnv(HttpRequest *request)
+ char **createEnv(HttpRequest *request)
 {
     std::vector<std::string> envp_vect;
+    std::string script_name = request->GetPath();
+         //   .substr( request->GetPath().find_last_of('/') );
+//    script_name.substr(request->location.size());
 
-    envp_vect.push_back("REQUEST_URI=" + request.getPath().substr(0, request.getPath().find_last_of("/")));                                             /* =/cgi-bin/php/hello.php */
-    envp_vect.push_back("DOCUMENT_URI=" + request.getPath() + request.getQueryString());                                            /* =/cgi-bin/php/hello.php */
-    envp_vect.push_back("SCRIPT_NAME=" +  request.getPath());                                             /* =/cgi-bin/php/hello.php */
-    envp_vect.push_back("SCRIPT_FILENAME=" + response.get_full_path());                                         /* =/APP/examples/cgi-bin/php/hello.php */
-    envp_vect.push_back("PATH_TRANSLATED=" + response.get_full_path());                                         /* =/APP/examples/cgi-bin/php/hello.php */
-    envp_vect.push_back("QUERY_STRING=" + request.getQueryString());                                            /* = */
-    envp_vect.push_back("SERVER_NAME=localhost" /*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
-    envp_vect.push_back("SERVER_PORT=" + std::to_string(request.getPort()));                                             /* =82 */
-    envp_vect.push_back("REQUEST_METHOD=" + request.getMethod());                                          /* =GET */
-    envp_vect.push_back("DOCUMENT_ROOT=" + response.get_root());                                           /* =/APP/examples */
+    std::string script_path = request->root+
+            request->GetPath().substr(request->location.size());
+    std::string query_string = getParams(request->GetParams());
+
+    envp_vect.push_back("DOCUMENT_URI=" +request->GetPath());                 /* =/cgi-bin/php/hello.php */
+    envp_vect.push_back("REQUEST_URI=" +request->GetPath()+"?" + query_string );                                            /* =/cgi-bin/php/hello.php */
+    envp_vect.push_back("SCRIPT_NAME=" +  script_name);/* =/cgi-bin/php/hello.php */
+  //  envp_vect.push_back("PATH_INFO=" +request->GetPath().substr(0, request->GetPath().find_last_of('/') + 1));
+   envp_vect.push_back("SCRIPT_FILENAME=" +script_path);                                         /* =/APP/examples/cgi-bin/php/hello.php */
+    envp_vect.push_back("PATH_TRANSLATED=" +script_path);                                         /* =/APP/examples/cgi-bin/php/hello.php */
+    envp_vect.push_back("QUERY_STRING=" + query_string);                                            /* = */
+    envp_vect.push_back("SERVER_NAME=" + request->GetHeadersValueOfKey("Host")/*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
+    envp_vect.push_back("SERVER_PORT=" + std::to_string(request->port));                                             /* =82 */
+    envp_vect.push_back("REQUEST_METHOD=" + request->GetMethod());                                          /* =GET */
+    envp_vect.push_back("DOCUMENT_ROOT=" + request->root);                                           /* =/APP/examples */
     envp_vect.push_back("GETAWAY_INTERFACE=CGI/1.1");                                       /* =CGI/1.1 */
     envp_vect.push_back("SERVER_PROTOCOL=HTTP/1.1");                                         /* =HTTP/1.1 */
     envp_vect.push_back("REDIRECT_STATUS=200");                                         /* =200 */
@@ -105,40 +119,132 @@ const char **createEnv(HttpRequest *request)
     envp_vect.push_back("REQUEST_SCHEME=http");                                          /* =http */
     envp_vect.push_back("SERVER_SOFTWARE=webserv/1.1");                                         /* =webserv/1.1 (Linux) */
     envp_vect.push_back("PATH=" + std::string(std::getenv("PATH")));                                                    /* =/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin */
-    envp_vect.push_back("REMOTE_ADDR=0.0.0.0");                                             /* =0.0.0.0 */
-    envp_vect.push_back("REMOTE_PORT=0");                                             /* =0 */
+    envp_vect.push_back("REMOTE_ADDR=0.0.0.0" /*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
+    envp_vect.push_back("REMOTE_PORT=0"  /**+ std::to_string(request->port)*/);                                             /* =0 */
 
-    if (request.get_contentLength() > 0)
+    if (!request->GetBody().empty() )
     {
-        envp_vect.push_back("CONTENT_TYPE=" + request.getHeaders("Content-Type"));
-        envp_vect.push_back("CONTENT_LENGTH=" + std::to_string(request.get_contentLength()));
+        envp_vect.push_back("CONTENT_TYPE=" + request->GetHeadersValueOfKey("Content-Type"));
+        envp_vect.push_back("CONTENT_LENGTH=" + std::to_string(request->GetBody().size()));
     }
     else
     {
         envp_vect.push_back("CONTENT_TYPE=text/html; charset=UTF-8");
         envp_vect.push_back("CONTENT_LENGTH=0");
     }
-    for (std::vector<string_pair>::iterator it = request.getHeaders().begin(); it != request.getHeaders().end(); it++)
-        envp_vect.push_back(header_to_envp(*it));
+   for(std::pair<std::string , std::string > it : request->GetHeaders())
+    {
+        envp_vect.push_back(headerToEnv(it));
+    }
 
-    _envp = (char**)malloc(sizeof(char*) * (envp_vect.size() + 1));
+    char **_envp = (char**)malloc(sizeof(char*) * (envp_vect.size() + 1));
     size_t i = 0;
     while (i < envp_vect.size())
     {
         _envp[i] = strdup(envp_vect[i].c_str());
-        std::cout << "envp: [" << _envp[i] << "]" << std::endl;
+       std::cout << "envp: [" << _envp[i] << "]" << std::endl;
         i++;
     }
     _envp[i] = NULL;
+    return _envp;
+}
+
+std::string getParams(std::map<std::string, std::string> params) {
+    std::stringstream ss;
+    for (std::map<std::string, std::string>::iterator it = params.begin(); it != params.end(); it++)
+        ss << it->first << "=" << it->second << "&";
+    return ss.str();
 }
 
 // @todo: write a function that will return a Cgi object from a node
 void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
-    std::cout << "Cgi::execute" << std::endl;
-   const char  *args[3];
-    args[0] =  this->binaryPath.c_str();
-    args[1] =  pRequest->GetPath().c_str();
-    args[0] = nullptr;
-    const char **env;
-    pResponse->setStatusCode(FOUND);
+    if (!pRequest->cgiRunning) {
+        std::string path = pRequest->root + pRequest->GetPath().substr(pRequest->location.size());
+        const char *args[3];
+        args[0] = this->binaryPath.c_str();
+        args[1] = path.c_str();
+        args[0] = nullptr;
+       // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
+        char **env = createEnv(pRequest);
+        int writePipe[2];
+        int readPipe[2];
+        if (pipe(readPipe) == -1) {
+            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+            return;
+        }
+        if (!pRequest->GetBody().empty()) {
+            if (pipe(writePipe) == -1) {
+                close(readPipe[0]);
+                close(readPipe[1]);
+                pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+                return;
+            }
+        }
+        //int out = dup(STDOUT_FILENO);
+        pid_t pid = fork();
+        if (pid == -1) {
+            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+            return;
+        }
+        if (pid == 0) {
+         //   std::cout << "execve" << std::endl;
+            std::cout << this->binaryPath<< std::endl;
+            if (!pRequest->GetBody().empty()) {
+                dup2( writePipe[0],  STDIN_FILENO);
+                dup2(  readPipe[1] , STDOUT_FILENO );
+               // dup2(out, STDERR_FILENO );
+                close(readPipe[0]);
+                close(writePipe[1]);
+                close(readPipe[1]);
+                close(writePipe[0]);
+            } else {
+                close(readPipe[0]);
+                dup2( readPipe[1] , STDOUT_FILENO );
+               dup2(readPipe[1] , STDERR_FILENO );
+               close(readPipe[1]);
+            }
+
+          int s=   execve( this->binaryPath.c_str(), (char *const *) args, env);
+            exit(s);
+        } else {
+         //   dup2(STDERR_FILENO, out);
+            if (!pRequest->GetBody().empty()) {
+            //    std::cout << "writing body to cgi" << std::endl;
+                close(writePipe[0]);
+                write(writePipe[1],
+                      pRequest->GetBody().c_str(),
+                      pRequest->GetBody().size());
+                close(writePipe[1]);
+            }
+           close(readPipe[1]);
+            pRequest->cgiPid = pid;
+            pRequest->cgiRunning = true;
+            pResponse->setCgiReadFd(readPipe[0]);
+        }
+    }else
+    {
+      //  std::cout << "Cgi::execute: cgi already running" << std::endl;
+        int state;
+        int status =waitpid(pRequest->cgiPid, &state, WNOHANG);
+        if ( status == -1)
+        {
+            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);\
+            pRequest->cgiRunning = false;
+            return;
+        }
+        else if (status != 0)
+        {
+            if (WIFEXITED(state) == 0)
+            {
+                pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+                pResponse->setBody( "exit code :" + std::to_string(WIFEXITED(state)) + "sdf"
+                + std::to_string(state));
+                pRequest->cgiRunning = false;
+                return;
+            }
+            pResponse->readFromCgi(pResponse->getCgiReadFd());
+            close(pResponse->getCgiReadFd());
+            pRequest->cgiRunning = false;
+        }
+    }
 }

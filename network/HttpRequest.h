@@ -21,7 +21,8 @@ private:
     std::string Version;
     std::string Body;
 
-    std::map<std::string, std::string> Headers;
+
+
     std::map<std::string, std::string> Params;
 
     bool HeaderParsed;
@@ -49,6 +50,13 @@ private:
 
 
 public:
+    std::map<std::string, std::string> Headers;
+    std::string root;
+    std::string location ;
+    int  port;
+    std::string remoteAddress;
+    pid_t cgiPid;
+    bool cgiRunning = false;
     HttpRequest(int fd);
 
     void Parse();

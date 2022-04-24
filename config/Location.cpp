@@ -81,13 +81,13 @@ bool Location::isInLocation(const std::string &path) const {
 
 
 Cgi *Location::getCgiIfExists(const std::string &path) const {
-    if (this->isInLocation(path)) {
+
         for (std::vector<Cgi *>::const_iterator it = this->cgis.begin();
              it != this->cgis.end(); ++it) {
             if ((*it)->isCgi(path))
                 return *it;
         }
-        }
+
     return nullptr;
 }
 
@@ -198,6 +198,7 @@ void Location::addErrorPage(Page *page) {
 void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
     for (int i = 0; i < this->cgis.size(); i++) {
         if (this->cgis[i]->isCgi(pRequest->GetPath())) {
+
             this->cgis[i]->execute(pRequest, pResponse);
 
             return;

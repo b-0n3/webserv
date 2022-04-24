@@ -100,7 +100,7 @@ void    HttpRequest::Parse() {
         std::string host = GetHeadersValueOfKey("Host");
         if (host.find_last_of(':') != std::string::npos)
             host = host.substr(0, host.find_last_of(":"));
-        SetHeaders("Host", host);
+        Headers["Host"] = host;
         SetHeaderParsed(true);
     }
 
