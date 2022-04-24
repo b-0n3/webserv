@@ -6,6 +6,7 @@
 #include <fstream>
 
 #include <fcntl.h>
+#include <sys/stat.h>
 #include "Location.h"
 
 
@@ -105,7 +106,8 @@ Location  *Location::fromNode(Node<Token *> *root) {
                 throw IllegalArgumentException(
                         root->getChildren()[i]->getData()->getValue() + " : expected array of values");
             for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
-                l->addIndexFile(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
+                l->addIndexFile(
+                        root->getChildren()[i]->getChildren()[j]->getData()->getValue());
         } else if (value == "allowed_methods") {
             if (!l->getAllowedMethods().empty())
                 throw IllegalArgumentException(" redecalaration of allowed methods");
@@ -157,7 +159,8 @@ void Location::addIndexFile(String indexFile) {
     if (indexFile == "") {
         throw IllegalArgumentException("unexpected value");
     }
-    this->indexFiles.push_back(indexFile);
+    indexFile = indexFile.substr(indexFile.find('-') + 1);
+    this->indexFiles.push_back(trim(indexFile));
 }
 
 Location::Location() {
@@ -204,67 +207,14 @@ void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
 
 void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
     // check if method is Get
-    if (pRequest->GetMethod() == "GET") {
-      //  std::cout << "root dir " <<this->getRootRir()<< std::endl;
-        std::string filePath = this->getRootRir()+ pRequest->GetPath();
-    if  (is_directory(filePath)) {
-            if (this->autoIndex) {
-                DIR *dir;
-                struct dirent *diread;
-              //  std::vector<char *> files;
-                std::string content = "<html><body>";
-                if ((dir = opendir(filePath.c_str())) != nullptr) {
-                    while ((diread = readdir(dir)) != nullptr) {
-
-                        //  files.push_back(diread->d_name);
-                        content.append("<a href=");
-                        content.append(diread->d_name);
-                        content.append("> ");
-                        content.append(diread->d_name);
-                        content.append("</a></br>");
-                    }
-                    closedir(dir);
-                }
-                pResponse->setContentType("text/html");
-
-
-                content.append("</pre></body></html>");
-                pResponse->setBody(content);
-                //    std::cout<< content << std::endl;
-                return;
-            }
-            pResponse->setStatusCode(UNAUTHORIZED);
-            pResponse->setBody((std::string &) "<h1>Unauthorized</h1>");
-            pResponse->setContentType("text/html");
-            return;
-        }
-        std::string file;
-        int fd  = open(filePath.c_str(), O_RDONLY);
-        if (fd < 0) {
-            pResponse->setStatusCode(NOT_FOUND);
-            std::string body = "<h1>Not Found</h1>";
-            pResponse->setBody(body);
-            pResponse->setContentType("text/html");
-            return;
-        }
-        int ret = 0;
-        char buf[10000];
-        while ((ret = read(fd, buf, 10000)) > 0) {
-            file.append(buf , ret);
-        }
-
-        pResponse->setBody(file);
-        pResponse->setContentType(getConentTypeFromFileName(filePath));
-        return;
-    }
-    return;
-
-    // if route is a file and file exists return file
-    // else if the route is a directory and autoIndex is true and indexFile exists return file in the directory
-    // if the method is Post save the file
-
-    //  if the method is delete do nothing
-
+    if (pRequest->GetMethod() == "GET")
+        this->handleGet(pRequest, pResponse);
+//    else if (pRequest->GetMethod() == "POST")
+//        this->handlePost(pRequest, pResponse);
+//    else if (pRequest->GetMethod() == "DELETE")
+//        this->handleDelete(pRequest, pResponse);
+    else
+        pResponse->setStatusCode(NOT_IMPLEMENTED);
 }
 
 const std::string &Location::getRootRir() const {
@@ -274,6 +224,75 @@ const std::string &Location::getRootRir() const {
 void Location::setRootRir(const std::string &rootRir) {
    this->rootRir = rootRir;
 }
+
+std::string Location::getIndexFile(String dir) {
+    for (int i = 0; i < this->indexFiles.size(); i++) {
+        std::string filePath = dir + this->indexFiles[i];
+        int fd  = open(filePath.c_str(), O_RDONLY);
+        if (fd !=  -1) {
+            close(fd);
+            return filePath;
+        }
+    }
+    return "";
+}
+
+void Location::handleGet(HttpRequest *req, HttpResponse *res) {
+    std::string filePath = this->getRootRir()+ req->GetPath();
+    if  (is_directory(filePath) ) {
+        if (filePath [filePath.size() - 1] != '/')
+            return this->redirect(req, res, req->GetPath() + "/");
+            std::string indexFile = this->getIndexFile(filePath);
+            if (!indexFile.empty()) {
+                indexFile = indexFile.substr(this->getRootRir().size());
+                Cgi *cgi = this->getCgiIfExists(indexFile);
+                req->SetPath(indexFile);
+                if (cgi != nullptr) {
+                    this->handleCgi(req, res);
+                    return;
+                }
+                return this->handleGet(req, res);
+            }
+        if (this->autoIndex) {
+            std::string content = autoIndexRead(filePath);
+            if (content.empty()){
+                res->setStatusCode(NOT_FOUND);
+                return;
+            }
+            res->setContentType("text/html");
+            res->setBody(content);
+            return;
+        }
+        return;
+    }
+   else  if (is_file(filePath)) {
+        std::string content = readFileAndReturnString(filePath);
+        if (content.empty()) {
+            res->setStatusCode(NOT_FOUND);
+            return;
+        }
+        res->setContentType(getConentTypeFromFileName(filePath));
+        res->setBody(content);
+        return;
+    }
+   else
+        res->setStatusCode(NOT_FOUND);
+}
+
+bool Location::is_file(std::string path) {
+    struct stat sb;
+    if (stat(path.c_str(), &sb) == 0 && S_ISREG(sb.st_mode)) {
+        return true;
+    }
+    return false;
+}
+
+void Location::redirect(HttpRequest *req, HttpResponse *res, std::string path) {
+    res->setStatusCode(FOUND);
+    res->addHeader("Location", path);
+}
+
+
 
 
 

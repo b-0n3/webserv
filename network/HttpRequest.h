@@ -64,7 +64,7 @@ public:
         std::map<std::string, std::string> GetHeaders(){return Headers;}
 
     std::map<std::string, std::string> GetParams() { return Params; }
-
+    int getStatusCode() { return StatusCode; }
     // Utils
     bool IsHeaderFinished();
 

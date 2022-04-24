@@ -11,11 +11,7 @@ HttpResponse::HttpResponse() {
     this->contentType = "text/html";
 }
 void HttpResponse::writeToFd(int i) {
-//    std::cout << "Writing to fd" << std::endl;
-//    std::cout << "Status code: " << this->statusCode << std::endl;
-//    std::cout << "Content length: " << this->contentLength << std::endl;
-//    std::cout << "Content type: " << this->contentType << std::endl;
-//    std::cout << "Body: " << this->body << std::endl;
+
 
     write(i, "HTTP/1.1 ", 9);
     write(i, std::to_string(this->statusCode).c_str(),
@@ -25,12 +21,21 @@ void HttpResponse::writeToFd(int i) {
     write(i, std::to_string(this->contentLength).c_str(),
           std::to_string(this->contentLength).length());
     write(i, "\r\n", 2);
+    for (std::map<std::string, std::string>::iterator it = this->headers.begin();
+    it != this->headers.end(); ++it){
+        write(i, it->first.c_str(),
+              it->first.length());
+        write(i, ": ", 2);
+        write(i, it->second.c_str(),
+              it->second.length());
+        write(i, "\r\n", 2);
+    }
     write(i, "\r\n", 2);
-  int ret =   write(i, body.c_str(), body.length());
+  write(i, body.c_str(), body.length());
    // std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
 }
 
-void HttpResponse::addHeader(std::string &key, std::string &value) {
+void HttpResponse::addHeader(std::string const &key, std::string const  &value) {
     this->headers[key] = value;
 }
 

@@ -31,7 +31,7 @@ public:
 
     void setHeaders(std::map<std::string, std::string> headers);
 
-    void addHeader(std::string &key, std::string &value);
+    void addHeader(std::string const &key, std::string  const &value);
 
     void writeToFd(int i);
 };

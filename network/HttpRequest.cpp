@@ -1,7 +1,9 @@
 
 #include <cstring>
-#include <iostream>
+
 #include "HttpRequest.h"
+#include "StatusCode.h"
+#include "../tools/Utils.h"
 
 HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    buffer(""),
@@ -84,11 +86,21 @@ void    HttpRequest::Parse() {
           //  std::cout << token << std::endl;
             if (token[0] == '\r' || token[1] == '\n')
                 break;
-            SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
+
+            if (token.find(':') != std::string::npos) {
+            std::string   header = token.substr(0, token.find(':') );
+            std::string  value = token.substr(token.find(':') + 1);
+
+             SetHeaders(trim(header),
+                        trim(value));
+            }
+            else
+                StatusCode = BAD_REQUEST;
         }
         std::string host = GetHeadersValueOfKey("Host");
-        if (host.find_last_of(":") != std::string::npos)
+        if (host.find_last_of(':') != std::string::npos)
             host = host.substr(0, host.find_last_of(":"));
+        SetHeaders("Host", host);
         SetHeaderParsed(true);
     }
 

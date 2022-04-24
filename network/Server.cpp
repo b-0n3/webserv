@@ -64,8 +64,8 @@ int main(int argc, char *argv[]) {
                 perror(str);
             }
         }
-    } catch (std::exception &e) {
-        std::cout << "Error while parsing the config file :" << std::endl << e.what() << std::endl;
+    } catch (const char *str) {
+        std::cout << "Error while parsing the config file :" << std::endl <<str << std::endl;
 
     }
     perror("sdfd");

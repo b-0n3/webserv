@@ -18,4 +18,6 @@ bool is_directory(const std::string &path);
 
 std::string getConentTypeFromFileName(std::string fileName);
 struct pollfd *convertToArray(std::vector< struct pollfd>  vec);
+std::string autoIndexRead(std::string path);
+std::string readFileAndReturnString(std::string filePath);
 #endif //WEBSERV_UTILS_H

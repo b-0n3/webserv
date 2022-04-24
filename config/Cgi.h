@@ -13,7 +13,7 @@
 #include <algorithm>
 #include "../network/HttpRequest.h"
 #include "../network/HttpResponse.h"
-
+#include "../tools/Utils.h"
 class Cgi {
 private:
     std::string  binaryPath;

@@ -11,6 +11,8 @@
 void HttpServlet::addServer(std::string name, Server *server) {
     if (server == nullptr  || name != server->getHost())
         throw IllegalArgumentException("invalid server");
+    if (this->servers.find(name) != this->servers.end())
+        throw IllegalArgumentException("server already exists");
     this->servers[name] = server;
 
 }
@@ -152,7 +154,6 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
         return;
     }
     Server *s = this->servers[server];
-
     Location *l = s->getLocation(request->GetPath());
     if (l == nullptr) {
         response->setStatusCode(NOT_FOUND);
@@ -161,7 +162,6 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
         return;
     }
     if (l->isAllowedMethod(request->GetMethod())) {
-
         l->setRootRir(s->getRoot());
         if (l->getCgiIfExists(request->GetPath()))
             l->handleCgi(request, response);
@@ -177,9 +177,15 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
     std::string server = request->GetHeadersValueOfKey("Host");
+    if (request->getStatusCode() != 200)
+    {
+        response->setStatusCode(request->getStatusCode());
+        response->setBody("Bad Request");
+        return;
+    }
     if (server.empty()) {
         response->setStatusCode(BAD_REQUEST);
-        std::string body = "<html><body><h1>400 Bad Request</h1></body></html>";
+        std::string body = "<html><body><h1>400 Bad Requ sest</h1></body></html>";
         response->setBody(body);
         return;
     }
