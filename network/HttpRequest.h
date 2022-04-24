@@ -9,6 +9,8 @@
 #define WEBSERV_HTTPREQUEST_H
 #include <unistd.h>
 #include <string>
+#include <iostream>
+#include <sstream>
 #include <map>
 
 class HttpRequest {
@@ -56,16 +58,19 @@ public:
 
     //Getters
     std::string GetMethod() { return Method; }
-        std::string GetPath(){return Path;}
-        std::string GetVersion(){return Version;}
-        std::string GetBody(){return Body;}
-        std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
-        std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
-        std::map<std::string, std::string> GetHeaders(){return Headers;}
-
+    std::string GetPath(){return Path;}
+    std::string GetVersion(){return Version;}
+    std::string GetBody(){return Body;}
+    std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
+    std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
+    std::map<std::string, std::string> GetHeaders(){ return Headers; }
     std::map<std::string, std::string> GetParams() { return Params; }
 
     // Utils
+	void ParseFirstLine( std::string );
+
+	void ParseHeaders( std::string );
+
     bool IsHeaderFinished();
 
     bool IsHeaderParsed() { return HeaderParsed; }
@@ -84,6 +89,5 @@ public:
 
     void SetPath(std::string path) { Path = path; }
 };
-
 
 #endif //WEBSERV_HTTPREQUEST_H

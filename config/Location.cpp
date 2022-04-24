@@ -206,7 +206,7 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
     if (pRequest->GetMethod() == "GET") {
       //  std::cout << "root dir " <<this->getRootRir()<< std::endl;
         std::string filePath = this->getRootRir()+ pRequest->GetPath();
-        std::cout << filePath << std::endl;
+        //std::cout << filePath << std::endl; // commented by za7adotexe 
         if (is_directory(filePath)) {
             if (this->autoIndex) {
                 DIR *dir;
