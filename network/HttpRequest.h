@@ -10,18 +10,19 @@
 #include <unistd.h>
 #include <string>
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <map>
 
 class HttpRequest {
 private:
-    int Socketfd;
+    int			Socketfd;
     std::string request;
-    char buffer[5000];//Used char* for strtok compatibility
+    char 		buffer[5000];//Used char* for strtok compatibility
     std::string Method;
     std::string Path;
     std::string Version;
-    std::string Body;
+    std::ofstream  BodyFd;
 
     std::map<std::string, std::string> Headers;
     std::map<std::string, std::string> Params;
@@ -60,7 +61,7 @@ public:
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}
     std::string GetVersion(){return Version;}
-    std::string GetBody(){return Body;}
+    std::ofstream &GetBodyFd(){return BodyFd;}
     std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
     std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
     std::map<std::string, std::string> GetHeaders(){ return Headers; }
@@ -83,9 +84,9 @@ public:
 
     bool IsHasBody() { return Method == "POST" ? true : false; }
 
-	bool IsBodyEqualContentLenght() { 
-		return (std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length()) ? true : false ; 
-	}
+	// bool IsBodyEqualContentLenght() { 
+	// 	return (std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length()) ? true : false ; 
+	// }
 
     void SetPath(std::string path) { Path = path; }
 };

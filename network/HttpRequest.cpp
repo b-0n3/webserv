@@ -9,12 +9,14 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    Method(""),
                                    Path(""),
                                    Version(""),
-                                   Body(""),
                                    HeaderParsed(false),
                                    BodyParsed(false),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
+	std::string filename = "/tmp/" + std::to_string(rand()) ;
+	std::cout << filename << std::endl;
+	BodyFd.open(filename);
     Parse();
 }
 
@@ -24,7 +26,8 @@ bool HttpRequest::IsHeaderFinished()
 }
 
 bool HttpRequest::IsBodyFinished()
-{    
+{
+	;
 }
 
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
@@ -86,6 +89,12 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 		//std::cout << it->first << " => " << it->second << std::endl;
 }
 
+
+void check()
+{
+
+}
+
 void    HttpRequest::Parse() {
     
     
@@ -97,8 +106,12 @@ void    HttpRequest::Parse() {
         return;
     }
 
-    this->request.append(buffer, ret);
-    std::cout << "\n\n\n***Request***\n\n" << request << "\n\n***Request***\n\n\n" << std::endl;
+    if (!IsHeaderParsed())
+    	this->request.append(buffer, ret);
+	else
+		this->request = buffer;
+
+    // std::cout << "\n\n\n***Request***\n\n" << request << "\n\n***Request***\n\n\n" << std::endl;
 
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
@@ -118,36 +131,29 @@ void    HttpRequest::Parse() {
 		//---------------------------------------------------
 
         SetHeaderParsed(true);
+		request = request.substr(request.find("\r\n\r\n") + 4);
     }
     
     //Use form data postman
     //if has body and header parsed and body not parsed yet
     if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed())
     {
-		std::cout << "1==>" << request << std::endl;	
+		
+		BodyFd << request;
+
         if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
-        {
-			std::string body = request.substr(request.find("\r\n\r\n") + 2);
-			strtok((char *)body.c_str(), "\r\n");
-			for (size_t i = 0; true; i++)
-			{
-				std::string token = strtok(NULL, "\r\n");
-				if (!(i % 2))
-					Body.append(token.substr(0, token.find("\r\n")));
-				if (token[0] == '\r' && token[1] == '\r' && token[2] == '\n')
-					break;
-			}        
-        }
-        if (GetHeadersValueOfKey("Transfer-Encoding") == "gzip" && GetHeadersValueOfKey("Content-Encoding") == "gzip")
-        {
-            ;
-        }
-        else
 		{
-			//std::cout << "\n\n\n\n" << std::endl;
-			//std::cout << "==>" << request.substr(request.find("\r\n\r\n") + 4) << std::endl;		
-            // Body.append(request.substr(request.find("\r\n\r\n") + 4));
+			//if file has 0/r/n/r/n
+			//then strip all odd lines and /r/n
 		}
-		IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
+		else 
+		{
+			//if file has /r/n/r/n
+			//then strip all /r/n
+		}
+
+		//verfiy if body == content-length
+
+		//IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
     }
 }
