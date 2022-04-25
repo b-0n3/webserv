@@ -16,13 +16,17 @@
 
 class HttpRequest {
 private:
-    int			Socketfd;
-    std::string request;
-    char 		buffer[5000];//Used char* for strtok compatibility
-    std::string Method;
-    std::string Path;
-    std::string Version;
-    std::ofstream  BodyFd;
+    int			    Socketfd;
+    std::string     request;
+    char 		    buffer[5000];//Used char* for strtok compatibility
+    std::string     Method;
+    std::string     Path;
+    std::string     Version;
+    std::ofstream   BodyFd;
+    size_t          BodySize;
+    int             BodyRemaining;
+    bool            checkBody;
+    
 
     std::map<std::string, std::string> Headers;
     std::map<std::string, std::string> Params;
