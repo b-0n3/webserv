@@ -4,7 +4,7 @@
 #include "HttpRequest.h"
 
 HttpRequest::HttpRequest(int fd) : Socketfd(fd),
-                                   buffer(""),
+                                   buffer(new char[BUFFER_SIZE]),
                                    request(""),
                                    Method(""),
                                    Path(""),
@@ -14,9 +14,17 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-	std::string filename = "/tmp/" + std::to_string(rand()) ;
-	std::cout << filename << std::endl;
-	BodyFd.open(filename);
+	
+	srand(time(NULL));
+	std::string filename1 = "/tmp/" + std::to_string(rand());
+	srand(time(NULL));
+	std::string filename2 = "/tmp/" + std::to_string(rand());
+
+	std::cout << filename1 << std::endl;
+	std::cout << filename2 << std::endl;
+
+	PureBodyFd.open(filename1);
+	CleanBodyFd.open(filename2);
     Parse();
 }
 
@@ -25,10 +33,64 @@ bool HttpRequest::IsHeaderFinished()
     return ((request.find("\r\n\r\n") != std::string::npos) ? true : false) ;
 }
 
-bool HttpRequest::IsBodyFinished()
+bool HttpRequest::IsChunkedBodyFinished()
 {
-	;
+	//search for the end of the chunked body in PureBodyFd
+	std::string line;
+	while(PureBodyFd.good())
+	{
+		std::getline(PureBodyFd, line);
+		if(line.equals("0\r\n"))
+			return true;
+	}
+	return false;
 }
+
+//check if the condition is true !!!!!!!!!!!!!
+bool HttpRequest::IsNormalBodyFinished()
+{
+	PureBodyFd.seekg(0, PureBodyFd.end);
+	size_t length =PureBodyFd.tellg()
+	PureBodyFd.seekg(0, PureBodyFd.beg);
+
+	return (GetHeadersValueOfKey("Content-Length") != Headers.end() && std::stoi(GetHeadersValueOfKey("Content-Length")) == length);
+
+}
+
+void HttpRequest::ProcessChunkedBody()
+{
+	int i = 0;
+	size_t line_size = 0;
+
+	//strip the chunked body from PureBodyFd and put it in CleanBodyFd
+	std::string line;
+	while(PureBodyFd.good())
+	{
+		if( line == "0\r\n" )
+			break;
+		if (i % 2 == 0)
+		{
+			std::getline(PureBodyFd, line);
+			std::stringstream ss(line);
+			ss >> std::hex >> line_size; // E\r\n => 14
+		}
+		else
+		{
+			for (size_t i = 0; i < line_size; i++) // < 14
+			{
+				std::getline(PureBodyFd, line);
+				CleanBodyFd << line;
+				line_size -= line.length();
+			}
+		}
+	}
+}
+
+void HttpRequest::ProcessNormalBody()
+{
+
+}
+
 
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
 {
@@ -89,22 +151,18 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 		//std::cout << it->first << " => " << it->second << std::endl;
 }
 
-
-void check()
-{
-
-}
-
 void    HttpRequest::Parse() {
     
     
     int ret = 0;
     // To Check if this correct
-    if ((ret = read(Socketfd, buffer, 5000)) < 0)
+    if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0)
     {
         StatusCode = 400;
         return;
     }
+	
+	buffer[ret] = '\0';
 
     if (!IsHeaderParsed())
     	this->request.append(buffer, ret);
@@ -133,27 +191,32 @@ void    HttpRequest::Parse() {
         SetHeaderParsed(true);
 		request = request.substr(request.find("\r\n\r\n") + 4);
     }
+
+	std::cout << "Body: " << request << std::endl;
     
     //Use form data postman
     //if has body and header parsed and body not parsed yet
     if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed())
     {
-		
-		BodyFd << request;
-
-        if (GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
+	// 	PureBodyFd << request;
+        if (GetHeadersValueOfKey("Transfer-Encoding") != Headers.end() && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{
-			//if file has 0/r/n/r/n
-			//then strip all odd lines and /r/n
+			std::cout << "chunked" << std::endl;
+			if (IsChunkedBodyFinished())
+			{
+				ProcessChunkedBody();
+				// IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
+			}
 		}
 		else 
 		{
-			//if file has /r/n/r/n
-			//then strip all /r/n
+			std::cout << "Not chunked" << std::endl;
+			if (IsNormalBodyFinished())
+			{
+				ProcessNormalBody();
+				// IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
+			}
 		}
-
-		//verfiy if body == content-length
-
-		//IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
     }
+	std::cout << std::endl<< std::endl<< std::endl<< std::endl;
 }

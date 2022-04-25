@@ -14,15 +14,20 @@
 #include <sstream>
 #include <map>
 
+#define BUFFER_SIZE 5001
+
 class HttpRequest {
 private:
-    int			Socketfd;
-    std::string request;
-    char 		buffer[5000];//Used char* for strtok compatibility
-    std::string Method;
-    std::string Path;
-    std::string Version;
-    std::ofstream  BodyFd;
+    int				Socketfd;
+    std::string 	request;
+    char 			*buffer;//Used char* for strtok compatibility
+    std::string 	Method;
+    std::string 	Path;
+    std::string 	Version;
+    std::ofstream 	PureBodyFd;
+    std::ofstream 	CleanBodyFd;
+
+
 
     std::map<std::string, std::string> Headers;
     std::map<std::string, std::string> Params;
@@ -61,7 +66,7 @@ public:
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}
     std::string GetVersion(){return Version;}
-    std::ofstream &GetBodyFd(){return BodyFd;}
+    std::ofstream &GetBodyFd(){return CleanBodyFd;}
     std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
     std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
     std::map<std::string, std::string> GetHeaders(){ return Headers; }
@@ -76,7 +81,8 @@ public:
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-    bool IsBodyFinished();
+    bool IsNormalBodyFinished();
+	bool IsChunkedBodyFinished();
 
     bool IsBodyParsed() { return BodyParsed; }
 
@@ -84,11 +90,14 @@ public:
 
     bool IsHasBody() { return Method == "POST" ? true : false; }
 
+
+	void ProcessChunkedBody();
+	void ProcessNormalBody();
+
+
 	// bool IsBodyEqualContentLenght() { 
 	// 	return (std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length()) ? true : false ; 
 	// }
-
-    void SetPath(std::string path) { Path = path; }
 };
 
 #endif //WEBSERV_HTTPREQUEST_H
