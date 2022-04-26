@@ -24,8 +24,10 @@ private:
     std::string 	Method;
     std::string 	Path;
     std::string 	Version;
-    std::ofstream 	PureBodyFd;
-    std::ofstream 	CleanBodyFd;
+	std::string		BodyFileName;
+	std::string		TmpBodyFileName;
+    std::fstream 	BodyFd;
+    std::fstream 	TmpBodyFd;
 
 
 
@@ -55,18 +57,19 @@ private:
         Params.insert(std::pair<std::string, std::string>(key, value));
     }
 
-
 public:
     HttpRequest(int fd);
 
     void Parse();
     // void ContinueParse(); REMOVED
 
-    //Getters
+
+	
+  	//Getters
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}
     std::string GetVersion(){return Version;}
-    std::ofstream &GetBodyFd(){return CleanBodyFd;}
+    std::fstream &GetBodyFd(){return BodyFd;}
     std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
     std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
     std::map<std::string, std::string> GetHeaders(){ return Headers; }
@@ -81,8 +84,6 @@ public:
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-    bool IsNormalBodyFinished();
-	bool IsChunkedBodyFinished();
 
     bool IsBodyParsed() { return BodyParsed; }
 
@@ -91,13 +92,10 @@ public:
     bool IsHasBody() { return Method == "POST" ? true : false; }
 
 
+	bool IsChunkedBodyFinished();
 	void ProcessChunkedBody();
-	void ProcessNormalBody();
+	size_t  ParseHexaLine();
 
-
-	// bool IsBodyEqualContentLenght() { 
-	// 	return (std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length()) ? true : false ; 
-	// }
 };
 
 #endif //WEBSERV_HTTPREQUEST_H

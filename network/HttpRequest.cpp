@@ -3,6 +3,9 @@
 #include <iostream>
 #include "HttpRequest.h"
 
+#include <sys/stat.h>
+#include <sys/types.h>
+
 HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    buffer(new char[BUFFER_SIZE]),
                                    request(""),
@@ -16,16 +19,28 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
     Headers.clear(), Params.clear();
 	
 	srand(time(NULL));
-	std::string filename1 = "/tmp/" + std::to_string(rand());
-	srand(time(NULL));
-	std::string filename2 = "/tmp/" + std::to_string(rand());
+	this->BodyFileName = "/tmp/" + std::to_string(rand());
+	this->TmpBodyFileName = "/tmp/" + std::to_string(rand());
 
-	std::cout << filename1 << std::endl;
-	std::cout << filename2 << std::endl;
-
-	PureBodyFd.open(filename1);
-	CleanBodyFd.open(filename2);
+	std::cout << "body" << BodyFileName << std::endl;
+	std::cout << "tmp" << TmpBodyFileName << std::endl;
     Parse();
+}
+
+size_t CountFileSize(const char *filename) {
+    struct stat st; 
+
+    if (stat(filename, &st) == 0)
+        return st.st_size;
+    return -1; 
+}
+
+size_t HexadecimaltoDecimal(std::string str)
+{
+	size_t n;
+    std::stringstream d(str);
+    d >> std::hex >> n;
+	return n;
 }
 
 bool HttpRequest::IsHeaderFinished()
@@ -35,62 +50,51 @@ bool HttpRequest::IsHeaderFinished()
 
 bool HttpRequest::IsChunkedBodyFinished()
 {
-	//search for the end of the chunked body in PureBodyFd
-	std::string line;
-	while(PureBodyFd.good())
-	{
-		std::getline(PureBodyFd, line);
-		if(line.equals("0\r\n"))
-			return true;
-	}
-	return false;
+	bool ret  = false;
+	const int X = 5;
+	char* buf = new char[X];
+	TmpBodyFd.seekg(-X, std::ios::end);
+    TmpBodyFd.read(buf, X);
+	if (strcmp("0\r\n\r\n", buf) == 0)
+		ret = true;
+	delete [] buf;
+	return ret;
 }
 
-//check if the condition is true !!!!!!!!!!!!!
-bool HttpRequest::IsNormalBodyFinished()
+size_t  HttpRequest::ParseHexaLine()
 {
-	PureBodyFd.seekg(0, PureBodyFd.end);
-	size_t length =PureBodyFd.tellg()
-	PureBodyFd.seekg(0, PureBodyFd.beg);
-
-	return (GetHeadersValueOfKey("Content-Length") != Headers.end() && std::stoi(GetHeadersValueOfKey("Content-Length")) == length);
-
+	char buffer[256];
+	char c;
+	int count = 0;
+	while (1)
+	{
+		TmpBodyFd.read(&c, 1);
+		std::cout << c << std::endl;
+		if (c == '\r')
+			break;
+		buffer[count++] = c;
+ 	}
+	buffer[count] = 0;
+	TmpBodyFd.read(&c, 1);
+	return HexadecimaltoDecimal(std::string(buffer));
 }
 
 void HttpRequest::ProcessChunkedBody()
 {
-	int i = 0;
-	size_t line_size = 0;
-
-	//strip the chunked body from PureBodyFd and put it in CleanBodyFd
-	std::string line;
-	while(PureBodyFd.good())
+	BodyFd.open(BodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary);
+	TmpBodyFd.seekg(std::ios_base::beg);
+	size_t ret = ParseHexaLine();
+	char c[2];
+	while(ret != 0)
 	{
-		if( line == "0\r\n" )
-			break;
-		if (i % 2 == 0)
-		{
-			std::getline(PureBodyFd, line);
-			std::stringstream ss(line);
-			ss >> std::hex >> line_size; // E\r\n => 14
-		}
-		else
-		{
-			for (size_t i = 0; i < line_size; i++) // < 14
-			{
-				std::getline(PureBodyFd, line);
-				CleanBodyFd << line;
-				line_size -= line.length();
-			}
-		}
+		char *buffer = new char[ret];
+		TmpBodyFd.read(buffer, ret);
+		TmpBodyFd.read(c, 2);
+		BodyFd.write(buffer, ret);
+		ret = ParseHexaLine();
 	}
+	BodyFd.close();
 }
-
-void HttpRequest::ProcessNormalBody()
-{
-
-}
-
 
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
 {
@@ -144,15 +148,19 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 		std::getline(ss, token, '\n');
 		if (token[0] == '\r')
 			break;
+		token.erase(token.find("\r") , 1);
 		SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
 	}
-	//std::map<std::string, std::string> headersss = GetHeaders();
-	//for (std::map<std::string, std::string>::iterator it = headersss.begin(); it != headersss.end(); ++it)
-		//std::cout << it->first << " => " << it->second << std::endl;
+	// std::cout << "\rfff" << std::endl;
+	// std::map<std::string, std::string> headersss = GetHeaders();
+	// for (std::map<std::string, std::string>::iterator it = headersss.begin(); it != headersss.end(); ++it)
+	// 	std::cout << it->first << " => " << it->second << std::endl;
+	// 	std::cout << headersss["Transfer-Encoding"] << "====" << std::endl;
+	// 		print_memory(headersss["Transfer-Encoding"]);
+
 }
 
 void    HttpRequest::Parse() {
-    
     
     int ret = 0;
     // To Check if this correct
@@ -161,62 +169,48 @@ void    HttpRequest::Parse() {
         StatusCode = 400;
         return;
     }
-	
 	buffer[ret] = '\0';
 
     if (!IsHeaderParsed())
     	this->request.append(buffer, ret);
 	else
-		this->request = buffer;
-
-    // std::cout << "\n\n\n***Request***\n\n" << request << "\n\n***Request***\n\n\n" << std::endl;
+		this->request  = std::string(buffer, ret);
 
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
-
 		// Parse the first line
-		//---------------------------------------------------
-
 		ParseFirstLine(request.substr(0, request.find("\r\n")));
 
-		//---------------------------------------------------
-
         // Parse headers
-		//---------------------------------------------------
-
 		ParseHeaders(request.substr(request.find("\r\n") + 2, request.find("\r\n\r\n")));
-
-		//---------------------------------------------------
 
         SetHeaderParsed(true);
 		request = request.substr(request.find("\r\n\r\n") + 4);
     }
 
-	std::cout << "Body: " << request << std::endl;
-    
     //Use form data postman
     //if has body and header parsed and body not parsed yet
-    if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed())
-    {
-	// 	PureBodyFd << request;
-        if (GetHeadersValueOfKey("Transfer-Encoding") != Headers.end() && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
+    if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed()) {
+        
+		if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{
-			std::cout << "chunked" << std::endl;
+			TmpBodyFd.open(TmpBodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary ) ;
+			TmpBodyFd.write(request.c_str() , request.size());
 			if (IsChunkedBodyFinished())
 			{
 				ProcessChunkedBody();
-				// IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
+				if (CountFileSize(BodyFileName.c_str()) == std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
+					SetBodyParsed(true);
 			}
+			TmpBodyFd.close();
 		}
-		else 
+		else
 		{
-			std::cout << "Not chunked" << std::endl;
-			if (IsNormalBodyFinished())
-			{
-				ProcessNormalBody();
-				// IsBodyEqualContentLenght() ? SetBodyParsed(true) : (void)(StatusCode = 400);
-			}
+			BodyFd.open(BodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary);
+			BodyFd.write(request.c_str() , request.size());
+			BodyFd.close();
+			if (CountFileSize(BodyFileName.c_str()) == std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
+				SetBodyParsed(true);
 		}
     }
-	std::cout << std::endl<< std::endl<< std::endl<< std::endl;
 }
