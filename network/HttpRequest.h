@@ -9,17 +9,27 @@
 #define WEBSERV_HTTPREQUEST_H
 #include <unistd.h>
 #include <string>
+#include <iostream>
+#include <fstream>
+#include <sstream>
 #include <map>
+
+#define BUFFER_SIZE 5001
 
 class HttpRequest {
 private:
-    int Socketfd;
-    std::string request;
-    char buffer[5000];//Used char* for strtok compatibility
-    std::string Method;
-    std::string Path;
-    std::string Version;
-    std::string Body;
+    int				Socketfd;
+    std::string 	request;
+    char 			*buffer;//Used char* for strtok compatibility
+    std::string 	Method;
+    std::string 	Path;
+    std::string 	Version;
+	std::string		BodyFileName;
+	std::string		TmpBodyFileName;
+    std::fstream 	BodyFd;
+    std::fstream 	TmpBodyFd;
+
+
 
 
 
@@ -48,7 +58,6 @@ private:
         Params.insert(std::pair<std::string, std::string>(key, value));
     }
 
-
 public:
     std::map<std::string, std::string> Headers;
     std::string root;
@@ -62,23 +71,27 @@ public:
     void Parse();
     // void ContinueParse(); REMOVED
 
-    //Getters
-    std::string GetMethod() { return Method; }
-        std::string GetPath(){return Path;}
-        std::string GetVersion(){return Version;}
-        std::string GetBody(){return Body;}
-        std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
-        std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
-        std::map<std::string, std::string> GetHeaders(){return Headers;}
 
+	
+  	//Getters
+    std::string GetMethod() { return Method; }
+    std::string GetPath(){return Path;}
+    std::string GetVersion(){return Version;}
+    std::fstream &GetBodyFd(){return BodyFd;}
+    std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
+    std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
+    std::map<std::string, std::string> GetHeaders(){ return Headers; }
     std::map<std::string, std::string> GetParams() { return Params; }
     int getStatusCode() { return StatusCode; }
     // Utils
+	void ParseFirstLine( std::string );
+
+	void ParseHeaders( std::string );
+
     bool IsHeaderFinished();
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-    bool IsBodyFinished();
 
     bool IsBodyParsed() { return BodyParsed; }
 
@@ -86,12 +99,11 @@ public:
 
     bool IsHasBody() { return Method == "POST" ? true : false; }
 
-	bool IsBodyEqualContentLenght() { 
-		return (std::atoi(GetHeadersValueOfKey("Content-Length").c_str()) == Body.length()) ? true : false ; 
-	}
 
-    void SetPath(std::string path) { Path = path; }
+	bool IsChunkedBodyFinished();
+	void ProcessChunkedBody();
+	size_t  ParseHexaLine();
+
 };
-
 
 #endif //WEBSERV_HTTPREQUEST_H
