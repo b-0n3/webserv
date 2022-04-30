@@ -4,18 +4,17 @@
 
 #include <unistd.h>
 #include <iostream>
+#include <cstring>
 #include "HttpResponse.h"
+#include "StatusCode.h"
+
 HttpResponse::HttpResponse() {
     this->statusCode = 200;
     this->contentLength = 0;
     this->contentType = "text/html";
 }
 void HttpResponse::writeToFd(int i) {
-//    std::cout << "Writing to fd" << std::endl;
-//    std::cout << "Status code: " << this->statusCode << std::endl;
-//    std::cout << "Content length: " << this->contentLength << std::endl;
-//    std::cout << "Content type: " << this->contentType << std::endl;
-//    std::cout << "Body: " << this->body << std::endl;
+
 
     write(i, "HTTP/1.1 ", 9);
     write(i, std::to_string(this->statusCode).c_str(),
@@ -25,12 +24,21 @@ void HttpResponse::writeToFd(int i) {
     write(i, std::to_string(this->contentLength).c_str(),
           std::to_string(this->contentLength).length());
     write(i, "\r\n", 2);
+    for (std::map<std::string, std::string>::iterator it = this->headers.begin();
+    it != this->headers.end(); ++it){
+        write(i, it->first.c_str(),
+              it->first.length());
+        write(i, ": ", 2);
+        write(i, it->second.c_str(),
+              it->second.length());
+        write(i, "\r\n", 2);
+    }
     write(i, "\r\n", 2);
-  int ret =   write(i, body.c_str(), body.length());
+  write(i, body.c_str(), body.length());
    // std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
 }
 
-void HttpResponse::addHeader(std::string &key, std::string &value) {
+void HttpResponse::addHeader(std::string const &key, std::string const  &value) {
     this->headers[key] = value;
 }
 
@@ -62,7 +70,7 @@ void HttpResponse::setHeaders(std::map<std::string, std::string> headers) {
     this->headers = headers;
 }
 
-void HttpResponse::setBody(std::string &body) {
+void HttpResponse::setBody(std::string const &body) {
     this->body = body;
     this->contentLength = body.length();
 }
@@ -74,6 +82,61 @@ void HttpResponse::setStatusCode(int statusCode) {
 void HttpResponse::setContentType(std::string contentType) {
     this->contentType = contentType;
 }
+
+unsigned long HttpResponse::getContentLength() const {
+    return contentLength;
+}
+
+void HttpResponse::setContentLength(unsigned long contentLength) {
+    HttpResponse::contentLength = contentLength;
+}
+
+int HttpResponse::getCgiReadFd() const {
+    return cgiReadFd;
+}
+
+void HttpResponse::setCgiReadFd(int cgiReadFd) {
+    HttpResponse::cgiReadFd = cgiReadFd;
+}
+
+void HttpResponse::readFromCgi(int cgiReadFd) {
+    char buf[1024];
+    int ret;
+    std::string bd;
+    while ((ret = read(cgiReadFd, buf, 1024)) > 0) {
+        bd.append(buf, ret);
+    }
+    this->setStatusCode(OK);
+    std::string headers = bd.substr(0, bd.find("\r\n\r\n") + 4);
+    this->parseHeaders(headers);
+    this->setBody( bd.substr(headers.length() + 4));
+}
+
+void HttpResponse::parseHeaders(std::string &headers) {
+ std::string firstLine = headers.substr(0, headers.find("\r\n"));
+    std::string header = headers.substr(headers.find("\r\n") + 2);
+    std::string key;
+    std::string value;
+    if (firstLine.find("Status") != std::string::npos) {
+        std::string statusCode = firstLine.substr(firstLine.find(' ') + 1,
+                                                   firstLine.find(' ') + 3);
+        this->setStatusCode(std::stoi(statusCode));
+    } else {
+        key = firstLine.substr(0, firstLine.find(':'));
+       value = firstLine.substr(firstLine.find(':') + 1);
+        this->addHeader(key, value);
+        this->setStatusCode(OK);
+    }
+
+    while (header.length() > 0) {
+        std::string nextHeader = header.substr(0, header.find("\r\n"));
+        header = header.substr(header.find("\r\n") + 2);
+        key = nextHeader.substr(0, nextHeader.find(':'));
+        value = nextHeader.substr(nextHeader.find(':') + 1);
+        this->addHeader(key, value);
+    }
+}
+
 
 
 

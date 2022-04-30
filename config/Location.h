@@ -46,7 +46,7 @@ public:
     const std::string &getUploadDir() const;
     void setAutoIndex(String uploadDir) ;
     void setUploadDir(const std::string &uploadDir);
-
+    std::string getIndexFile(String dir);
     const std::vector<std::string> &getIndexFiles() const;
     void addIndexFile(String indexFile) ;
     void setIndexFiles(const std::vector<std::string> &indexFiles);
@@ -69,6 +69,12 @@ public:
     void handleStatic(HttpRequest *pRequest, HttpResponse *pResponse);
 
     void handleCgi(HttpRequest *pRequest, HttpResponse *pResponse);
+
+    void handleGet(HttpRequest *req, HttpResponse *res);
+
+    bool is_file(std::string path);
+
+    void redirect(HttpRequest *req, HttpResponse *res, std::string path);
 };
 
 

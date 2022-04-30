@@ -3,7 +3,11 @@
 //
 
 #include <sys/stat.h>
+#include <fstream>
 #include "Utils.h"
+#include <sstream>
+#include <dirent.h>
+
 #define WHITESPACE " \t\n\r"
 std::string ltrim(const std::string &s)
 {
@@ -52,5 +56,47 @@ std::string getConentTypeFromFileName(std::string fileName) {
     contentTypes["pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
     contentTypes["mp3"] = "audio/mpeg";
     contentTypes["mp4"] = "video/mp4";
-    return contentTypes[fileName.substr(fileName.find_last_of(".") + 1)];
+    if (contentTypes.find(fileName.substr(fileName.find_last_of(".") + 1)) != contentTypes.end()) {
+        return contentTypes[fileName.substr(fileName.find_last_of(".") + 1)];
+    }
+    return "text/plain";
+}
+
+struct pollfd *convertToArray(std::vector< struct pollfd>  vec) {
+    struct  pollfd *array = new struct pollfd[vec.size()];
+    for (int i = 0; i < vec.size(); i++) {
+        struct pollfd pfd;
+        pfd.fd = vec[i].fd;
+        pfd.events = vec[i].events;
+        array[i] = pfd;
+    }
+    return array;
+}
+
+std::string readFileAndReturnString(std::string filePath) {
+    std::ifstream file(filePath);
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+std::string autoIndexRead(std::string path)
+{
+    DIR *dir;
+    struct dirent *diread;
+    std::string content = "<html><body>";
+    if ((dir = opendir(path.c_str())) != nullptr) {
+        while ((diread = readdir(dir)) != nullptr) {
+            content.append("<a href=");
+            content.append(diread->d_name);
+            content.append("> ");
+            content.append(diread->d_name);
+            content.append("</a></br>");
+        }
+        closedir(dir);
+        content.append("</pre></body></html>");
+        return content;
+    }
+    else
+        return "";
 }
