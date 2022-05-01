@@ -98,7 +98,7 @@ std::string headerToEnv(std::pair<std::string, std::string> header)
 //    script_name.substr(request->location.size());
 
     std::string script_path = request->root+
-            request->GetPath().substr(request->location.size());
+            request->GetPath();
     std::string query_string = getParams(request->GetParams());
 
     envp_vect.push_back("DOCUMENT_URI=" +request->GetPath());                 /* =/cgi-bin/php/hello.php */
@@ -122,10 +122,10 @@ std::string headerToEnv(std::pair<std::string, std::string> header)
     envp_vect.push_back("REMOTE_ADDR=0.0.0.0" /*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
     envp_vect.push_back("REMOTE_PORT=0"  /**+ std::to_string(request->port)*/);                                             /* =0 */
 
-    if (!request->GetBody().empty() )
+    if (!request->IsHasBody() )
     {
         envp_vect.push_back("CONTENT_TYPE=" + request->GetHeadersValueOfKey("Content-Type"));
-        envp_vect.push_back("CONTENT_LENGTH=" + std::to_string(request->GetBody().size()));
+        envp_vect.push_back("CONTENT_LENGTH=" + request->GetHeadersValueOfKey("Content-Length"));
     }
     else
     {
@@ -159,7 +159,7 @@ std::string getParams(std::map<std::string, std::string> params) {
 // @todo: write a function that will return a Cgi object from a node
 void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
     if (!pRequest->cgiRunning) {
-        std::string path = pRequest->root + pRequest->GetPath().substr(pRequest->location.size());
+        std::string path = pRequest->root + pRequest->GetPath();
         const char *args[3];
         args[0] = this->binaryPath.c_str();
         args[1] = path.c_str();
@@ -172,7 +172,7 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
             pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
             return;
         }
-        if (!pRequest->GetBody().empty()) {
+        if (!pRequest->IsHasBody()) {
             if (pipe(writePipe) == -1) {
                 close(readPipe[0]);
                 close(readPipe[1]);
@@ -189,7 +189,7 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         if (pid == 0) {
          //   std::cout << "execve" << std::endl;
             std::cout << this->binaryPath<< std::endl;
-            if (!pRequest->GetBody().empty()) {
+            if (!pRequest->IsHasBody()) {
                 dup2( writePipe[0],  STDIN_FILENO);
                 dup2(  readPipe[1] , STDOUT_FILENO );
                // dup2(out, STDERR_FILENO );
@@ -208,12 +208,13 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
             exit(s);
         } else {
          //   dup2(STDERR_FILENO, out);
-            if (!pRequest->GetBody().empty()) {
+            if (!pRequest->IsHasBody()) {
             //    std::cout << "writing body to cgi" << std::endl;
                 close(writePipe[0]);
-                write(writePipe[1],
-                      pRequest->GetBody().c_str(),
-                      pRequest->GetBody().size());
+//                write(writePipe[1],
+//                      pRequest->GetBody().c_str(),
+//                      pRequest->GetBody().size());
+//                write(writePipe[1],pRequest.
                 close(writePipe[1]);
             }
            close(readPipe[1]);

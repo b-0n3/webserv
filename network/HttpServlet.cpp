@@ -166,6 +166,11 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
         response->setStatusCode(404);
         return;
     }
+    if (request->GetPath().empty() || request->GetPath() == " ") {
+        response->setStatusCode(  MOVED_PERMANENTLY);
+        response->addHeader("Location", "/");
+        return;
+    }
     Server *s = this->servers[server];
     Location *l = s->getLocation(request->GetPath());
     if (l == nullptr) {
@@ -193,6 +198,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
     std::string server = request->GetHeadersValueOfKey("Host");
+    std::cout<<"server is {" << server <<  "}"<< std::endl;
     if (request->getStatusCode() != 200)
     {
         response->setStatusCode(request->getStatusCode());
@@ -207,6 +213,8 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
     }
     this->handleRequest(request, response, server);
 }
+
+
 
 
 

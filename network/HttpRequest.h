@@ -28,11 +28,6 @@ private:
 	std::string		TmpBodyFileName;
     std::fstream 	BodyFd;
     std::fstream 	TmpBodyFd;
-
-
-
-
-
     std::map<std::string, std::string> Params;
 
     bool HeaderParsed;
@@ -65,7 +60,7 @@ public:
     int  port;
     std::string remoteAddress;
     pid_t cgiPid;
-    bool cgiRunning = false;
+    bool cgiRunning;
     HttpRequest(int fd);
 
     void Parse();

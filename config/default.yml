@@ -36,10 +36,12 @@ servers:   # list of servers
   - server: # server
       server_name: 127.0.0.1
       listen: 8080
-      root: /home/b0n3/Desktop/cursus/webserv/root/php-website
+
+      root: /Users/aait-ham/Desktop/webserv/root/php-website
+    #  root: /home/b0n3/Desktop/cursus/webserv/root/php-website
       client_max_body_size: 1000
       locations:
-          - /CGI:
+          - /:
               auto_index: true
               index:
                 - index.html
@@ -56,7 +58,10 @@ servers:   # list of servers
                 - GET
                 - DELETE
               cgi:
-                path: /usr/bin/php-cgi8.0
+                #make sure you have php-cgi installed on your system
+                # put the php-cgi absolute path here
+                path: /usr/sbin/php-cgi
+
                 ext:
                   - .php
                   - .php5

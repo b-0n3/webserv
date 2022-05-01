@@ -247,7 +247,7 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
             if (!indexFile.empty()) {
                 indexFile = indexFile.substr(this->getRootRir().size());
                 Cgi *cgi = this->getCgiIfExists(indexFile);
-                req->SetPath(indexFile);
+
                 if (cgi != nullptr) {
                     this->handleCgi(req, res);
                     return;

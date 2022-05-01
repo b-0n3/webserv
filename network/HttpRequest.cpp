@@ -101,10 +101,12 @@ void HttpRequest::ProcessChunkedBody()
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
 {
 	Method = FirstLine.substr(0, FirstLine.find(' '));
+    Path = FirstLine.substr(FirstLine.find(' ') + 1);
+    Path = Path.substr(0, Path.find(' '));
 	//std::cout << "Method: " << Method << std::endl;
-    
-	Path = FirstLine.substr(FirstLine.find(" "), FirstLine.find("HTTP/") - 5 );
-	//std::cout << "Path: " << Path << std::endl;
+    //std::cout << FirstLine<<std::endl;
+	//Path = FirstLine.substr(FirstLine.find(' '), FirstLine.find("HTTP/") - 5 );
+	std::cout << "Path: " << Path << std::endl;
 
     //If there is Host with path "GET http://wwww.1337.ma/index.html HTTP/1.1"
     if (Path.find("http://") != std::string::npos) {
@@ -144,15 +146,22 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 {
 	std::stringstream ss(HeadersLine);
 	
+
 	while (1)
 	{
 		std::string token;
 		std::getline(ss, token, '\n');
 		if (token[0] == '\r')
+		if (token[0] == '\r')
 			break;
 		token.erase(token.find("\r") , 1);
 		SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
 	}
+
+    std::string host = GetHeadersValueOfKey("Host");
+    if (host.find_first_of(':') != std::string::npos)
+        host = host.substr(0, host.find_first_of(':'));
+    this->Headers["Host"] = host;
 	// std::cout << "\rfff" << std::endl;
 	// std::map<std::string, std::string> headersss = GetHeaders();
 	// for (std::map<std::string, std::string>::iterator it = headersss.begin(); it != headersss.end(); ++it)
