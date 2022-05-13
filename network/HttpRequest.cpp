@@ -211,7 +211,8 @@ void    HttpRequest::Parse() {
 			if (IsChunkedBodyFinished())
 			{
 				ProcessChunkedBody();
-				if (CountFileSize(BodyFileName.c_str()) == std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
+				if (CountFileSize(BodyFileName.c_str()) ==
+                std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
 					SetBodyParsed(true);
 			}
 			TmpBodyFd.close();

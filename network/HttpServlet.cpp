@@ -77,7 +77,7 @@ void HttpServlet::acceptNewClient(struct pollfd pfd) {
 void HttpServlet::handleRequests() {
     struct pollfd *pfds = convertToArray(this->pollfd_list);
     int size = this->pollfd_list.size();
-    int nfds = poll(pfds, this->pollfd_list.size(), 1);
+    int nfds = poll(pfds, this->pollfd_list.size(), -1);
     if (nfds == -1) {
         delete [] pfds;
         return;

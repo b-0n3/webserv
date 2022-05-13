@@ -8,7 +8,7 @@
 #include "HttpResponse.h"
 #include "StatusCode.h"
 
-HttpResponse::HttpResponse() {
+HttpResponse::HttpResponse() :finished(false) ,chunked(false) {
     this->statusCode = 200;
     this->contentLength = 0;
     this->contentType = "text/html";

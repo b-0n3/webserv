@@ -53,8 +53,8 @@ int main(int argc, char *argv[]) {
         }
         while (true) {
             try{
+                // @Todo : use poll here to handle the requests
             for (int i = 0; i < servlets.size(); i++) {
-
                 servlets[i]->handleRequests();
                // perror("step1");
             }

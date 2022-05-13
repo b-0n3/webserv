@@ -48,7 +48,6 @@ private:
     void SetHeaders(std::string key, std::string value) {
         Headers.insert(std::pair<std::string, std::string>(key, value));
     }
-
     void SetParams(std::string key, std::string value) {
         Params.insert(std::pair<std::string, std::string>(key, value));
     }

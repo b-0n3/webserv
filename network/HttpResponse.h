@@ -13,15 +13,15 @@ private:
     unsigned  long contentLength;
     std::string contentType;
     std::string body;
+    bool chunked;
+    int bodyFileDescriptor;
+    bool finished;
     std::map<std::string, std::string> headers;
     int cgiReadFd;
 public:
     unsigned long getContentLength() const;
-
     void setContentLength(unsigned long contentLength);
-
     int getCgiReadFd() const;
-
     void setCgiReadFd(int cgiReadFd);
 
 public:
@@ -33,6 +33,11 @@ public:
     std::string getStatusMessage();
     std::string getContentType();
     std::string getBody();
+    void setChunked(bool chunked){this->chunked = chunked;};
+    bool isChunked(){return chunked;};
+    void setFinished(bool finished){this->finished = finished;};
+    bool isFinished(){return finished;};
+    int getBodyFileDescriptor(){return bodyFileDescriptor;};
     std::map<std::string, std::string> getHeaders();
     void setStatusCode(int statusCode);
     void setStatusMessage(std::string statusMessage);

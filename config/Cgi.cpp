@@ -166,20 +166,20 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         args[0] = nullptr;
        // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
         char **env = createEnv(pRequest);
-        int writePipe[2];
-        int readPipe[2];
-        if (pipe(readPipe) == -1) {
-            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
-            return;
-        }
-        if (!pRequest->IsHasBody()) {
-            if (pipe(writePipe) == -1) {
-                close(readPipe[0]);
-                close(readPipe[1]);
-                pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
-                return;
-            }
-        }
+        //int writePipe[2];
+       // int readPipe[2];
+//        if (pipe(readPipe) == -1) {
+//            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+//            return;
+//        }
+//        if (!pRequest->IsHasBody()) {
+//            if (pipe(writePipe) == -1) {
+//                close(readPipe[0]);
+//                close(readPipe[1]);
+//                pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+//                return;
+//            }
+//        }
         //int out = dup(STDOUT_FILENO);
         pid_t pid = fork();
         if (pid == -1) {
@@ -190,43 +190,46 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
          //   std::cout << "execve" << std::endl;
             std::cout << this->binaryPath<< std::endl;
             if (!pRequest->IsHasBody()) {
-                dup2( writePipe[0],  STDIN_FILENO);
-                dup2(  readPipe[1] , STDOUT_FILENO );
-               // dup2(out, STDERR_FILENO );
-                close(readPipe[0]);
-                close(writePipe[1]);
-                close(readPipe[1]);
-                close(writePipe[0]);
+                dup2( pRequest->GetBodyFd(),  STDIN_FILENO);
+                dup2(  pResponse->getBodyFileDescriptor() , STDOUT_FILENO );
+                close(pRequest->GetBodyFd());
+                close(pResponse->getBodyFileDescriptor());
+//               // dup2(out, STDERR_FILENO );
+//                close(readPipe[0]);
+//                close(writePipe[1]);
+//                close(readPipe[1]);
+//                close(writePipe[0]);
             } else {
-                close(readPipe[0]);
-                dup2( readPipe[1] , STDOUT_FILENO );
-               dup2(readPipe[1] , STDERR_FILENO );
-               close(readPipe[1]);
+               // close(readPipe[0]);
+                dup2( pResponse->getBodyFileDescriptor() , STDOUT_FILENO );
+                close(pResponse->getBodyFileDescriptor());
+                close(0);
+             //  dup2(readPipe[1] , STDERR_FILENO );
+              // close(readPipe[1]);
             }
-
-          int s=   execve( this->binaryPath.c_str(), (char *const *) args, env);
+          int s =   execve( this->binaryPath.c_str(), (char *const *) args, env);
             exit(s);
         } else {
          //   dup2(STDERR_FILENO, out);
-            if (!pRequest->IsHasBody()) {
-            //    std::cout << "writing body to cgi" << std::endl;
-                close(writePipe[0]);
-//                write(writePipe[1],
-//                      pRequest->GetBody().c_str(),
-//                      pRequest->GetBody().size());
-//                write(writePipe[1],pRequest.
-                close(writePipe[1]);
-            }
-           close(readPipe[1]);
+//            if (!pRequest->IsHasBody()) {
+//            //    std::cout << "writing body to cgi" << std::endl;
+//                close(writePipe[0]);
+////                write(writePipe[1],
+////                      pRequest->GetBody().c_str(),
+////                      pRequest->GetBody().size());
+////                write(writePipe[1],pRequest.
+//                close(writePipe[1]);
+//            }
+          // close(readPipe[1]);
             pRequest->cgiPid = pid;
             pRequest->cgiRunning = true;
-            pResponse->setCgiReadFd(readPipe[0]);
+         //   pResponse->setCgiReadFd(readPipe[0]);
         }
     }else
     {
       //  std::cout << "Cgi::execute: cgi already running" << std::endl;
         int state;
-        int status =waitpid(pRequest->cgiPid, &state, WNOHANG);
+        int status = waitpid(pRequest->cgiPid, &state, WNOHANG);
         if ( status == -1)
         {
             pResponse->setStatusCode(INTERNAL_SERVER_ERROR);\
@@ -247,5 +250,6 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
             close(pResponse->getCgiReadFd());
             pRequest->cgiRunning = false;
         }
+
     }
 }
