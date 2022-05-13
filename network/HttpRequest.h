@@ -71,6 +71,7 @@ public:
   	//Getters
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}
+    void SetPath(std::string path){Path = path;}
     std::string GetVersion(){return Version;}
     std::fstream &GetBodyFd(){return BodyFd;}
     std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}

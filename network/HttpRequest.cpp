@@ -14,6 +14,7 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    Method(""),
                                    Path(""),
                                    Version(""),
+                                   cgiRunning(false),
                                    HeaderParsed(false),
                                    BodyParsed(false),
                                    StatusCode(200) {

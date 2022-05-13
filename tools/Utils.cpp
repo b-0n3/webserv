@@ -56,6 +56,29 @@ std::string getConentTypeFromFileName(std::string fileName) {
     contentTypes["pptx"] = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
     contentTypes["mp3"] = "audio/mpeg";
     contentTypes["mp4"] = "video/mp4";
+    contentTypes["m4a"] = "audio/mp4";
+    contentTypes["m4v"] = "video/mp4";
+    contentTypes["ogg"] = "audio/ogg";
+    contentTypes["ogv"] = "video/ogg";
+    contentTypes["wav"] = "audio/wav";
+    contentTypes["webm"] = "video/webm";
+    contentTypes["webp"] = "image/webp";
+    contentTypes["ico"] = "image/x-icon";
+    contentTypes["svg"] = "image/svg+xml";
+    contentTypes["eot"] = "application/vnd.ms-fontobject";
+    contentTypes["ttf"] = "application/x-font-ttf";
+    contentTypes["woff"] = "application/x-font-woff";
+    contentTypes["woff2"] = "application/x-font-woff2";
+    contentTypes["otf"] = "application/x-font-otf";
+    contentTypes["sfnt"] = "application/x-font-sfnt";
+    contentTypes["json"] = "application/json";
+    contentTypes["xml"] = "application/xml";
+    contentTypes["zip"] = "application/zip";
+    contentTypes["rar"] = "application/x-rar-compressed";
+    contentTypes["7z"] = "application/x-7z-compressed";
+    contentTypes["tar"] = "application/x-tar";
+    contentTypes["gz"] = "application/x-gzip";
+    contentTypes["bz2"] = "application/x-bzip2";
     if (contentTypes.find(fileName.substr(fileName.find_last_of(".") + 1)) != contentTypes.end()) {
         return contentTypes[fileName.substr(fileName.find_last_of(".") + 1)];
     }

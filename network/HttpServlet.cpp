@@ -31,8 +31,8 @@ void HttpServlet::start() {
     int i = 1;
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int));
     int set = 1;
-    //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-    signal(SIGPIPE, SIG_IGN);
+    setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    //signal(SIGPIPE, SIG_IGN);
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) == -1) {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
@@ -84,7 +84,7 @@ void HttpServlet::handleRequests() {
     }
     this->acceptNewClient(pfds[0]);
     std::vector<int> to_delete;
- //   std::cout << this->pollfd_list.size() << std::endl;
+
     for (int i = 1; i < size; i++) {
         int fd = this->pollfd_list[i].fd;
         if (this->requests.find(fd)!= this->requests.end() && this->requests[fd]->cgiRunning) {
@@ -131,6 +131,7 @@ void HttpServlet::handleRequests() {
        else  if (pfds[i].revents & POLLOUT) {
 
                 this->responses[fd]->writeToFd(fd);
+
                 to_delete.push_back(fd);
 
             std::cout << close(fd) << std::endl;
@@ -207,7 +208,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
     }
     if (server.empty()) {
         response->setStatusCode(BAD_REQUEST);
-        std::string body = "<html><body><h1>400 Bad Requ sest</h1></body></html>";
+        std::string body = "<html><body><h1>400 Bad Request</h1></body></html>";
         response->setBody(body);
         return;
     }

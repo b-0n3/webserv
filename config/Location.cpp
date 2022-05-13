@@ -239,7 +239,7 @@ std::string Location::getIndexFile(String dir) {
 }
 
 void Location::handleGet(HttpRequest *req, HttpResponse *res) {
-    std::string filePath = this->getRootRir()+ req->GetPath();
+    std::string filePath = this->getRootRir() + req->GetPath();
     if  (is_directory(filePath) ) {
         if (filePath [filePath.size() - 1] != '/')
             return this->redirect(req, res, req->GetPath() + "/");
@@ -247,7 +247,7 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
             if (!indexFile.empty()) {
                 indexFile = indexFile.substr(this->getRootRir().size());
                 Cgi *cgi = this->getCgiIfExists(indexFile);
-
+                req->SetPath(indexFile);
                 if (cgi != nullptr) {
                     this->handleCgi(req, res);
                     return;
