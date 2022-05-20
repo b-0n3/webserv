@@ -7,6 +7,7 @@
 
 #include <string>
 #include <map>
+#include "../tools/TempFile.h"
 class HttpResponse {
 private:
     int statusCode;
@@ -14,7 +15,7 @@ private:
     std::string contentType;
     std::string body;
     bool chunked;
-    int bodyFileDescriptor;
+    TempFile tempFile;
     bool finished;
     std::map<std::string, std::string> headers;
     int cgiReadFd;
@@ -37,7 +38,8 @@ public:
     bool isChunked(){return chunked;};
     void setFinished(bool finished){this->finished = finished;};
     bool isFinished(){return finished;};
-    int getBodyFileDescriptor(){return bodyFileDescriptor;};
+    int getBodyFileDescriptor(){return tempFile.getFd();};
+    TempFile &getTempFile(){return tempFile;}
     std::map<std::string, std::string> getHeaders();
     void setStatusCode(int statusCode);
     void setStatusMessage(std::string statusMessage);

@@ -26,8 +26,10 @@ private:
     std::string 	Version;
 	std::string		BodyFileName;
 	std::string		TmpBodyFileName;
+    // @Todo change to ../tools tempFile.cpp
     std::fstream 	BodyFd;
     std::fstream 	TmpBodyFd;
+  // change this
     std::map<std::string, std::string> Params;
 
     bool HeaderParsed;
