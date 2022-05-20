@@ -20,8 +20,9 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-	
+
 	srand(time(NULL));
+
 	this->BodyFileName = "/tmp/" + std::to_string(rand());
 	this->TmpBodyFileName = "/tmp/" + std::to_string(rand());
 
@@ -203,6 +204,7 @@ void    HttpRequest::Parse() {
     //Use form data postman
     //if has body and header parsed and body not parsed yet
     if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed()) {
+		//change compare of the map
         
 		if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{

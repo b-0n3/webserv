@@ -55,31 +55,23 @@ private:
     }
 
 public:
-    std::map<std::string, std::string> Headers;
-    std::string root;
-    std::string location ;
-    int  port;
-    std::string remoteAddress;
-    pid_t cgiPid;
-    bool cgiRunning;
-    HttpRequest(int fd);
-
+    
+	std::map<std::string, std::string> Headers;
+	HttpRequest(int fd);
     void Parse();
-    // void ContinueParse(); REMOVED
-
-
 	
   	//Getters
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}
     void SetPath(std::string path){Path = path;}
     std::string GetVersion(){return Version;}
-    std::fstream &GetBodyFd(){return BodyFd;}
+    int GetBodyFd(){return open(BodyFileName.c_str(), O_RDONLY);}
     std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
     std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
     std::map<std::string, std::string> GetHeaders(){ return Headers; }
     std::map<std::string, std::string> GetParams() { return Params; }
     int getStatusCode() { return StatusCode; }
+
     // Utils
 	void ParseFirstLine( std::string );
 
@@ -100,6 +92,17 @@ public:
 	bool IsChunkedBodyFinished();
 	void ProcessChunkedBody();
 	size_t  ParseHexaLine();
+
+
+
+	/////////////////
+	std::string root;
+    std::string location ;
+    int  port;
+    std::string remoteAddress;
+    pid_t cgiPid;
+    bool cgiRunning;
+	/////////////////
 
 };
 

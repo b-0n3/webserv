@@ -7,8 +7,8 @@
 #include "TempFile.h"
 
 TempFile::TempFile() {
-//@todo generate a unique file name
-char tmp[] = "/tmp/uniqueXXXXXX";
+	//@todo generate a unique file name
+	char tmp[] = "/tmp/uniqueXXXXXX";
     this->fd = mkstemp(tmp);
     fileName = tmp;
     isMoved = false;
