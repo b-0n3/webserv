@@ -46,3 +46,8 @@ int TempFile::getFd() {
     return this->fd;
 }
 
+void TempFile::setFd(int fd) {
+    close(this->fd);
+    this->fd  = fd;
+}
+

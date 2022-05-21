@@ -122,7 +122,7 @@ std::string headerToEnv(std::pair<std::string, std::string> header)
     envp_vect.push_back("REMOTE_ADDR=0.0.0.0" /*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
     envp_vect.push_back("REMOTE_PORT=0"  /**+ std::to_string(request->port)*/);                                             /* =0 */
 
-    if (!request->IsHasBody() )
+    if (request->IsHasBody() )
     {
         envp_vect.push_back("CONTENT_TYPE=" + request->GetHeadersValueOfKey("Content-Type"));
         envp_vect.push_back("CONTENT_LENGTH=" + request->GetHeadersValueOfKey("Content-Length"));
@@ -241,13 +241,13 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
             if (WIFEXITED(state) == 0)
             {
                 pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
-                pResponse->setBody( "exit code :" + std::to_string(WIFEXITED(state)) + "sdf"
-                + std::to_string(state));
+
                 pRequest->cgiRunning = false;
                 return;
             }
-            pResponse->readFromCgi(pResponse->getCgiReadFd());
-            close(pResponse->getCgiReadFd());
+            pResponse->getTempFile()._close();
+            pResponse->getTempFile()._open();
+            pResponse->readFromCgi();
             pRequest->cgiRunning = false;
         }
 

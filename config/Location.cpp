@@ -255,25 +255,26 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
                 return this->handleGet(req, res);
             }
         if (this->autoIndex) {
-            std::string content = autoIndexRead(filePath);
-            if (content.empty()){
+
+            if (autoIndexRead( res->getBodyFileDescriptor(), filePath)){
                 res->setStatusCode(NOT_FOUND);
                 return;
             }
             res->setContentType("text/html");
-            res->setBody(content);
             return;
         }
         return;
     }
    else  if (is_file(filePath)) {
-        std::string content = readFileAndReturnString(filePath);
-        if (content.empty()) {
+       // std::string content = readFileAndReturnString(filePath);
+       int fd;
+        if ((fd = open(filePath.c_str(), O_RDONLY))) {
             res->setStatusCode(NOT_FOUND);
             return;
         }
         res->setContentType(getConentTypeFromFileName(filePath));
-        res->setBody(content);
+        res->getTempFile().setFd(fd);
+       // res->setBody(content);
         return;
     }
    else

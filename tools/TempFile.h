@@ -19,6 +19,7 @@ public:
     ~TempFile();
     int _open();
     void _close();
+    void setFd(int fd);
     int getFd();
    std::string &getFileName();
     bool transferTo(std::string path);

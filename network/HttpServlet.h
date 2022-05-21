@@ -24,7 +24,7 @@
 class HttpServlet {
 private:
     int port;
-    std::vector<struct pollfd> pollfd_list;
+
     struct sockaddr_in address;
     int sock;
     std::map<std::string,  Server * > servers;
@@ -34,6 +34,7 @@ private:
     void handleRequest(HttpRequest *request, HttpResponse *response);
     void handleRequest(HttpRequest *request, HttpResponse *response, std::string server);
 public:
+    std::vector<struct pollfd> pollfd_list;
     ~HttpServlet();
     HttpServlet(int port);
     void addServer(std::string name, Server * server);

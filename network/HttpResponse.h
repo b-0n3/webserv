@@ -17,6 +17,7 @@ private:
     bool chunked;
     TempFile tempFile;
     bool finished;
+    int bodySkiped;
     std::map<std::string, std::string> headers;
     int cgiReadFd;
 public:
@@ -27,9 +28,7 @@ public:
 
 public:
     HttpResponse();
-    HttpResponse(int statusCode, std::string statusMessage, std::string contentType, std::string body);
-    HttpResponse(int statusCode, std::string statusMessage, std::string contentType, std::string body, std::map<std::string, std::string> headers);
-    void readFromCgi(int cgiReadFd);
+    void readFromCgi();
     int getStatusCode();
     std::string getStatusMessage();
     std::string getContentType();

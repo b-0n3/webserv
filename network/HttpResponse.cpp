@@ -7,14 +7,15 @@
 #include <cstring>
 #include "HttpResponse.h"
 #include "StatusCode.h"
+#include "filesystem"
+#include "../tools/Utils.h"
 
-HttpResponse::HttpResponse() :finished(false) ,chunked(false) {
+HttpResponse::HttpResponse() :finished(false) ,bodySkiped(0),chunked(false) {
     this->statusCode = 200;
     this->contentLength = 0;
     this->contentType = "text/html";
 }
 void HttpResponse::writeToFd(int i) {
-
 
     write(i, "HTTP/1.1 ", 9);
     write(i, std::to_string(this->statusCode).c_str(),
@@ -34,7 +35,14 @@ void HttpResponse::writeToFd(int i) {
         write(i, "\r\n", 2);
     }
     write(i, "\r\n", 2);
-  write(i, body.c_str(), body.length());
+    if (this->bodySkiped > 0) {
+        write(i, body.c_str(), body.length());
+    }
+    char buff[1024];
+    int ret = read(this->getBodyFileDescriptor(), buff, 1024);
+    write(1, buff, ret);
+    if (ret == 0)
+        this->finished = true;
    // std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
 }
 
@@ -99,17 +107,22 @@ void HttpResponse::setCgiReadFd(int cgiReadFd) {
     HttpResponse::cgiReadFd = cgiReadFd;
 }
 
-void HttpResponse::readFromCgi(int cgiReadFd) {
+void HttpResponse::readFromCgi() {
     char buf[1024];
     int ret;
     std::string bd;
-    while ((ret = read(cgiReadFd, buf, 1024)) > 0) {
+    while ((ret = read(this->getBodyFileDescriptor(), buf, 1024)) > 0) {
         bd.append(buf, ret);
+        if (bd.find("\r\n\r\n") != std::string::npos)
+            break;
     }
     this->setStatusCode(OK);
     std::string headers = bd.substr(0, bd.find("\r\n\r\n") + 4);
     this->parseHeaders(headers);
     this->setBody( bd.substr(headers.length() + 4));
+    this->bodySkiped = this->body.size();
+    this->contentLength = filesize(this->getTempFile().getFileName().c_str()) ;
+    this->contentLength -= headers.length() + 4;
 }
 
 void HttpResponse::parseHeaders(std::string &headers) {
@@ -118,9 +131,9 @@ void HttpResponse::parseHeaders(std::string &headers) {
     std::string key;
     std::string value;
     if (firstLine.find("Status") != std::string::npos) {
-        std::string statusCode = firstLine.substr(firstLine.find(' ') + 1,
+        std::string sc = firstLine.substr(firstLine.find(' ') + 1,
                                                    firstLine.find(' ') + 3);
-        this->setStatusCode(std::stoi(statusCode));
+        this->setStatusCode(std::stoi(sc));
     } else {
         key = firstLine.substr(0, firstLine.find(':'));
        value = firstLine.substr(firstLine.find(':') + 1);

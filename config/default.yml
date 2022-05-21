@@ -2,8 +2,8 @@ servers:   # list of servers
         # sdfsdaf
   - server: # server
         server_name: 127.0.0.1
-        listen: 80
-        root: ./root
+        listen: 8080
+        root: /home/b0n3/Desktop/cursus/webserv/root/roxy
         client_max_body_size: 1000
         locations:
           - /the7:
@@ -15,7 +15,7 @@ servers:   # list of servers
               error_page:
                 - code: 500
                   content: ./Networking/index.html
-                - code: 502
+                - code: 503
                   content: ./Networking/index.html
               upload_directory: /var/www/html/public/uploads
               allowed_methods:
@@ -23,7 +23,7 @@ servers:   # list of servers
                   - GET
                   - DELETE
               cgi:
-                  path: ./Networking/index.html
+                  path: /usr/bin/php-cgi
                   ext:
                     - .php
                     - .php5
@@ -35,9 +35,9 @@ servers:   # list of servers
                     - .php6
   - server: # server
       server_name: 127.0.0.1
-      listen: 8080
+      listen: 8081
 
-      root: /Users/aait-ham/Desktop/webserv/root/php-website
+      root: /home/b0n3/Desktop/cursus/webserv/root/php-website
 
       client_max_body_size: 1000
       locations:
@@ -60,7 +60,7 @@ servers:   # list of servers
               cgi:
                 #make sure you have php-cgi installed on your system
                 # put the php-cgi absolute path here
-                path: /Users/aait-ham/.brew/bin/php-cgi
+                path: /usr/bin/php-cgi
 
                 ext:
                   - .php

@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 #include <sys/poll.h>
+#include <fstream>
+std::ifstream::pos_type filesize(const char* filename);
 
 std::string trim(const std::string &s);
 
@@ -18,6 +20,6 @@ bool is_directory(const std::string &path);
 
 std::string getConentTypeFromFileName(std::string fileName);
 struct pollfd *convertToArray(std::vector< struct pollfd>  vec);
-std::string autoIndexRead(std::string path);
+bool autoIndexRead(int fd, std::string path);
 std::string readFileAndReturnString(std::string filePath);
 #endif //WEBSERV_UTILS_H

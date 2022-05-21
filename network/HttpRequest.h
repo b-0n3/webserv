@@ -14,6 +14,8 @@
 #include <sstream>
 #include <map>
 
+#include <fcntl.h>
+
 #define BUFFER_SIZE 5001
 
 class HttpRequest {
@@ -86,7 +88,7 @@ public:
 
     bool IsFinished() { return (IsHeaderFinished() && IsBodyParsed()) || (!IsHasBody() && IsHeaderParsed()); }
 
-    bool IsHasBody() { return Method == "POST" ? true : false; }
+    bool IsHasBody() { return Method == "POST"; }
 
 
 	bool IsChunkedBodyFinished();

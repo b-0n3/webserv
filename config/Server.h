@@ -17,7 +17,6 @@ private:
     std::string host;
     int port;
     std::string root;
-    unsigned  long maxBodySize;
     std::vector<Location*> locations;
 public:
     Server();
@@ -30,6 +29,8 @@ public:
     Location *getLocation(std::string path);
 
     static Server *fromNode(Node<Token *> *root);
+
+    unsigned  long maxBodySize;
 };
 
 

@@ -31,8 +31,8 @@ void HttpServlet::start() {
     int i = 1;
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int));
     int set = 1;
-    setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-    //signal(SIGPIPE, SIG_IGN);
+    //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+    signal(SIGPIPE, SIG_IGN);
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) == -1) {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
@@ -75,16 +75,12 @@ void HttpServlet::acceptNewClient(struct pollfd pfd) {
 }
 
 void HttpServlet::handleRequests() {
-    struct pollfd *pfds = convertToArray(this->pollfd_list);
-    int size = this->pollfd_list.size();
-    int nfds = poll(pfds, this->pollfd_list.size(), -1);
-    if (nfds == -1) {
-        delete [] pfds;
-        return;
-    }
-    this->acceptNewClient(pfds[0]);
-    std::vector<int> to_delete;
 
+    int size = this->pollfd_list.size();
+
+    if (this->pollfd_list[0].revents & POLLIN)
+        this->acceptNewClient(this->pollfd_list[0]);
+    std::vector<int> to_delete;
     for (int i = 1; i < size; i++) {
         int fd = this->pollfd_list[i].fd;
         if (this->requests.find(fd)!= this->requests.end() && this->requests[fd]->cgiRunning) {
@@ -95,7 +91,7 @@ void HttpServlet::handleRequests() {
             continue;
         }
 
-        if (pfds[i].revents & POLLIN) {
+        if (pollfd_list[i].revents & POLLIN) {
             if (this->requests.find(fd) == this->requests.end()) {
                 this->requests[fd] = new HttpRequest(fd);
                 this->responses[fd] = new HttpResponse();
@@ -120,18 +116,20 @@ void HttpServlet::handleRequests() {
                 this->requests[fd]->Parse();
                 if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
-                                        this->responses[fd],
-                                        "127.0.0.1");
+                                        this->responses[fd]);
                     if (!requests[fd]->cgiRunning)
                         this->pollfd_list[i].events = POLLOUT;
                     continue;
                 }
             }
         }
-       else  if (pfds[i].revents & POLLOUT) {
-
+       else  if (pollfd_list[i].revents & POLLOUT) {
+            // @ todo check if the request is still not served
+            if (!this->responses[fd]->isFinished()) {
                 this->responses[fd]->writeToFd(fd);
-
+                pollfd_list[i].events = POLLOUT;
+            }
+            else
                 to_delete.push_back(fd);
 
             std::cout << close(fd) << std::endl;
@@ -156,45 +154,47 @@ void HttpServlet::handleRequests() {
                 }
             }
         }
-    delete[] pfds;
+
 }
 
 
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
-    if (this->servers.find(server) == this->servers.end()) {
-        response->setBody("Server not found");
-        response->setStatusCode(404);
-        return;
-    }
-    if (request->GetPath().empty() || request->GetPath() == " ") {
-        response->setStatusCode(  MOVED_PERMANENTLY);
-        response->addHeader("Location", "/");
-        return;
-    }
-    Server *s = this->servers[server];
-    Location *l = s->getLocation(request->GetPath());
-    if (l == nullptr) {
-        response->setStatusCode(NOT_FOUND);
-        std::string body = "<html><body><h1>404 Not Found</h1></body></html>";
-        response->setBody(body);
-        return;
-    }
-    request->root  = s->getRoot();
-//    request->SetPath(request->GetPath().substr(l->getRout().size()));
-    request->location = l->getRout();
-    if (l->isAllowedMethod(request->GetMethod())) {
-        l->setRootRir(s->getRoot());
-        if (l->getCgiIfExists(request->GetPath()))
-            l->handleCgi(request, response);
-        else
-            l->handleStatic(request, response);
+    if (response->getStatusCode() == 200) {
+        if (this->servers.find(server) == this->servers.end()) {
+            response->setBody("Server not found");
+            response->setStatusCode(404);
 
-    } else {
-        response->setStatusCode(METHOD_NOT_ALLOWED);
-        std::string body = "<html><body><h1>405 Method Not Allowed</h1></body></html>";
-        response->setBody(body);
+        }
+        if (request->GetPath().empty() || request->GetPath() == " ") {
+            response->setStatusCode(MOVED_PERMANENTLY);
+            response->addHeader("Location", "/");
+            return;
+        }
+        Server *s = this->servers[server];
+        Location *l = s->getLocation(request->GetPath());
+        if (response->getContentLength() > s->maxBodySize) {
+            response->setStatusCode(BAD_REQUEST);
+        }
+        if (l == nullptr) {
+            response->setStatusCode(NOT_FOUND);
+            return;
+        }
+        request->root = s->getRoot();
+//    request->SetPath(request->GetPath().substr(l->getRout().size()));
+        request->location = l->getRout();
+        if (l->isAllowedMethod(request->GetMethod())) {
+            l->setRootRir(s->getRoot());
+            if (l->getCgiIfExists(request->GetPath()))
+                l->handleCgi(request, response);
+            else
+                l->handleStatic(request, response);
+
+        } else {
+            response->setStatusCode(METHOD_NOT_ALLOWED);
+        }
     }
+    // @Todo find error page
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
@@ -204,13 +204,13 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
     {
         response->setStatusCode(request->getStatusCode());
         response->setBody("Bad Request");
-        return;
+
     }
     if (server.empty()) {
         response->setStatusCode(BAD_REQUEST);
         std::string body = "<html><body><h1>400 Bad Request</h1></body></html>";
         response->setBody(body);
-        return;
+
     }
     this->handleRequest(request, response, server);
 }

@@ -7,6 +7,8 @@
 #include "Utils.h"
 #include <sstream>
 #include <dirent.h>
+#include <unistd.h>
+#include <cstring>
 
 #define WHITESPACE " \t\n\r"
 std::string ltrim(const std::string &s)
@@ -103,23 +105,33 @@ std::string readFileAndReturnString(std::string filePath) {
     return buffer.str();
 }
 
-std::string autoIndexRead(std::string path)
+bool  autoIndexRead(int fd, std::string path)
 {
     DIR *dir;
     struct dirent *diread;
-    std::string content = "<html><body>";
+        write(fd, "<html><body>", 12);
     if ((dir = opendir(path.c_str())) != nullptr) {
         while ((diread = readdir(dir)) != nullptr) {
-            content.append("<a href=");
-            content.append(diread->d_name);
-            content.append("> ");
-            content.append(diread->d_name);
-            content.append("</a></br>");
+            write(fd,"<a href=", 8);
+            write(fd,diread->d_name, strlen(diread->d_name));
+            write(fd,"> ",2);
+            write(fd,diread->d_name, strlen(diread->d_name));
+            write(fd,"</a></br>",9);
         }
         closedir(dir);
-        content.append("</pre></body></html>");
-        return content;
+        write(fd, "</pre></body></html>",20);
+        close(fd);
+        return true;
     }
     else
-        return "";
+        return false;
+}
+
+
+
+
+std::ifstream::pos_type filesize(const char* filename)
+{
+    std::ifstream in(filename, std::ifstream::ate | std::ifstream::binary);
+    return in.tellg();
 }
