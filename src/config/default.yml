@@ -1,0 +1,72 @@
+servers:   # list of servers
+        # sdfsdaf
+  - server: # server
+        server_name: 127.0.0.1
+        listen: 8080
+        root: /var/www/html/roxy
+        client_max_body_size: 1000
+        locations:
+          - /:
+              auto_index: true
+              index:
+                - index.html
+                - index.htm
+                - index.php
+              error_page:
+                - code: 500
+                  content: ./Networking/index.html
+                - code: 503
+                  content: ./Networking/index.html
+              upload_directory: /var/www/html/public/uploads
+              allowed_methods:
+                  - POST
+                  - GET
+                  - DELETE
+              cgi:
+                  path: /usr/bin/php-cgi
+                  ext:
+                    - .php
+                    - .php5
+                    - .php7
+                    - .php-cgi
+                    - .php3
+                    - .php4
+                    - .php5
+                    - .php6
+  - server: # server
+      server_name: 192.168.99.100
+      listen: 8081
+
+      root: /var/www/html/wordpress
+
+      client_max_body_size: 1000
+      locations:
+          - /:
+              auto_index: true
+              index:
+                - index.html
+                - index.htm
+                - index.php
+              error_page:
+                - code: 500
+                  content: ./Networking/index.html
+                - code: 502
+                  content: ./Networking/index.html
+              upload_directory: /var/www/html/public/uploads
+              allowed_methods:
+                - POST
+                - GET
+                - DELETE
+              cgi:
+                #make sure you have php-cgi installed on your system
+                # put the php-cgi absolute path here
+                path: /usr/bin/php-cgi
+                ext:
+                  - .php
+                  - .php5
+                  - .php7
+                  - .php-cgi
+                  - .php3
+                  - .php4
+                  - .php5
+                  - .php6
