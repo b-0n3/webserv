@@ -87,6 +87,55 @@ std::string getConentTypeFromFileName(std::string fileName) {
     return "text/plain";
 }
 
+std::string getExtensionByContentType(std::string type)
+{
+    std::map<std::string , std::string > values;
+    values[ "text/html"] = "html";
+    values["text/css"] = "css" ;
+    values["application/javascript"] = "js";
+    values["image/jpeg"] = "jpg" ;
+    values[ "image/jpeg"] = "jpeg";
+    values["image/png"] = "png" ;
+    values["image/gif"] = "gif" ;
+    values["text/plain"] = "txt" ;
+    values["application/pdf"] = "pdf" ;
+    values["application/msword"] = "doc" ;
+    values[ "application/vnd.openxmlformats-officedocument.wordprocessingml.document"] = "docx";
+    values["application/vnd.ms-excel"] = "xls" ;
+    values[ "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"] = "xlsx";
+    values["application/vnd.ms-powerpoint"] = "ppt" ;
+    values[ "application/vnd.openxmlformats-officedocument.presentationml.presentation"] = "pptx";
+    values["audio/mpeg"] = "mp3" ;
+    values["video/mp4"] = "mp4" ;
+    values["audio/mp4"] = "m4a" ;
+    values["video/mp4"] = "m4v" ;
+    values["audio/ogg"] = "ogg" ;
+    values["video/ogg"] = "ogv" ;
+    values["audio/wav"] = "wav" ;
+    values[ "video/webm"] = "webm";
+    values[ "image/webp"] = "webp";
+    values["image/x-icon"] = "ico" ;
+    values["image/svg+xml"] = "svg" ;
+    values["application/vnd.ms-fontobject"] = "eot" ;
+    values["application/x-font-ttf"] = "ttf" ;
+    values[ "application/x-font-woff"] = "woff";
+    values[ "application/x-font-woff2"] = "woff";
+    values["application/x-font-otf"] = "otf" ;
+    values[ "application/x-font-sfnt"] = "sfnt";
+    values[ "application/json"] = "json";
+    values["application/xml"] = "xml" ;
+    values["application/zip"] = "zip" ;
+    values["application/x-rar-compressed"] = "rar" ;
+    values["application/x-7z-compressed"] = "7z";
+    values["application/x-tar"] = "tar" ;
+    values["application/x-gzip"] = "gz";
+    values["application/x-bzip2"] = "bz2" ;
+    if (values.find(type) != values.end()) {
+        return "."+values[type];
+    }
+    return ".txt";
+}
+
 struct pollfd *convertToArray(std::vector< struct pollfd>  vec) {
     struct  pollfd *array = new struct pollfd[vec.size()];
     for (int i = 0; i < vec.size(); i++) {
@@ -101,7 +150,7 @@ size_t countFileSize(const char *filename) {
     struct stat st;
 
     if (stat(filename, &st) == 0)
-        return st.st_size;
+        return st.st_size ;
     return -1;
 }
 std::string readFileAndReturnString(std::string filePath) {

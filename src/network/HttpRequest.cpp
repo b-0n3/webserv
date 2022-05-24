@@ -27,8 +27,8 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
 	this->BodyFileName = "/tmp/" + std::to_string(rand());
 	this->TmpBodyFileName = "/tmp/" + std::to_string(rand());
 
-	std::cout << "body" << BodyFileName << std::endl;
-	std::cout << "tmp" << TmpBodyFileName << std::endl;
+//	std::cout << "body" << BodyFileName << std::endl;
+//	std::cout << "tmp" << TmpBodyFileName << std::endl;
     Parse();
 }
 
@@ -104,6 +104,7 @@ void HttpRequest::ProcessChunkedBody()
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
 {
 	Method = FirstLine.substr(0, FirstLine.find(' '));
+    std::cout << "method =- "  << Method << std::endl;
     Path = FirstLine.substr(FirstLine.find(' ') + 1);
     Path = Path.substr(0, Path.find(' '));
 	//std::cout << "Method: " << Method << std::endl;
@@ -155,7 +156,6 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 		std::string token;
 		std::getline(ss, token, '\n');
 		if (token[0] == '\r')
-		if (token[0] == '\r')
 			break;
 		token.erase(token.find("\r") , 1);
 		SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
@@ -206,19 +206,24 @@ void    HttpRequest::Parse() {
 
     //Use form data postman
     //if has body and header parsed and body not parsed yet
-    if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed()) {
+    if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed() ) {
 		//change compare of the map
-        
-		if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
+        if (Headers.count("Content-Length") == 0) {
+            SetBodyParsed(true);
+            return;
+        }
+            if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{
 			TmpBodyFd.open(TmpBodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary ) ;
+            std::cout << request<< std::endl;
 			TmpBodyFd.write(request.c_str() , request.size());
 			if (IsChunkedBodyFinished())
 			{
 				ProcessChunkedBody();
-				if (CountFileSize(BodyFileName.c_str()) ==
+				if (CountFileSize(BodyFileName.c_str()) >=
                 std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
 					SetBodyParsed(true);
+                std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
 			}
 			TmpBodyFd.close();
 		}
@@ -227,8 +232,9 @@ void    HttpRequest::Parse() {
 			BodyFd.open(BodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary);
 			BodyFd.write(request.c_str() , request.size());
 			BodyFd.close();
-			if (CountFileSize(BodyFileName.c_str()) == std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
+			if (CountFileSize(BodyFileName.c_str()) >= std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
 				SetBodyParsed(true);
+            std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
 		}
     }
 }

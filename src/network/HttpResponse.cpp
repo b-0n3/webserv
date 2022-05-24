@@ -11,9 +11,10 @@
 #include "filesystem"
 #include "../tools/Utils.h"
 
-HttpResponse::HttpResponse() :finished(false) ,writingBody(false),bodySkiped(0),chunked(false) {
+HttpResponse::HttpResponse() :finished(false) , writingBody(false),bodySkiped(0),chunked(false) {
     this->statusCode = 200;
     this->contentLength = 0;
+    this->cgiHeaderSize = 0;
     this->contentType = "text/html";
 }
 void HttpResponse::writeToFd(int i) {
@@ -29,6 +30,13 @@ void HttpResponse::writeToFd(int i) {
         write(i, "\r\n", 2);
         write(i, "Keep-Alive: timeout=5, max=1000", strlen("Keep-Alive: timeout=5, max=1000") );
         write(i, "\r\n", 2);
+        for (int j  = 0; j < this->cookies.size(); j++)
+        {
+            std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
+            write(i, "Set-Cookie: ",12);
+            write(i, this->cookies[j].c_str(),this->cookies[j].length());
+            write(i, "\r\n",2);
+        }
         for (std::map<std::string, std::string>::iterator it = this->headers.begin();
              it != this->headers.end(); ++it) {
             write(i, it->first.c_str(),
@@ -44,20 +52,29 @@ void HttpResponse::writeToFd(int i) {
         }
         writingBody = true;
     }
-    char buff[10000];
-    int ret = read(this->getBodyFileDescriptor(), buff, 10000);
-    if (ret == 0)
-        this->finished = true;
+    if (this->contentLength > 0) {
+        int BUFFER_SIZE = 20000;
+        char buff[BUFFER_SIZE];
+        int ret = read(this->getBodyFileDescriptor(), buff, BUFFER_SIZE);
+        if (ret == 0)
+            this->finished = true;
+        else
+            write(i, buff, ret);
+        if (ret < BUFFER_SIZE && ret <= this->contentLength)
+            this->finished = true;
+    }
     else
-        write(i, buff, ret);
-    if (ret < 10000 && ret <= this->contentLength)
         this->finished = true;
-
-    std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
+  //  std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
 }
 
 void HttpResponse::addHeader(std::string const &key, std::string const  &value) {
-    this->headers[key] = value;
+    if (key == "Set-Cookie") {
+        this->cookies.push_back(value);
+        std::cout <<value<< std::endl;
+    }
+    else
+        this->headers[key]  =  value;
 }
 
 int HttpResponse::getStatusCode() {
@@ -125,14 +142,18 @@ void HttpResponse::readFromCgi() {
         bd.append(buf, ret);
         if (bd.find("\r\n\r\n") != std::string::npos)
             break;
+        write(1, buf, ret);
     }
     this->setStatusCode(OK);
     std::string headers = bd.substr(0, bd.find("\r\n\r\n") + 4);
     this->parseHeaders(headers);
     this->body = bd.substr(bd.find("\r\n\r\n") + 4);
     this->bodySkiped = this->body.size();
+    this->cgiHeaderSize = headers.size();
     this->contentLength =  countFileSize(this->getTempFile().getFileName().c_str());
-    this->contentLength -= headers.length() + 4;
+    std::cerr << this->contentLength << " content length" << std::endl;
+    this->contentLength -= headers.length();
+    std::cerr << headers.length() << std::endl;
 }
 
 void HttpResponse::parseHeaders(std::string &headers) {

@@ -2,7 +2,7 @@
 // Created by Abdelouahad Ait hamd on 4/7/22.
 //
 
-#include <dirent.h>
+#include <cstring>
 #include <fstream>
 
 #include <fcntl.h>
@@ -210,10 +210,10 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
     // check if method is Get
     if (pRequest->GetMethod() == "GET")
         this->handleGet(pRequest, pResponse);
-//    else if (pRequest->GetMethod() == "POST")
-//        this->handlePost(pRequest, pResponse);
-//    else if (pRequest->GetMethod() == "DELETE")
-//        this->handleDelete(pRequest, pResponse);
+    else if (pRequest->GetMethod() == "POST")
+        this->handlePost(pRequest, pResponse);
+    else if (pRequest->GetMethod() == "DELETE")
+        this->handleDelete(pRequest, pResponse);
     else
         pResponse->setStatusCode(NOT_IMPLEMENTED);
 }
@@ -294,6 +294,36 @@ bool Location::is_file(std::string path) {
 void Location::redirect(HttpRequest *req, HttpResponse *res, std::string path) {
     res->setStatusCode(FOUND);
     res->addHeader("Location", path);
+}
+
+void Location::handlePost(HttpRequest *req, HttpResponse *res) {
+    std::string filename = this->uploadDir + req->getBodyFileName() + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
+    std::string filePath =  this->rootRir + "/" +  this->uploadDir + req->getBodyFileName()
+            + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
+    if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
+
+
+        res->setStatusCode(200);
+        res->getTempFile()._close();
+        res->getTempFile()._open();
+        write(res->getBodyFileDescriptor(), filename.c_str(), filename.length());
+        res->getTempFile()._close();
+        res->getTempFile()._open();
+        res->setContentLength(filename.length());
+    } else
+        res->setStatusCode(UNAUTHORIZED);
+
+}
+void Location::handleDelete(HttpRequest *req, HttpResponse *res) {
+    std::string filename = this->rootRir  + "/"  + req->GetPath();
+    if (std::strncmp(req->GetPath().c_str(), this->uploadDir.c_str(), this->uploadDir.length()) != 0)
+        res->setStatusCode(UNAUTHORIZED);
+    else if (unlink(filename.c_str()) > 0)
+    {
+        res->setStatusCode(OK);
+    }
+    else
+        res->setStatusCode(NOT_FOUND);
 }
 
 

@@ -7,6 +7,7 @@
 
 #include <string>
 #include <map>
+#include <vector>
 #include "../tools/TempFile.h"
 class HttpResponse {
 private:
@@ -20,6 +21,8 @@ private:
     bool finished;
     int bodySkiped;
     std::map<std::string, std::string> headers;
+    std::vector<std::string> cookies;
+    unsigned  long cgiHeaderSize;
     int cgiReadFd;
 public:
     unsigned long getContentLength() const;

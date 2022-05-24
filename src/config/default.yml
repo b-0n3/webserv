@@ -35,7 +35,7 @@ servers:   # list of servers
                     - .php6
   - server: # server
       server_name: 192.168.99.100
-      listen: 8081
+      listen: 80
 
       root: /var/www/html/wordpress
 
@@ -52,7 +52,7 @@ servers:   # list of servers
                   content: ./Networking/index.html
                 - code: 502
                   content: ./Networking/index.html
-              upload_directory: /var/www/html/public/uploads
+              upload_directory: wp-content/uploads
               allowed_methods:
                 - POST
                 - GET

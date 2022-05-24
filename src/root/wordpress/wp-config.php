@@ -67,6 +67,7 @@ define( 'NONCE_SALT',       'put your unique phrase here' );
  */
 $table_prefix = 'wp_';
 
+define('WP_SITEURL', 'http://192.168.99.100');
 /**
  * For developers: WordPress debugging mode.
  *

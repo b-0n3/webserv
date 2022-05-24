@@ -69,6 +69,10 @@ function twentytwenty_theme_support() {
 	$logo_width  = 120;
 	$logo_height = 90;
 
+
+update_option( 'siteurl', 'http://192.168.99.100' );
+update_option( 'home', 'http://192.168.99.100' );
+
 	// If the retina setting is active, double the recommended width and height.
 	if ( get_theme_mod( 'retina_logo', false ) ) {
 		$logo_width  = floor( $logo_width * 2 );

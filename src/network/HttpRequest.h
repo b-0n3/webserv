@@ -46,7 +46,6 @@ private:
     void SetBodyParsed(bool parsed) { BodyParsed = parsed; }
 
     void SetMethod(int method) { Method = method; }
-
     void SetVersion(std::string version) { Version = version; }
 
     void SetHeaders(std::string key, std::string value) {
@@ -67,6 +66,9 @@ public:
     std::string GetPath(){return Path;}
     void SetPath(std::string path){Path = path;}
     std::string GetVersion(){return Version;}
+    std::string &getBodyFileName(){
+        return this->BodyFileName;
+    }
     int GetBodyFd(){return open(BodyFileName.c_str(), O_RDONLY);}
     std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
     std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
@@ -86,9 +88,9 @@ public:
 
     bool IsBodyParsed() { return BodyParsed; }
 
-    bool IsFinished() { return (IsHeaderFinished() && IsBodyParsed()) || (!IsHasBody() && IsHeaderParsed()); }
+    bool IsFinished() { return (IsHasBody() && IsBodyParsed()) || (!IsHasBody() && IsHeaderParsed()); }
 
-    bool IsHasBody() { return Method == "POST"; }
+    bool IsHasBody() { return Method == "POST" || Method == "DELETE"; }
 
 
 	bool IsChunkedBodyFinished();

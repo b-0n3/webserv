@@ -71,6 +71,8 @@ public:
     void handleCgi(HttpRequest *pRequest, HttpResponse *pResponse);
 
     void handleGet(HttpRequest *req, HttpResponse *res);
+    void handlePost(HttpRequest *req, HttpResponse *res);
+    void handleDelete(HttpRequest *req, HttpResponse *res);
 
     bool is_file(std::string path);
 

@@ -84,7 +84,7 @@ std::string headerToEnv(std::pair<std::string, std::string> header)
         if ((header).first[i] == '-')
             env += '_';
         else
-            env += toupper(header.first[i]);
+            env += std::toupper(header.first[i]);
     }
     env += "=";
     env += header.second;
@@ -100,6 +100,10 @@ std::string headerToEnv(std::pair<std::string, std::string> header)
     std::string script_path = request->root+
             request->GetPath();
     std::string query_string = getParams(request->GetParams());
+    if (request->GetHeaders().count("Cookie"))
+    {
+        envp_vect.push_back("COOKIE=" +request->GetHeadersValueOfKey("Cookie"));
+    }
 
     envp_vect.push_back("DOCUMENT_URI=" +request->GetPath());                 /* =/cgi-bin/php/hello.php */
     envp_vect.push_back("REQUEST_URI=" +request->GetPath()+"?" + query_string );                                            /* =/cgi-bin/php/hello.php */
@@ -108,7 +112,7 @@ std::string headerToEnv(std::pair<std::string, std::string> header)
    envp_vect.push_back("SCRIPT_FILENAME=" +script_path);                                         /* =/APP/examples/cgi-bin/php/hello.php */
     envp_vect.push_back("PATH_TRANSLATED=" +script_path);                                         /* =/APP/examples/cgi-bin/php/hello.php */
     envp_vect.push_back("QUERY_STRING=" + query_string);                                            /* = */
-    envp_vect.push_back("SERVER_NAME=" + request->GetHeadersValueOfKey("Host") + ":" +  std::to_string(request->port)/*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
+    envp_vect.push_back("SERVER_NAME=" + request->GetHeadersValueOfKey("Host") /*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
     envp_vect.push_back("SERVER_PORT=" + std::to_string(request->port));                                             /* =82 */
     envp_vect.push_back("REQUEST_METHOD=" + request->GetMethod());                                          /* =GET */
     envp_vect.push_back("DOCUMENT_ROOT=" + request->root);                                           /* =/APP/examples */
@@ -164,18 +168,14 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         args[0] = this->binaryPath.c_str();
         args[1] = path.c_str();
         args[0] = nullptr;
+        std::cout << "methode =" << pRequest->GetMethod() << std::endl;
        // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
         char **env = createEnv(pRequest);
-        //int writePipe[2];
+       // int writePipe[2];
        // int readPipe[2];
-//        if (pipe(readPipe) == -1) {
-//            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
-//            return;
-//        }
-//        if (!pRequest->IsHasBody()) {
+
+//        if (pRequest->IsHasBody()) {
 //            if (pipe(writePipe) == -1) {
-//                close(readPipe[0]);
-//                close(readPipe[1]);
 //                pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
 //                return;
 //            }
@@ -189,11 +189,12 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         if (pid == 0) {
          //   std::cout << "execve" << std::endl;
             std::cout << this->binaryPath<< std::endl;
-            if (!pRequest->IsHasBody()) {
+            if (pRequest->IsHasBody()) {
                 dup2( pRequest->GetBodyFd(),  STDIN_FILENO);
-                dup2(  pResponse->getBodyFileDescriptor() , STDOUT_FILENO );
+                dup2(  pResponse->getBodyFileDescriptor() , STDOUT_FILENO);
                 close(pRequest->GetBodyFd());
                 close(pResponse->getBodyFileDescriptor());
+               // write(STDERR_FILENO, "FSDF\n", 5);
 //               // dup2(out, STDERR_FILENO );
 //                close(readPipe[0]);
 //                close(writePipe[1]);
@@ -211,15 +212,23 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
             exit(s);
         } else {
          //   dup2(STDERR_FILENO, out);
-//            if (!pRequest->IsHasBody()) {
-//            //    std::cout << "writing body to cgi" << std::endl;
-//                close(writePipe[0]);
-////                write(writePipe[1],
-////                      pRequest->GetBody().c_str(),
-////                      pRequest->GetBody().size());
-////                write(writePipe[1],pRequest.
+
+            if (pRequest->IsHasBody()) {
+               // close(writePipe[0]);
+                    close(pRequest->GetBodyFd());
+                   std::cout << "writing body to cgi" << std::endl;
+                   // @Todo: change this to nonBlocking
+//                char buff[1056];
+//                int ret;
+//                while ((ret = read(pRequest->GetBodyFd(), buff, 1056)) >0 )
+//                {
+//                    write(writePipe[1], buff, ret);
+//                    write(1, buff, ret);
+//                }
+//                close(pRequest->GetBodyFd());
 //                close(writePipe[1]);
-//            }
+
+            }
           // close(readPipe[1]);
             pRequest->cgiPid = pid;
             pRequest->cgiRunning = true;
