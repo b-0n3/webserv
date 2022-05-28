@@ -161,14 +161,14 @@ void HttpServlet::handleRequests() {
 
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
+    if (this->servers.find(server) == this->servers.end()) {
+        response->setStatusCode(BAD_GATEWAY);
+        return;
+    }
     Server *s = this->servers[server];
     Location *l = s->getLocation(request->GetPath());
     if (response->getStatusCode() == 200) {
-        if (this->servers.find(server) == this->servers.end()) {
-            response->setBody("Server not found");
-            response->setStatusCode(BAD_GATEWAY);
 
-        }
         if (request->GetPath().empty() || request->GetPath() == " ") {
             response->setStatusCode(MOVED_PERMANENTLY);
             response->addHeader("Location", "/");
@@ -212,7 +212,6 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
             response->setContentType(getContentTypeFromFileName(p->getContentPath()));
         }
     }
-    // @Todo find error page
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {

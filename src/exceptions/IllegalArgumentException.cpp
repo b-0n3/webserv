@@ -4,7 +4,7 @@
 
 #include "IllegalArgumentException.h"
 
-IllegalArgumentException::IllegalArgumentException(const std::string message) {
+IllegalArgumentException::IllegalArgumentException(const std::string &message) {
     this->message = message;
 }
 

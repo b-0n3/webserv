@@ -167,7 +167,7 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         const char *args[3];
         args[0] = this->binaryPath.c_str();
         args[1] = path.c_str();
-        args[0] = nullptr;
+        args[2] = nullptr;
         std::cout << "methode =" << pRequest->GetMethod() << std::endl;
        // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
         char **env = createEnv(pRequest);

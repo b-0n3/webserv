@@ -21,7 +21,8 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-
+    this->startedAt = time(0);
+    this->timeOutAt = 
 	srand(time(NULL));
 
 	this->BodyFileName = "/tmp/" + std::to_string(rand());

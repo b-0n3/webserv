@@ -114,6 +114,8 @@ Server *Server::fromNode(Node<Token *> *root) {
         else
             throw IllegalArgumentException("unexpected token" + root->getChildren()[i]->getData()->getValue());
     }
+    if (s->locations.size() == 0)
+        throw IllegalArgumentException("no locations defined");
     s->initLocations();
     return s;
 }
@@ -261,7 +263,7 @@ void Server::initLocations() {
         if (this->locations[i]->getIndexFiles().empty())
             this->locations[i]->setIndexFiles(indexFiles);
         if (this->locations[i]->getRootRir().empty())
-            this->locations[i]->setRootRir(rootRir);
+            this->locations[i]->setRootRir(this->root);
 //        if (this->locations[i]->isAutoIndexParsed() == false)
 //            this->locations[i]->setAutoIndex(autoIndex);
     }

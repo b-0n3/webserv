@@ -31,6 +31,8 @@ private:
     // @Todo change to ../tools tempFile.cpp
     std::fstream 	BodyFd;
     std::fstream 	TmpBodyFd;
+    time_t          startedAt;
+    time_t          timeOutAt;
   // change this
     std::map<std::string, std::string> Params;
 

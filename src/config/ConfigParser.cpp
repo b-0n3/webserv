@@ -177,6 +177,9 @@ void ConfigParser::replaceEnv() {
         }
         first = this->currentLine.find_first_of('$', start);
         last = this->currentLine.find_first_of('}', first + 1);
+        if (last == std::string::npos) {
+            break;
+        }
         std::cout << "first "<< first << " last " << last << std::endl;
         std::string env = this->currentLine.substr(first + 2, last - first - 2 );
         std::cout << "env" << env<< std::endl;

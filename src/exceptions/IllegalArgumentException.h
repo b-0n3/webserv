@@ -12,7 +12,7 @@ private :
     std::string message;
 public:
   virtual  ~IllegalArgumentException() throw() {};
-    IllegalArgumentException(const std::string message);
+    IllegalArgumentException(const std::string &message);
    virtual const char* what() const throw() ;
 };
 

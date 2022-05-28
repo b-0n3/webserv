@@ -8,6 +8,7 @@ servers:   # list of servers
         locations:
           - /:
               auto_index: true
+              strip_url_path: true
               index:
                 - index.html
                 - index.htm
