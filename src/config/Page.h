@@ -7,17 +7,20 @@
 #include <string>
 #include "../container/Node.h"
 #include "Token.h"
+#include <fcntl.h>
 
 class Page {
 private:
-    int errorCode;
+    int minErorrCode;
+    int maxErrorCode;
     std::string contentPath;
 public:
-    Page(int errorCode, std::string contentPath);
-    int getErrorCode();
+    Page(std::string errorCode, std::string contentPath);
     std::string getContentPath();
-
     static Page *fromNode(Node<Token *> *root);
+    Page *isInThisPage(int errorCode);
+
+    int openFile();
 };
 
 

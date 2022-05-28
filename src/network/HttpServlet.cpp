@@ -161,6 +161,8 @@ void HttpServlet::handleRequests() {
 
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
+    Server *s = this->servers[server];
+    Location *l = s->getLocation(request->GetPath());
     if (response->getStatusCode() == 200) {
         if (this->servers.find(server) == this->servers.end()) {
             response->setBody("Server not found");
@@ -172,9 +174,8 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
             response->addHeader("Location", "/");
             return;
         }
-        Server *s = this->servers[server];
-        Location *l = s->getLocation(request->GetPath());
-        if (response->getContentLength() > s->maxBodySize) {
+
+        if (std::atoi(request->GetHeadersValueOfKey("Content-Length").c_str()) > s->getMaxBodySize()) { // @todo change this one to
             response->setStatusCode(BAD_REQUEST);
         }
         if (l == nullptr) {
@@ -185,7 +186,6 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 //    request->SetPath(request->GetPath().substr(l->getRout().size()));
         request->location = l->getRout();
         if (l->isAllowedMethod(request->GetMethod())) {
-            l->setRootRir(s->getRoot());
             if (l->getCgiIfExists(request->GetPath()))
                 l->handleCgi(request, response);
             else
@@ -193,6 +193,23 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 
         } else {
             response->setStatusCode(METHOD_NOT_ALLOWED);
+        }
+    }
+    if (response->getStatusCode() >= 400) {
+        Page *p = nullptr;
+        int fd = -1;
+        for (int i = 0; i < l->getErrorPages().size(); i++) {
+            p = l->getErrorPages()[i]->isInThisPage(response->getStatusCode());
+            if (p != nullptr) {
+                fd = p->openFile();
+                break;
+            }
+        }
+        if (fd != -1 && p != nullptr)
+        {
+            response->getTempFile().setFd(fd);
+            response->setContentLength(countFileSize(p->getContentPath().c_str()));
+            response->setContentType(getContentTypeFromFileName(p->getContentPath()));
         }
     }
     // @Todo find error page

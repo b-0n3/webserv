@@ -6,6 +6,6 @@
 
 FileNotFoundException::FileNotFoundException(const char *message) : _message(message) {}
 
-const char *FileNotFoundException::what() {
+const char *FileNotFoundException::what() const throw(){
     return  this->_message.c_str();
 }

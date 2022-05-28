@@ -19,7 +19,7 @@ bool is_digits(const std::string &str);
 bool is_directory(const std::string &path);
 size_t countFileSize(const char *filename);
 std::string getExtensionByContentType(std::string type);
-std::string getConentTypeFromFileName(std::string fileName);
+std::string getContentTypeFromFileName(std::string fileName);
 struct pollfd *convertToArray(std::vector< struct pollfd>  vec);
 bool autoIndexRead(int fd, std::string path);
 std::string readFileAndReturnString(std::string filePath);

@@ -43,12 +43,16 @@ public:
 
     void setAllowedMethods(const std::vector<std::string> &allowedMethods);
 
+    const std::string &getRoute() const;
+
+    bool isAutoIndex() const;
+
     const std::string &getUploadDir() const;
     void setAutoIndex(String uploadDir) ;
     void setUploadDir(const std::string &uploadDir);
     std::string getIndexFile(String dir);
     const std::vector<std::string> &getIndexFiles() const;
-    void addIndexFile(String indexFile) ;
+
     void setIndexFiles(const std::vector<std::string> &indexFiles);
     const std::vector<Page *> &getErrorPages() const;
     void setErrorPages(const std::vector<Page *> &errorPages);
@@ -59,7 +63,7 @@ public:
     Cgi  *getCgiIfExists(const std::string &path) const;
 
     static Location *fromNode(Node<Token *> *root);
-
+    void addIndexFile(String indexFile);
     void addAllowedMethod(String method);
 
     void addCgi(Cgi *cgi);

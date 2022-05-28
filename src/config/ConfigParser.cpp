@@ -45,13 +45,13 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *parent,Node<Token *> *root
     Node<Token *> *currentNode = root;
     if (std::getline(*this->configFile, this->currentLine).eof())
         return;// @todo:  Change and call other function to convert ast into a vector of server;// @todo:  Change and call other function to convert ast into a vector of server
-    //std::cout << this->currentLine<<std::endl;
+    this->replaceEnv();
     if (isEmptyLine(this->currentLine) || isOnlyComment(this->currentLine)) {
 
         return this->tokenizeConfigFiles(parent, root, lastIndentation, currentIndentation);
     }
     if (this->currentLine.find_first_of(':') == std::string::npos && !isArrayElment(this->currentLine)) {
-        throw IllegalArgumentException("Config sdffile is not valid");
+        throw IllegalArgumentException("unexpected token" + this->currentLine);
     }
     indentation = this->caluclateIndenetation();
     if (indentation > lastIndentation) {
@@ -160,6 +160,36 @@ std::vector<Server *> ConfigParser::validateAst() {
 
 BinaryTree<Token *> ConfigParser::getAst() {
     return this->ast;
+}
+
+void ConfigParser::replaceEnv() {
+    if (std::count(this->currentLine.begin(), this->currentLine.end(), '$') == 0) {
+        return;
+    }
+
+    std::string lastValue = this->currentLine;
+    std::string::size_type start = 0;
+    std::string::size_type first = 0;
+    std::string::size_type last = 0;
+    while (1) {
+        if (this->currentLine.find_first_of("${", start) == std::string::npos) {
+            break;
+        }
+        first = this->currentLine.find_first_of('$', start);
+        last = this->currentLine.find_first_of('}', first + 1);
+        std::cout << "first "<< first << " last " << last << std::endl;
+        std::string env = this->currentLine.substr(first + 2, last - first - 2 );
+        std::cout << "env" << env<< std::endl;
+        start = last + 1;
+        char *value = std::getenv(env.c_str());
+        if (value == nullptr)
+            continue;
+
+       lastValue.replace(first,
+                                  last - first + 1,
+                                  value);
+    }
+    this->currentLine = lastValue;
 }
 
 

@@ -18,19 +18,68 @@ private:
     int port;
     std::string root;
     std::vector<Location*> locations;
+    bool autoIndex;
+    std::string uploadDir;
+    std::vector<std::string> indexFiles;
+    std::vector<Page*> errorPages;
+    std::vector<Cgi*> cgis;
+    std::string rootRir;
+    std::vector<std::string> allowedMethods;
+    unsigned  long maxBodySize;
 public:
     Server();
     Server(std::string host, int port, std::string root);
+    void initLocations();
     std::string getHost();
     int getPort();
     std::string getRoot();
+    const std::vector<std::string> &getAllowedMethods() const;
+    void setAllowedMethods(const std::vector<std::string> &allowedMethods);
     std::vector<Location *> getLocations();
     bool requestBelongToThisServer(std::string host, int port);
     Location *getLocation(std::string path);
-
     static Server *fromNode(Node<Token *> *root);
+    void addIndexFile(String indexFile);
+    void addAllowedMethod(String method);
 
-    unsigned  long maxBodySize;
+    void addCgi(Cgi *cgi);
+
+    void addErrorPage(Page *page);
+    void setHost(const std::string &host);
+
+    void setPort(int port);
+
+    void setRoot(const std::string &root);
+
+    void setLocations(const std::vector<Location *> &locations);
+
+    bool isAutoIndex() const;
+
+    void setAutoIndex(std::string autoIndex);
+
+    const std::string &getUploadDir() const;
+
+    void setUploadDir(const std::string &uploadDir);
+
+    const std::vector<std::string> &getIndexFiles() const;
+
+    void setIndexFiles(const std::vector<std::string> &indexFiles);
+
+    const std::vector<Page *> &getErrorPages() const;
+
+    void setErrorPages(const std::vector<Page *> &errorPages);
+
+    const std::vector<Cgi *> &getCgis() const;
+
+    void setCgis(const std::vector<Cgi *> &cgis);
+
+    const std::string &getRootRir() const;
+
+    void setRootRir(const std::string &rootRir);
+
+    unsigned long getMaxBodySize() const;
+
+    void setMaxBodySize(unsigned long maxBodySize);
 };
 
 

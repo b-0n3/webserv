@@ -5,6 +5,7 @@
 #ifndef WEBSERV_ILLEGALSTATEEXCEPTION_H
 #define WEBSERV_ILLEGALSTATEEXCEPTION_H
 #include <string>
+#include <exception>
 
 class IllegalStateException :virtual public std::exception {
 private:
@@ -12,7 +13,7 @@ private:
 public:
     virtual  ~IllegalStateException() throw() {};
     IllegalStateException(std::string message);
-   virtual const char *what();
+   virtual const char *what() const  throw();
 };
 
 

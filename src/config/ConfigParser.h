@@ -33,6 +33,8 @@ public:
     Node<Token *> *getNextToken();
     int caluclateIndenetation();
     std::vector<Server *> validateAst();
+
+    void replaceEnv();
 };
 
 

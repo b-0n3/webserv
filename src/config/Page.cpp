@@ -7,10 +7,32 @@
 #include "../exceptions/IllegalArgumentException.h"
 #include "../tools/Utils.h"
 
-Page::Page(int errorCode,  std::string contentPath) {
-    if (errorCode <= 0 || errorCode >= 599)
-        throw IllegalArgumentException("errorCode must be between 100 and 599");
-    this->errorCode = errorCode;
+
+
+Page::Page(std::string errorCode,  std::string contentPath) {
+
+    if (errorCode.empty()) {
+        throw IllegalArgumentException("errorCode is empty");
+    }
+    if (contentPath.empty()) {
+        throw IllegalArgumentException("contentPath is empty");
+    }
+    if (errorCode.find_first_of('x') != std::string::npos)
+    {
+        std::replace( errorCode.begin(), errorCode.end(), 'x', '0');
+        this->minErorrCode = std::stoi(errorCode);
+        this->maxErrorCode = this->minErorrCode / 100;
+        this->maxErrorCode *= 100;
+        this->maxErrorCode += 99;
+    }
+    else
+    {
+        this->minErorrCode = std::stoi(errorCode);
+        this->maxErrorCode = this->minErorrCode;
+    }
+    if (this->minErorrCode < 0 || this->minErorrCode > 999) {
+        throw IllegalArgumentException("errorCode is not valid");
+    }
     std::ofstream file(contentPath,std::ios::in |std::ios::app);
     if (!file.is_open())
         throw IllegalArgumentException("bad content file :" + contentPath + " File not found");
@@ -18,16 +40,14 @@ Page::Page(int errorCode,  std::string contentPath) {
     this->contentPath = contentPath;
 }
 
-int Page::getErrorCode() {
-    return this->errorCode;
-}
+
 
 std::string Page::getContentPath() {
     return this->contentPath;
 }
 
 Page *Page::fromNode(Node<Token *> *root) {
-    int errorCode = -1;
+    std::string errorCode = "-1";
     std::string contentPath ;
     if (root == nullptr)
         throw IllegalArgumentException("root must not be null");
@@ -37,14 +57,12 @@ Page *Page::fromNode(Node<Token *> *root) {
     }
     for (int i = 0; i< root->getChildren().size(); i++)
     {
-//           if (root->getChildren()[i]->getChildren().size() != 2)
-//               throw IllegalArgumentException("unexpected number of children for code");
 
                if (is_digits(root->getChildren()[i]->getData()->getValue()))
                {
-                   if (errorCode != -1)
-                       throw IllegalArgumentException("code must be unique");
-                   errorCode = std::stoi(root->getChildren()[i]->getData()->getValue());
+                   if (errorCode != "-1")
+                       throw IllegalArgumentException("duplicated code");
+                   errorCode =root->getChildren()[i]->getData()->getValue();
                }
                else if (root->getChildren()[i]->getData()->getValue() == "content")
                {
@@ -58,3 +76,14 @@ Page *Page::fromNode(Node<Token *> *root) {
 
     return new Page(errorCode, contentPath);
 }
+
+Page *Page::isInThisPage(int status) {
+    if (status >= this->minErorrCode && status <= this->maxErrorCode)
+        return this;
+    return nullptr;
+}
+
+int Page::openFile() {
+    return open(this->contentPath.c_str(), O_RDONLY);
+}
+

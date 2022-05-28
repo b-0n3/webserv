@@ -29,7 +29,7 @@ std::string trim(const std::string &s) {
 
 
 bool is_digits(const std::string &str) {
-    return str.find_first_not_of("0123456789") == std::string::npos;
+    return str.find_first_not_of("0123456789x") == std::string::npos;
 }
 
 bool is_directory(const std::string &path) {
@@ -39,7 +39,7 @@ bool is_directory(const std::string &path) {
     return false;
 }
 
-std::string getConentTypeFromFileName(std::string fileName) {
+std::string getContentTypeFromFileName(std::string fileName) {
     std::map<std::string, std::string> contentTypes;
     contentTypes["html"] = "text/html";
     contentTypes["css"] = "text/css";

@@ -52,44 +52,38 @@ int main(int argc, char *argv[]) {
             servlets[i]->start();
         }
         while (true) {
-            try{
+            try {
                 // @Todo : use poll here to handle the requests
-            std::vector<struct pollfd> pList;
-            for (int i = 0; i< servlets.size(); i++)
-                for (int j = 0; j < servlets[i]->pollfd_list.size() ; j++)
+                std::vector<struct pollfd> pList;
+                for (int i = 0; i < servlets.size(); i++)
+                    for (int j = 0; j < servlets[i]->pollfd_list.size(); j++)
                         pList.push_back(servlets[i]->pollfd_list[j]);
-            struct pollfd *pfds = convertToArray(pList);
-            int nfds = poll(pfds, pList.size(), 10);
-//           if (nfds <=0)
-//           {
-//               delete [] pfds;
-//               continue;
-//           }
-           for (int i = 0; i < pList.size(); i++)
-               for (int j = 0; j < servlets.size(); j++)
-                   for (int k = 0; k < servlets[j]->pollfd_list.size(); k++)
-                   {
-                       if (pfds[i].fd == servlets[j]->pollfd_list[k].fd)
-                       {
-                           servlets[j]->pollfd_list[k].revents = pfds[i].revents;
-                           break;
-                       }
-                   }
-           delete[] pfds;
-            for (int i = 0; i < servlets.size(); i++) {
-                servlets[i]->handleRequests();
-               // perror("step1");
+                struct pollfd *pfds = convertToArray(pList);
+                int nfds = poll(pfds, pList.size(), 10);
+                for (int i = 0; i < pList.size(); i++)
+                    for (int j = 0; j < servlets.size(); j++)
+                        for (int k = 0; k < servlets[j]->pollfd_list.size(); k++) {
+                            if (pfds[i].fd == servlets[j]->pollfd_list[k].fd) {
+                                servlets[j]->pollfd_list[k].revents = pfds[i].revents;
+                                break;
+                            }
+                        }
+                delete[] pfds;
+                for (int i = 0; i < servlets.size(); i++) {
+                    servlets[i]->handleRequests();
+                    // perror("step1");
+                }
+            }
+            catch (std::exception &e)
+            {
+                std::cout << e.what() << std::endl;
+                //perror(str);
             }
         }
-            catch (const char *str) {
-                std::cout << str << std::endl;
-                perror(str);
-            }
-        }
-    } catch (const char *str) {
-        std::cout << "Error while parsing the config file :" << std::endl <<str << std::endl;
+    } catch (std::exception &e) {
+        std::cout << "Error while parsing the config file :" << std::endl <<e.what() << std::endl;
 
     }
-    perror("sdfd");
+   // perror("sdfd");
    return 0;
 }

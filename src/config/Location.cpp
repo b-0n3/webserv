@@ -133,15 +133,12 @@ Location  *Location::fromNode(Node<Token *> *root) {
                 throw IllegalArgumentException(
                         root->getChildren()[i]->getData()->getValue() + " : expected array of values");
             l->setUploadDir(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        } else
+        }
+        else if (value == "root")
+            l->rootRir = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
+        else
             throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
     }
-        if (l->getAllowedMethods().empty())
-        {
-            l->addAllowedMethod("GET");
-            l->addAllowedMethod("POST");
-            l->addAllowedMethod("DELETE");
-        }
     return l;
 }
 
@@ -156,7 +153,7 @@ void Location::setAutoIndex(String autoIndex)  {
 }
 
 void Location::addIndexFile(String indexFile) {
-    if (indexFile == "") {
+    if (indexFile.empty()) {
         throw IllegalArgumentException("unexpected value");
     }
     indexFile = indexFile.substr(indexFile.find('-') + 1);
@@ -165,7 +162,7 @@ void Location::addIndexFile(String indexFile) {
 
 Location::Location() {
     this->route = "";
-    this->autoIndex = true;
+    this->autoIndex = nullptr;
     this->indexFiles = std::vector<std::string>();
     this->allowedMethods = std::vector<std::string>();
 }
@@ -260,6 +257,10 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
                 res->setStatusCode(NOT_FOUND);
                 return;
             }
+            res->setContentLength(countFileSize(res->getTempFile().getFileName().c_str()));
+            res->setStatusCode(OK);
+            res->getTempFile()._close();
+            res->getTempFile()._open();
             res->setContentType("text/html");
             return;
         }
@@ -273,7 +274,7 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
             return;
         }
 
-        res->setContentType(getConentTypeFromFileName(filePath));
+        res->setContentType(getContentTypeFromFileName(filePath));
         res->setContentLength(countFileSize(filePath.c_str()));
         res->getTempFile().setFd(fd);
        // res->setBody(content);
@@ -324,6 +325,14 @@ void Location::handleDelete(HttpRequest *req, HttpResponse *res) {
     }
     else
         res->setStatusCode(NOT_FOUND);
+}
+
+const std::string &Location::getRoute() const {
+    return route;
+}
+
+bool Location::isAutoIndex() const {
+    return autoIndex;
 }
 
 

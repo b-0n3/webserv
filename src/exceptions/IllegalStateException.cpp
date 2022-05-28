@@ -8,6 +8,6 @@ IllegalStateException::IllegalStateException(std::string message) {
     this->message = message;
 }
 
-const char *IllegalStateException::what(){
+const char *IllegalStateException::what() const throw(){
     return message.c_str();
 }

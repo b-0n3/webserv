@@ -5,6 +5,7 @@
 #ifndef WEBSERV_ILLEGALARGUMENTEXCEPTION_H
 #define WEBSERV_ILLEGALARGUMENTEXCEPTION_H
 #include <string>
+#include <exception>
 
 class IllegalArgumentException:virtual public std::exception {
 private :
@@ -12,7 +13,7 @@ private :
 public:
   virtual  ~IllegalArgumentException() throw() {};
     IllegalArgumentException(const std::string message);
-   virtual const char* what()  ;
+   virtual const char* what() const throw() ;
 };
 
 
