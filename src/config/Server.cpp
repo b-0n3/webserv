@@ -45,86 +45,14 @@ Location *Server::getLocation(std::string path) {
     return nullptr;
 }
 
-Server *Server::fromNode(Node<Token *> *root) {
-    Server *s;
-    std::string value;
-    if (root->getData()->getValue() != "server")
-        throw IllegalArgumentException("unexpected token" + root->getData()->getValue());
-    if (root->getChildren().empty())
-        throw IllegalArgumentException("empty server not allowed");
-    s = new Server();
-    for(int i = 0; i < root->getChildren().size(); i++)
-    {
-        value = root->getChildren()[i]->getData()->getValue();
-        if (value == "server_name") {
-            s->host = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
-        }
-        else if (value == "listen") {
-            if (!is_digits(root->getChildren()[i]->getChildren()[0]->getData()->getValue()))
-                throw IllegalArgumentException("port must be a number");
-            s->port = std::stoi(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        }
-        else if (value == "root") {
-            s->root = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
 
-        }
-        else if (value == "locations") {
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size();j ++) {
-                s->locations.push_back(Location::fromNode(root->getChildren()[i]->getChildren()[j]));
-            }
-        }
-        else if (value == "client_max_body_size") {
-            if (!is_digits(root->getChildren()[i]->getChildren()[0]->getData()->getValue()))
-                throw IllegalArgumentException("client_max_body_size must be a number");
-            s->setMaxBodySize(  std::stoi(root->getChildren()[i]->getChildren()[0]->getData()->getValue()));
-        }
-        else if (value == "allowed_methods") {
-            if (!s->getAllowedMethods().empty())
-                throw IllegalArgumentException(" redecalaration of allowed methods");
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {
-                s->addAllowedMethod(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
-            }
-        } else if (value == "cgi") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            s->addCgi(Cgi::fromNode(root->getChildren()[i]));
-        } else if (value == "error_page") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
-                s->addErrorPage(Page::fromNode(root->getChildren()[i]->getChildren()[j]));
-        } else if (value == "upload_directory") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            s->setUploadDir(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        }else if (value == "index") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
-                s->addIndexFile(
-                        root->getChildren()[i]->getChildren()[j]->getData()->getValue());
-        }
-        else
-            throw IllegalArgumentException("unexpected token" + root->getChildren()[i]->getData()->getValue());
-    }
-    if (s->locations.size() == 0)
-        throw IllegalArgumentException("no locations defined");
-    s->initLocations();
-    return s;
-}
 
 Server::Server() {
     this->host = "localhost";
     this->port = 80;
     this->root = "/var/www/html";
     this->maxBodySize = 1024;
+    this->initParsingMethods();
 }
 
 void Server::setHost(const std::string &host) {
@@ -268,3 +196,165 @@ void Server::initLocations() {
 //            this->locations[i]->setAutoIndex(autoIndex);
     }
 }
+
+
+Server *Server::fromNode(Node<Token *> *root) {
+    Server *s;
+    std::string value;
+    if (root->getData()->getValue() != "server")
+        throw IllegalArgumentException("unexpected token" + root->getData()->getValue());
+    if (root->getChildren().empty())
+        throw IllegalArgumentException("empty server not allowed");
+    s = new Server();
+    for(int i = 0; i < root->getChildren().size(); i++)
+    {
+        value = root->getChildren()[i]->getData()->getValue();
+        if (s->parsingMethods.find(value) != s->parsingMethods.end()) {
+            func f = s->parsingMethods[value];
+            (s->*f)(root->getChildren()[i]);
+        }
+        else
+            throw IllegalArgumentException("unexpected token" + root->getChildren()[i]->getData()->getValue());
+    }
+    if (s->locations.empty())
+        throw IllegalArgumentException("no locations defined");
+    s->initLocations();
+    return s;
+}
+
+
+
+
+void Server::parseHost(Node<Token *> *n) {
+    this->host = n->getChildren()[0]->getData()->getValue();
+    if(root.empty())
+        throw IllegalArgumentException("no root defined");
+}
+
+void Server::parsePort(Node<Token *> *node) {
+    std::string value = node->getChildren()[0]->getData()->getValue();
+
+    if (!is_digits(value))
+        throw IllegalArgumentException("port must be a number");
+    this->port = std::stoi(value);
+}
+
+void Server::parseRoot(Node<Token *> *node) {
+    this->root = node->getChildren()[0]->getData()->getValue();
+    if (root[root.size() -1] == '/')
+        root.pop_back();
+}
+
+void Server::parseLocation(Node<Token *> *node) {
+    for (int j = 0; j < node->getChildren().size();j ++) {
+        this->locations.push_back(Location::fromNode(node->getChildren()[j]));
+    }
+}
+
+void Server::parseAutoIndex(Node<Token *> *n) {
+    this->setAutoIndex(
+            n->getChildren()[0]->getData()->getValue());
+
+}
+
+void Server::parseUploadDir(Node<Token *> *n) {
+    if (n->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                n->getData()->getValue() + " : expected array of values");
+    this->setUploadDir(n->getChildren()[0]->getData()->getValue());
+
+}
+
+void Server::parseIndexFiles(Node<Token *> *n) {
+    if (n->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                n->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < n->getChildren().size(); j++)
+        this->addIndexFile(
+                n->getChildren()[j]->getData()->getValue());
+
+}
+
+void Server::parseErrorPages(Node<Token *> *n) {
+    if (n->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                n->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < n->getChildren().size(); j++)
+        this->addErrorPage(Page::fromNode(n->getChildren()[j]));
+
+}
+
+void Server::parseCgi(Node<Token *> *node) {
+    if (node->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
+    this->addCgi(Cgi::fromNode(node));
+
+}
+
+
+
+void Server::parseAllowedMethods(Node<Token *> *node) {
+    std::vector<Node<Token *> *> childs = node->getChildren();
+    if (!this->getAllowedMethods().empty())
+        throw IllegalArgumentException(" redeclaration of allowed methods");
+    if (childs.size() == 0)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < childs.size(); j++) {
+        this->addAllowedMethod(childs[j]->getData()->getValue());
+    }
+}
+
+void Server::parseMaxBodySize(Node<Token *> *node) {
+    std::string value = node->getChildren()[0]->getData()->getValue();
+    if (!is_digits(value))
+        throw IllegalArgumentException("client_max_body_size must be a number");
+    this->setMaxBodySize(  std::stoi(value));
+}
+void Server::parseRedirect(Node<Token *> *node) {
+    if (node->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < node->getChildren().size(); j++) {
+        this->redirects.push_back(Redirect::fromNode(node->getChildren()[j]));
+    }
+}
+
+
+void Server::initParsingMethods() {
+    this->parsingMethods["server_name"] = &Server::parseHost;
+    this->parsingMethods["listen"] = &Server::parsePort;
+    this->parsingMethods["root"] = &Server::parseRoot;
+    this->parsingMethods["locations"] = &Server::parseLocation;
+    this->parsingMethods["auto_index"] = &Server::parseAutoIndex;
+    this->parsingMethods["upload_directory"] = &Server::parseUploadDir;
+    this->parsingMethods["index"] = &Server::parseIndexFiles;
+    this->parsingMethods["error_page"] = &Server::parseErrorPages;
+    this->parsingMethods["cgi"] = &Server::parseCgi;
+    this->parsingMethods["allowed_methods"] = &Server::parseAllowedMethods;
+    this->parsingMethods["client_max_body_size"] = &Server::parseMaxBodySize;
+    this->parsingMethods["redirects"] = &Server::parseRedirect;
+}
+
+Server::~Server() {
+    for (int i = 0; i < this->locations.size(); i++)
+        delete this->locations[i];
+
+    for (int i =0; i < this->errorPages.size(); i++)
+        delete this->errorPages[i];
+
+    for (int i = 0; i < this->cgis.size(); i++)
+        delete this->cgis[i];
+
+
+}
+
+Redirect *Server::getRedirect(std::string path) {
+    for (int i = 0; i < this->redirects.size(); i++) {
+        if (this->redirects[i]->getUrl() == path)
+            return this->redirects[i];
+    }
+    return NULL;
+}
+

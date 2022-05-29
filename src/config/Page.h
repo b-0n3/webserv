@@ -19,7 +19,6 @@ public:
     std::string getContentPath();
     static Page *fromNode(Node<Token *> *root);
     Page *isInThisPage(int errorCode);
-
     int openFile();
 };
 

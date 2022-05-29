@@ -14,6 +14,11 @@ public:
     BinaryTree() {
         size = 0;
     }
+    ~BinaryTree() {
+        for (int i = 0; i < size; i++) {
+            delete routes[i];
+        }
+    }
     void addRoote(Node<T>* node) {
         routes.push_back(node);
         size++;
@@ -34,4 +39,13 @@ public:
         return size;
     }
 
+    void deleteTree(Node<T> *root) {
+        if (root == nullptr) {
+            return;
+        }
+        for (int i = 0; i < root->getChildren().size(); i++) {
+            deleteTree(root->getChildren()[i]);
+        }
+       // delete root;
+    }
 };

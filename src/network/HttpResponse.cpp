@@ -181,6 +181,11 @@ void HttpResponse::parseHeaders(std::string &headers) {
     }
 }
 
+HttpResponse::~HttpResponse() {
+    tempFile.deleteFile();
+    std::cout << "deleted" << std::endl;
+}
+
 
 
 

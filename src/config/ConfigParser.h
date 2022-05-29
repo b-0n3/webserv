@@ -29,6 +29,7 @@ private:
 public:
     BinaryTree<Token *> getAst();
     ConfigParser(std::string configFilePath);
+    ~ConfigParser();
     void  tokenizeConfigFiles(Node<Token *> *parent, Node<Token *> *root, int lastIndentation, int currentIndentation);
     Node<Token *> *getNextToken();
     int caluclateIndenetation();

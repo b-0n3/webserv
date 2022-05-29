@@ -20,6 +20,7 @@ void HttpServlet::addServer(std::string name, Server *server) {
 HttpServlet::~HttpServlet() {
     while(close(this->sock) == -1);
 }
+
 void HttpServlet::start() {
 
     address.sin_family = AF_INET;
@@ -143,12 +144,17 @@ void HttpServlet::handleRequests() {
                 {
 
                     int fd = to_delete[i];
+                    HttpResponse *r = this->responses[fd];
+                    HttpRequest *rq = this->requests[fd];
                     std::map<int , HttpResponse *>::iterator
                     response = this->responses.find(fd);
+
                     std::map<int , HttpRequest *>::iterator
                             req = this->requests.find(fd);
                     this->requests.erase(req);
                     this->responses.erase(response);
+                    delete r;
+                    delete rq;
                     this->pollfd_list.erase(this->pollfd_list.begin() + j);
                     close(fd);
                     break;
@@ -161,28 +167,40 @@ void HttpServlet::handleRequests() {
 
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
+//    if (request->isTimedOut())
+//    {
+//        response->setStatus(408);
+//        response->setFinished(true);
+//        return;
+//    }
     if (this->servers.find(server) == this->servers.end()) {
         response->setStatusCode(BAD_GATEWAY);
         return;
     }
     Server *s = this->servers[server];
+    Redirect *r = s->getRedirect(request->GetPath());
+    if (r != NULL)
+    {
+        response->setStatusCode(r->getStatus());
+        response->addHeader("Location", r->getLocation());
+
+    }
     Location *l = s->getLocation(request->GetPath());
     if (response->getStatusCode() == 200) {
-
         if (request->GetPath().empty() || request->GetPath() == " ") {
             response->setStatusCode(MOVED_PERMANENTLY);
             response->addHeader("Location", "/");
             return;
         }
 
-        if (std::atoi(request->GetHeadersValueOfKey("Content-Length").c_str()) > s->getMaxBodySize()) { // @todo change this one to
-            response->setStatusCode(BAD_REQUEST);
-        }
+//        if (std::atoi(request->GetHeadersValueOfKey("Content-Length").c_str()) > s->getMaxBodySize()) { // @todo change this one to
+//            response->setStatusCode(BAD_REQUEST);
+//        }
         if (l == nullptr) {
             response->setStatusCode(NOT_FOUND);
             return;
         }
-        request->root = s->getRoot();
+        request->root = l->getRootRir();
 //    request->SetPath(request->GetPath().substr(l->getRout().size()));
         request->location = l->getRout();
         if (l->isAllowedMethod(request->GetMethod())) {

@@ -17,8 +17,9 @@
 #include "../network/HttpRequest.h"
 #include "../network/HttpResponse.h"
 #include "../network/StatusCode.h"
-
+class Location;
 typedef std::string String;
+typedef  void (Location::*func)(Node<Token *> *);
 class Location {
 private:
     std::string route;
@@ -28,9 +29,39 @@ private:
     std::vector<std::string> indexFiles;
     std::vector<Page*> errorPages;
     std::vector<Cgi*> cgis;
+    bool stripPrefix;
     std::string rootRir;
+    bool autoIndexParsed;
+
+    std::map<std::string, func> parsingMethods;
+    unsigned  long maxBodySize;
+public:
+    void setAutoIndex1(bool autoIndex);
+
+    bool isStripPrefix() const;
+    ~Location();
+    void setStripPrefix(std::string &stripPrefix);
+
+    const std::map<std::string, func> &getParsingMethods() const;
+
+    void setParsingMethods(const std::map<std::string, func> &parsingMethods);
+
+    unsigned long getMaxBodySize() const;
+
+    void setMaxBodySize(unsigned long maxBodySize);
+
 public:
     Location();
+    void initParsingMethods();
+    void parseRoot(Node<Token *> *node);
+    void parseStripPrefix(Node<Token *> *node);
+    void parseAutoIndex(Node<Token*> *node);
+    void parseUploadDir(Node<Token*> *node);
+    void parseIndexFiles(Node<Token*> *node);
+    void parseErrorPages(Node<Token*> *node);
+    void parseCgi(Node<Token*> *node);
+    void parseAllowedMethods(Node<Token*> *node);
+    void parseMaxBodySize(Node<Token*> *node);
     std::string getRout() const;
 
     void setRoute(const std::string &rout);

@@ -1,14 +1,120 @@
 servers:   # list of servers
         # sdfsdaf
-  - server: # server
+    - server: # server
+      server_name: localhost
+      listen: 8080
+      root: ${PWD}/src/root
+      client_max_body_size: 1000
+      redirects:
+        - /test-redirect-static:
+            status: 301
+            location: /roxy-static
+        - /test-redirect-to-php:
+            status: 301
+            location: /cgi-test
+      locations:
+        - /:
+            auto_index: true
+            index:
+              - index.html
+            error_page:
+              - code: 40x
+                content: ${PWD}/src/root/errorsPages/404.html
+              - code: 503
+                content: ${PWD}/src/root/errorsPages/503.html
+            allowed_methods:
+              - GET
+        - /roxy-static:
+            root: ${PWD}/src/root/roxy
+            auto_index: true
+            strip_prefix: true
+            index:
+              - index.html
+              - index.htm
+              - index.php
+            error_page:
+              - code: 40x
+                content: ${PWD}/src/root/errorsPages/503.html
+              - code: 503
+                content: ${PWD}/src/root/errorsPages/503.html
+            upload_directory: ${PWD}/src/root/uploads
+            allowed_methods:
+              - POST
+              - GET
+              - DELETE
+            cgi:
+              path: /Users/${USER}/.brew/bin/php-cgi
+              ext:
+                - .php
+                - .php5
+                - .php7
+                - .php-cgi
+                - .php3
+                - .php4
+                - .php5
+                - .php6
+        - /cgi-test:
+            root: ${PWD}/src/root/php-website
+            auto_index: true
+            strip_prefix: true
+            index:
+              - index.html
+              - index.htm
+              - index.php
+            error_page:
+              - code: 40x
+                content: ${PWD}/src/root/errorsPages/503.html
+              - code: 503
+                content: ${PWD}/src/root/errorsPages/503.html
+            upload_directory: ${PWD}/src/root/uploads
+            allowed_methods:
+              - POST
+              - GET
+              - DELETE
+            cgi:
+              path: /Users/${USER}/.brew/bin/php-cgi
+              ext:
+                - .php
+                - .php5
+                - .php7
+                - .php-cgi
+                - .php3
+                - .php4
+                - .php5
+                - .php6
+    - server: # server
         server_name: 127.0.0.1
-        listen: 8080
+        listen: 80
         root: ${PWD}/src/root
         client_max_body_size: 1000
+        redirects:
+         - /test-redirect-static:
+             status: 301
+             location: /the7-static
+         - /test-redirect-to-php:
+             status: 302
+             location: /php-cgi-test
+         - /test-redirect-to-py:
+               status: 307
+               location: /py-cgi-test
         locations:
           - /:
               auto_index: true
-              strip_url_path: true
+              index:
+                - index.html
+              error_page:
+                - code: 40x
+                  content: ${PWD}/src/root/errorsPages/404.html
+                - code: 503
+                  content: ${PWD}/src/root/errorsPages/503.html
+              upload_directory: ${PWD}/src/root/uploads
+              allowed_methods:
+                - GET
+                - POST
+          - /php-cgi-test:
+              root: ${PWD}/src/root/php-website
+              auto_index: true
+              strip_prefix: true
               index:
                 - index.html
                 - index.htm
@@ -18,19 +124,75 @@ servers:   # list of servers
                   content: ${PWD}/src/root/errorsPages/503.html
                 - code: 503
                   content: ${PWD}/src/root/errorsPages/503.html
-              upload_directory: /var/www/html/public/uploads
+              upload_directory: ${PWD}/src/root/uploads
+              allowed_methods:
+                - POST
+                - GET
+                - DELETE
+              cgi:
+                path: /Users/${USER}/.brew/bin/php-cgi
+                ext:
+                  - .php
+                  - .php5
+                  - .php7
+                  - .php-cgi
+                  - .php3
+                  - .php4
+                  - .php5
+                  - .php6
+          - /the7-static:
+              root: ${PWD}/src/root/the7
+              auto_index: true
+              strip_prefix: true
+              index:
+                - index.html
+                - index.htm
+                - index.php
+              error_page:
+                - code: 40x
+                  content: ${PWD}/src/root/errorsPages/503.html
+                - code: 503
+                  content: ${PWD}/src/root/errorsPages/503.html
+              upload_directory: ${PWD}/src/root/uploads
+              allowed_methods:
+                - POST
+                - GET
+                - DELETE
+          - /py-cgi-test:
+              root: ${PWD}/src/root/python-website
+              auto_index: true
+              strip_prefix: true
+              index:
+                - index.html
+              error_page:
+                - code: 40x
+                  content: ${PWD}/src/root/errorsPages/503.html
+                - code: 503
+                  content: ${PWD}/src/root/errorsPages/503.html
+              upload_directory: ${PWD}/src/root/uploads
+              allowed_methods:
+                - POST
+                - GET
+                - DELETE
+          - /python:
+              root: ${PWD}/src/root/python-website
+              auto_index: true
+              strip_prefix: true
+              index:
+                - index.html
+                - index.htm
+                - index.py
+              error_page:
+                - code: 40x
+                  content: ${PWD}/src/root/errorsPages/503.html
+                - code: 503
+                  content: ${PWD}/src/root/errorsPages/503.html
+              upload_directory: ${PWD}/src/root/uploads
               allowed_methods:
                   - POST
                   - GET
                   - DELETE
               cgi:
-                  path: /Users/${USER}/.brew/bin/php-cgi
+                  path: /Users/aait-ham/.brew/bin/python3
                   ext:
-                    - .php
-                    - .php5
-                    - .php7
-                    - .php-cgi
-                    - .php3
-                    - .php4
-                    - .php5
-                    - .php6
+                    - .py

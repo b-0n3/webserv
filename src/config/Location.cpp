@@ -91,56 +91,7 @@ Cgi *Location::getCgiIfExists(const std::string &path) const {
     return nullptr;
 }
 
-Location  *Location::fromNode(Node<Token *> *root) {
-    Location *l;
-    if (root == nullptr)
-        throw IllegalArgumentException("unexpected token");
-    l = new Location();
-    l->setRoute(root->getData()->getValue());
-    for (int i = 0; i < root->getChildren().size(); i++) {
-        String value = root->getChildren()[i]->getData()->getValue();
-        if (value == "auto_index")
-            l->setAutoIndex(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        else if (value == "index") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
-                l->addIndexFile(
-                        root->getChildren()[i]->getChildren()[j]->getData()->getValue());
-        } else if (value == "allowed_methods") {
-            if (!l->getAllowedMethods().empty())
-                throw IllegalArgumentException(" redecalaration of allowed methods");
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {
-                l->addAllowedMethod(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
-            }
-        } else if (value == "cgi") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            l->addCgi(Cgi::fromNode(root->getChildren()[i]));
-        } else if (value == "error_page") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++)
-                l->addErrorPage(Page::fromNode(root->getChildren()[i]->getChildren()[j]));
-        } else if (value == "upload_directory") {
-            if (root->getChildren()[i]->getChildren().size() == 0)
-                throw IllegalArgumentException(
-                        root->getChildren()[i]->getData()->getValue() + " : expected array of values");
-            l->setUploadDir(root->getChildren()[i]->getChildren()[0]->getData()->getValue());
-        }
-        else if (value == "root")
-            l->rootRir = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
-        else
-            throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
-    }
-    return l;
-}
+
 
 void Location::setAutoIndex(String autoIndex)  {
     if (autoIndex == "true") {
@@ -150,6 +101,7 @@ void Location::setAutoIndex(String autoIndex)  {
     } else {
         throw IllegalArgumentException("unexpected value");
     }
+    autoIndexParsed = true;
 }
 
 void Location::addIndexFile(String indexFile) {
@@ -165,6 +117,8 @@ Location::Location() {
     this->autoIndex = nullptr;
     this->indexFiles = std::vector<std::string>();
     this->allowedMethods = std::vector<std::string>();
+    this->stripPrefix = false;
+    initParsingMethods();
 }
 
 void Location::addAllowedMethod(String method) {
@@ -193,18 +147,23 @@ void Location::addErrorPage(Page *page) {
 
 // @todo : write a function that will execute cgi and return the result
 void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
+    std::string realPath = pRequest->GetPath();
     for (int i = 0; i < this->cgis.size(); i++) {
         if (this->cgis[i]->isCgi(pRequest->GetPath())) {
-
-            this->cgis[i]->execute(pRequest, pResponse);
-
-            return;
+            if (this->stripPrefix && pRequest->GetPath() == pRequest->getRealPath()) {
+                pRequest->SetPath(pRequest->GetPath().substr(this->route.length()));
+            }
+                this->cgis[i]->execute(pRequest, pResponse);
+                pRequest->SetPath(realPath);
+                return;
         }
     }
 }
 
 void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
-    // check if method is Get
+    std::string realPath = pRequest->GetPath();
+    if (this->stripPrefix)
+        pRequest->SetPath(pRequest->GetPath().substr(this->route.length()));
     if (pRequest->GetMethod() == "GET")
         this->handleGet(pRequest, pResponse);
     else if (pRequest->GetMethod() == "POST")
@@ -213,6 +172,7 @@ void Location::handleStatic(HttpRequest *pRequest, HttpResponse *pResponse) {
         this->handleDelete(pRequest, pResponse);
     else
         pResponse->setStatusCode(NOT_IMPLEMENTED);
+    pRequest->SetPath(realPath);
 }
 
 const std::string &Location::getRootRir() const {
@@ -239,13 +199,19 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
     std::string filePath = this->getRootRir() + req->GetPath();
     if  (is_directory(filePath) ) {
         if (filePath [filePath.size() - 1] != '/')
-            return this->redirect(req, res, req->GetPath() + "/");
+            return this->redirect(req, res, req->getRealPath() + "/");
             std::string indexFile = this->getIndexFile(filePath);
             if (!indexFile.empty()) {
                 indexFile = indexFile.substr(this->getRootRir().size());
                 Cgi *cgi = this->getCgiIfExists(indexFile);
+
+                req->setRealPath(indexFile);
                 req->SetPath(indexFile);
                 if (cgi != nullptr) {
+                    if (this->stripPrefix)
+                        indexFile = this->route + indexFile;
+                    req->SetPath(indexFile);
+                    req->setRealPath(indexFile);
                     this->handleCgi(req, res);
                     return;
                 }
@@ -298,11 +264,35 @@ void Location::redirect(HttpRequest *req, HttpResponse *res, std::string path) {
 }
 
 void Location::handlePost(HttpRequest *req, HttpResponse *res) {
-    std::string filename = this->uploadDir + req->getBodyFileName() + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
-    std::string filePath =  this->rootRir + "/" +  this->uploadDir + req->getBodyFileName()
-            + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
-    if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
+    std::string filePath = this->getRootRir() + req->GetPath();
+    if  (is_directory(filePath) ) {
+        if (filePath [filePath.size() - 1] != '/')
+            filePath+= "/";
+        std::string indexFile = this->getIndexFile(filePath);
+        if (!indexFile.empty()) {
+            indexFile = indexFile.substr(this->getRootRir().size());
+            Cgi *cgi = this->getCgiIfExists(indexFile);
 
+            req->setRealPath(indexFile);
+            req->SetPath(indexFile);
+            if (cgi != nullptr) {
+                if (this->stripPrefix)
+                    indexFile = this->route + indexFile;
+                req->SetPath(indexFile);
+                req->setRealPath(indexFile);
+                this->handleCgi(req, res);
+                return;
+            }
+        }
+    }
+    std::string bodyFilename = req->getBodyFileName().substr(req->getBodyFileName().find_last_of("/") + 1);
+    std::string filename = this->uploadDir
+            + req->getBodyFileName() + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
+        filePath =    this->uploadDir +"/" + bodyFilename
+            + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
+        std::cout << "filename: " << filename << std::endl;
+    std::cout << "filePaht: " << req->getBodyFileName() << std::endl;
+    if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
 
         res->setStatusCode(200);
         res->getTempFile()._close();
@@ -311,12 +301,41 @@ void Location::handlePost(HttpRequest *req, HttpResponse *res) {
         res->getTempFile()._close();
         res->getTempFile()._open();
         res->setContentLength(filename.length());
-    } else
+    } else {
+       // std::cout << "Error: " << strerror(errno) << std::endl;
         res->setStatusCode(UNAUTHORIZED);
+    }
 
 }
 void Location::handleDelete(HttpRequest *req, HttpResponse *res) {
-    std::string filename = this->rootRir  + "/"  + req->GetPath();
+
+    std::string filePath = this->getRootRir() + req->GetPath();
+    if  (is_directory(filePath) ) {
+        if (filePath [filePath.size() - 1] != '/')
+            filePath+= "/";
+        std::string indexFile = this->getIndexFile(filePath);
+        if (!indexFile.empty()) {
+            indexFile = indexFile.substr(this->getRootRir().size());
+            Cgi *cgi = this->getCgiIfExists(indexFile);
+
+            req->setRealPath(indexFile);
+            req->SetPath(indexFile);
+            if (cgi != nullptr) {
+                if (this->stripPrefix)
+                    indexFile = this->route + indexFile;
+                req->SetPath(indexFile);
+                req->setRealPath(indexFile);
+                this->handleCgi(req, res);
+                return;
+            }
+        }
+    }
+
+    if (uploadDir.empty()) {
+        res->setStatusCode(NOT_FOUND);
+        return;
+    }
+    std::string filename = this->uploadDir  + "/"  + req->GetPath();
     if (std::strncmp(req->GetPath().c_str(), this->uploadDir.c_str(), this->uploadDir.length()) != 0)
         res->setStatusCode(UNAUTHORIZED);
     else if (unlink(filename.c_str()) > 0)
@@ -334,6 +353,158 @@ const std::string &Location::getRoute() const {
 bool Location::isAutoIndex() const {
     return autoIndex;
 }
+
+Location  *Location::fromNode(Node<Token *> *root) {
+    Location *l;
+    if (root == nullptr)
+        throw IllegalArgumentException("unexpected token");
+    l = new Location();
+    l->setRoute(root->getData()->getValue());
+    for (int i = 0; i < root->getChildren().size(); i++) {
+        String value = root->getChildren()[i]->getData()->getValue();
+        if (l->parsingMethods.find(value) != l->parsingMethods.end())
+        {
+            func f = l->parsingMethods[value];
+            (l->*f)(root->getChildren()[i]);
+        }
+        else
+            throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
+    }
+    return l;
+}
+
+void Location::parseRoot(Node<Token *> *n) {
+    this->rootRir = n->getChildren()[0]->getData()->getValue();
+    if (rootRir[rootRir.size() -1] == '/')
+        rootRir.pop_back();
+}
+
+
+void Location::parseAutoIndex(Node<Token *> *n) {
+    this->setAutoIndex(n->getChildren()[0]->getData()->getValue());
+
+}
+
+void Location::parseUploadDir(Node<Token *> *n) {
+    if (n->getChildren().empty())
+        throw IllegalArgumentException(
+                n->getData()->getValue() + " : expected array of values");
+    this->setUploadDir(n->getChildren()[0]->getData()->getValue());
+
+}
+
+void Location::parseIndexFiles(Node<Token *> *n) {
+    if (n->getChildren().empty())
+        throw IllegalArgumentException(
+                n->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < n->getChildren().size(); j++)
+        this->addIndexFile(
+                n->getChildren()[j]->getData()->getValue());
+
+}
+
+void Location::parseErrorPages(Node<Token *> *n) {
+    if (n->getChildren().empty())
+        throw IllegalArgumentException(
+                n->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < n->getChildren().size(); j++)
+        this->addErrorPage(Page::fromNode(n->getChildren()[j]));
+
+}
+
+
+void Location::parseCgi(Node<Token *> *node) {
+    if (node->getChildren().empty())
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
+    this->addCgi(Cgi::fromNode(node));
+}
+
+void Location::parseAllowedMethods(Node<Token *> *node) {
+    std::vector<Node<Token *> *> childs = node->getChildren();
+    if (!this->getAllowedMethods().empty())
+        throw IllegalArgumentException(" redeclaration of allowed methods");
+    if (childs.size() == 0)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
+    for (int j = 0; j < childs.size(); j++) {
+        this->addAllowedMethod(childs[j]->getData()->getValue());
+    }
+}
+
+void Location::parseMaxBodySize(Node<Token *> *node) {
+    std::string value = node->getChildren()[0]->getData()->getValue();
+    if (!is_digits(value))
+        throw IllegalArgumentException("client_max_body_size must be a number");
+    this->setMaxBodySize(  std::stoi(value));
+
+}
+void Location::parseStripPrefix(Node<Token *> *node)  {
+    std::string value = node->getChildren()[0]->getData()->getValue();
+
+    this->setStripPrefix(value);
+}
+void Location::initParsingMethods() {
+    this->parsingMethods["root"] = &Location::parseRoot;
+    this->parsingMethods["auto_index"] = &Location::parseAutoIndex;
+    this->parsingMethods["upload_directory"] = &Location::parseUploadDir;
+    this->parsingMethods["index"] = &Location::parseIndexFiles;
+    this->parsingMethods["error_page"] = &Location::parseErrorPages;
+    this->parsingMethods["cgi"] = &Location::parseCgi;
+    this->parsingMethods["allowed_methods"] = &Location::parseAllowedMethods;
+    this->parsingMethods["client_max_body_size"] = &Location::parseMaxBodySize;
+    this->parsingMethods["strip_prefix"] = &Location::parseStripPrefix;
+
+}
+
+void Location::setAutoIndex1(bool autoIndex) {
+    Location::autoIndex = autoIndex;
+}
+
+bool Location::isStripPrefix() const {
+    return stripPrefix;
+}
+
+void Location::setStripPrefix(std::string  &stripPrefix) {
+    if (stripPrefix == "true")
+    {
+        this->stripPrefix = true;
+    } else if (stripPrefix == "false")
+    {
+        this->stripPrefix = false;
+    } else {
+        throw IllegalArgumentException("unexpected value");
+    }
+
+}
+
+const std::map<std::string, func> &Location::getParsingMethods() const {
+    return parsingMethods;
+}
+
+void Location::setParsingMethods(const std::map<std::string, func> &parsingMethods) {
+    Location::parsingMethods = parsingMethods;
+}
+
+unsigned long Location::getMaxBodySize() const {
+    return maxBodySize;
+}
+
+void Location::setMaxBodySize(unsigned long maxBodySize) {
+    Location::maxBodySize = maxBodySize;
+}
+
+Location::~Location() {
+    for (int i = 0; i < this->getErrorPages().size(); i++) {
+        delete this->getErrorPages()[i];
+    }
+    for (int i = 0; i < this->getCgis().size(); i++) {
+        delete this->getCgis()[i];
+    }
+
+}
+
+
 
 
 

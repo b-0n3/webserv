@@ -32,7 +32,15 @@ private:
     std::fstream 	BodyFd;
     std::fstream 	TmpBodyFd;
     time_t          startedAt;
-    time_t          timeOutAt;
+    std::string     realPath;
+public:
+    const std::string &getRealPath() const;
+    ~HttpRequest();
+    void setRealPath(const std::string &realPath);
+
+private:
+    unsigned  long       timeOutAt;
+    unsigned  long startTimestamp;
   // change this
     std::map<std::string, std::string> Params;
 
