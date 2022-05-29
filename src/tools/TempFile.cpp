@@ -15,9 +15,7 @@ TempFile::TempFile() {
 }
 
 TempFile::~TempFile() {
-    close(this->fd);
-    if (!isMoved)
-        remove(fileName.c_str());
+
 }
 
 void TempFile::_close() {
@@ -49,5 +47,11 @@ int TempFile::getFd() {
 void TempFile::setFd(int fd) {
     close(this->fd);
     this->fd  = fd;
+}
+
+void TempFile::deleteFile() {
+    close(this->fd);
+    if (!isMoved)
+        remove(fileName.c_str());
 }
 

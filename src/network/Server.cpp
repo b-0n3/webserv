@@ -85,5 +85,6 @@ int main(int argc, char *argv[]) {
 
     }
    // perror("sdfd");
+   system("leaks webserv");
    return 0;
 }

@@ -21,8 +21,8 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-    this->startedAt = time(0);
-    this->timeOutAt = 
+//    this->startedAt = time(0);
+//    this->timeOutAt = this->startedAt + TIMEOUT;
 	srand(time(NULL));
 
 	this->BodyFileName = "/tmp/" + std::to_string(rand());
@@ -108,6 +108,7 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
     std::cout << "method =- "  << Method << std::endl;
     Path = FirstLine.substr(FirstLine.find(' ') + 1);
     Path = Path.substr(0, Path.find(' '));
+
 	//std::cout << "Method: " << Method << std::endl;
     //std::cout << FirstLine<<std::endl;
 	//Path = FirstLine.substr(FirstLine.find(' '), FirstLine.find("HTTP/") - 5 );
@@ -142,7 +143,7 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
 		// (std::map<std::string, std::string>::iterator it = paramsss.begin(); it != paramsss.end(); ++it)
 			//::cout << it->first << " *=> " << it->second << std::endl;
     }
-
+    realPath = Path;
 	Version = FirstLine.substr(FirstLine.find("HTTP/") + 5, FirstLine.find("\r\n"));
 	//std::cout << "Version: " << Version << std::endl;
 }
@@ -238,4 +239,20 @@ void    HttpRequest::Parse() {
             std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
 		}
     }
+}
+
+const std::string &HttpRequest::getRealPath() const {
+    return realPath;
+}
+
+void HttpRequest::setRealPath(const std::string &realPath) {
+    HttpRequest::realPath = realPath;
+}
+
+HttpRequest::~HttpRequest() {
+    if (TmpBodyFd.is_open())
+        TmpBodyFd.close();
+    if (BodyFd.is_open())
+        BodyFd.close();
+    delete [] buffer;
 }

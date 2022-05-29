@@ -19,6 +19,11 @@ public:
         this->data = data;
         parent = nullptr;
     }
+    ~Node(){
+//        for(int i = 0; i < children.size(); i++){
+//            delete children[i];
+//        }
+    }
     Node(T data, Node<T> *parent){
         this->data = data;
         this->parent = parent;

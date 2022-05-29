@@ -32,6 +32,7 @@ public:
 
 public:
     HttpResponse();
+    ~HttpResponse();
     void readFromCgi();
     int getStatusCode();
     std::string getStatusMessage();

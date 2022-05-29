@@ -21,6 +21,7 @@ public:
     void _close();
     void setFd(int fd);
     int getFd();
+    void deleteFile();
    std::string &getFileName();
     bool transferTo(std::string path);
 };

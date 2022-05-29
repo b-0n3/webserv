@@ -195,6 +195,12 @@ void ConfigParser::replaceEnv() {
     this->currentLine = lastValue;
 }
 
+ConfigParser::~ConfigParser() {
+    configFile->close();
+    delete configFile;
+    ast.deleteTree( this->ast.get(0));
+}
+
 
 //int main()
 //{

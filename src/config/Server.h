@@ -10,10 +10,13 @@
 #include "../container/Node.h"
 #include "Token.h"
 #include "../tools/Utils.h"
+#include "Redirect.h"
 
+class Server;
 
 class Server {
 private:
+
     std::string host;
     int port;
     std::string root;
@@ -25,14 +28,34 @@ private:
     std::vector<Cgi*> cgis;
     std::string rootRir;
     std::vector<std::string> allowedMethods;
+    std::vector<Redirect *> redirects;
+    typedef  void (Server::*func)(Node<Token *> *);
+    std::map<std::string, func> parsingMethods;
     unsigned  long maxBodySize;
 public:
+
     Server();
+    ~Server();
     Server(std::string host, int port, std::string root);
     void initLocations();
     std::string getHost();
     int getPort();
+    Redirect *getRedirect(std::string path);
     std::string getRoot();
+    void initParsingMethods();
+    void parseHost(Node<Token *> *node);
+    void parsePort(Node<Token *> *node);
+    void parseRoot(Node<Token *> *node);
+    void parseLocation(Node<Token*> *node);
+    void parseAutoIndex(Node<Token*> *node);
+    void parseUploadDir(Node<Token*> *node);
+    void parseIndexFiles(Node<Token*> *node);
+    void parseRedirect(Node<Token*> *node);
+    void parseErrorPages(Node<Token*> *node);
+    void parseCgi(Node<Token*> *node);
+    void parseAllowedMethods(Node<Token*> *node);
+    void parseMaxBodySize(Node<Token*> *node);
+
     const std::vector<std::string> &getAllowedMethods() const;
     void setAllowedMethods(const std::vector<std::string> &allowedMethods);
     std::vector<Location *> getLocations();
