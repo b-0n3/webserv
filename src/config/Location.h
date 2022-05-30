@@ -35,6 +35,7 @@ private:
 
     std::map<std::string, func> parsingMethods;
     unsigned  long maxBodySize;
+    long timeOut;
 public:
     void setAutoIndex1(bool autoIndex);
 
@@ -50,6 +51,16 @@ public:
 
     void setMaxBodySize(unsigned long maxBodySize);
 
+
+
+    bool isAutoIndexParsed() const;
+
+    void setAutoIndexParsed(bool autoIndexParsed);
+
+    long getTimeOut() const;
+
+    void setTimeOut(long timeOut);
+
 public:
     Location();
     void initParsingMethods();
@@ -62,6 +73,7 @@ public:
     void parseCgi(Node<Token*> *node);
     void parseAllowedMethods(Node<Token*> *node);
     void parseMaxBodySize(Node<Token*> *node);
+    void parseTimeOut(Node<Token*> *node);
     std::string getRout() const;
 
     void setRoute(const std::string &rout);

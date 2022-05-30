@@ -32,6 +32,12 @@ private:
     typedef  void (Server::*func)(Node<Token *> *);
     std::map<std::string, func> parsingMethods;
     unsigned  long maxBodySize;
+    long timeOut;
+public:
+    long getTimeOut() const;
+
+    void setTimeOut(long timeOut);
+
 public:
 
     Server();
@@ -55,7 +61,7 @@ public:
     void parseCgi(Node<Token*> *node);
     void parseAllowedMethods(Node<Token*> *node);
     void parseMaxBodySize(Node<Token*> *node);
-
+    void parseTimeOut(Node<Token*> *node);
     const std::vector<std::string> &getAllowedMethods() const;
     void setAllowedMethods(const std::vector<std::string> &allowedMethods);
     std::vector<Location *> getLocations();

@@ -15,15 +15,15 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    Path(""),
                                    port(80),
                                    Version(""),
+                                   StartedAt(time(NULL)),
                                    cgiRunning(false),
                                    HeaderParsed(false),
                                    BodyParsed(false),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-//    this->startedAt = time(0);
-//    this->timeOutAt = this->startedAt + TIMEOUT;
-	srand(time(NULL));
+    this->setTimeOutAt(20L );
+	srand(StartedAt);
 
 	this->BodyFileName = "/tmp/" + std::to_string(rand());
 	this->TmpBodyFileName = "/tmp/" + std::to_string(rand());
@@ -255,4 +255,13 @@ HttpRequest::~HttpRequest() {
     if (BodyFd.is_open())
         BodyFd.close();
     delete [] buffer;
+}
+
+void HttpRequest::setTimeOutAt( long timeOutAt) {
+    this->timeOutAt = StartedAt + (timeOutAt);
+}
+
+bool HttpRequest::isTimeOut() {
+
+    return timeOutAt < time(NULL);
 }

@@ -118,6 +118,7 @@ Location::Location() {
     this->indexFiles = std::vector<std::string>();
     this->allowedMethods = std::vector<std::string>();
     this->stripPrefix = false;
+    this->timeOut = -1;
     initParsingMethods();
 }
 
@@ -444,6 +445,14 @@ void Location::parseStripPrefix(Node<Token *> *node)  {
 
     this->setStripPrefix(value);
 }
+
+void Location::parseTimeOut(Node<Token *> *node) {
+    std::string value = node->getChildren()[0]->getData()->getValue();
+    if (!is_digits(value))
+        throw IllegalArgumentException("timeout must be a number");
+    this->setTimeOut(std::stoi(value));
+}
+
 void Location::initParsingMethods() {
     this->parsingMethods["root"] = &Location::parseRoot;
     this->parsingMethods["auto_index"] = &Location::parseAutoIndex;
@@ -454,7 +463,7 @@ void Location::initParsingMethods() {
     this->parsingMethods["allowed_methods"] = &Location::parseAllowedMethods;
     this->parsingMethods["client_max_body_size"] = &Location::parseMaxBodySize;
     this->parsingMethods["strip_prefix"] = &Location::parseStripPrefix;
-
+    this->parsingMethods["timeout"] = &Location::parseTimeOut;
 }
 
 void Location::setAutoIndex1(bool autoIndex) {
@@ -503,6 +512,26 @@ Location::~Location() {
     }
 
 }
+
+
+
+
+bool Location::isAutoIndexParsed() const {
+    return autoIndexParsed;
+}
+
+void Location::setAutoIndexParsed(bool autoIndexParsed) {
+    Location::autoIndexParsed = autoIndexParsed;
+}
+
+long Location::getTimeOut() const {
+    return timeOut;
+}
+
+void Location::setTimeOut(long timeOut) {
+    Location::timeOut = timeOut ;
+}
+
 
 
 

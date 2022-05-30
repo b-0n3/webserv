@@ -52,6 +52,7 @@ Server::Server() {
     this->port = 80;
     this->root = "/var/www/html";
     this->maxBodySize = 1024;
+    this->setTimeOut(10);
     this->initParsingMethods();
 }
 
@@ -192,8 +193,12 @@ void Server::initLocations() {
             this->locations[i]->setIndexFiles(indexFiles);
         if (this->locations[i]->getRootRir().empty())
             this->locations[i]->setRootRir(this->root);
-//        if (this->locations[i]->isAutoIndexParsed() == false)
-//            this->locations[i]->setAutoIndex(autoIndex);
+        if (this->locations[i]->getMaxBodySize() == 0)
+            this->locations[i]->setMaxBodySize(maxBodySize);
+        if (this->locations[i]->getTimeOut() == -1)
+            this->locations[i]->setTimeOut(timeOut);
+    //        if (this->locations[i]->isAutoIndexParsed() == false)
+    //            this->locations[i]->setAutoIndex(autoIndex);
     }
 }
 
@@ -335,6 +340,7 @@ void Server::initParsingMethods() {
     this->parsingMethods["allowed_methods"] = &Server::parseAllowedMethods;
     this->parsingMethods["client_max_body_size"] = &Server::parseMaxBodySize;
     this->parsingMethods["redirects"] = &Server::parseRedirect;
+    this->parsingMethods["timeout"] = &Server::parseTimeOut;
 }
 
 Server::~Server() {
@@ -356,5 +362,21 @@ Redirect *Server::getRedirect(std::string path) {
             return this->redirects[i];
     }
     return NULL;
+}
+
+void Server::parseTimeOut(Node<Token *> *node) {
+    std::string value =
+            node->getChildren()[0]->getData()->getValue();
+    if (!is_digits(value))
+        throw IllegalArgumentException("timeout must be a number");
+    this->setTimeOut(std::stoi(value));
+}
+
+long Server::getTimeOut() const {
+    return timeOut;
+}
+
+void Server::setTimeOut(long timeOut) {
+    Server::timeOut = timeOut ;
 }
 

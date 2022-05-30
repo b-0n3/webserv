@@ -15,8 +15,10 @@
 #include <map>
 
 #include <fcntl.h>
+#include "../tools/Utils.h"
 
 #define BUFFER_SIZE 5001
+#define TIMEOUT 60
 
 class HttpRequest {
 private:
@@ -31,17 +33,11 @@ private:
     // @Todo change to ../tools tempFile.cpp
     std::fstream 	BodyFd;
     std::fstream 	TmpBodyFd;
-    time_t          startedAt;
+    time_t          StartedAt;
     std::string     realPath;
-public:
-    const std::string &getRealPath() const;
-    ~HttpRequest();
-    void setRealPath(const std::string &realPath);
-
-private:
-    unsigned  long       timeOutAt;
-    unsigned  long startTimestamp;
-  // change this
+      long       timeOutAt;
+      long startTimestamp;
+    // change this
     std::map<std::string, std::string> Params;
 
     bool HeaderParsed;
@@ -64,13 +60,16 @@ private:
     void SetParams(std::string key, std::string value) {
         Params.insert(std::pair<std::string, std::string>(key, value));
     }
-
 public:
+    const std::string &getRealPath() const;
+    ~HttpRequest();
+    void setRealPath(const std::string &realPath);
     
-	std::map<std::string, std::string> Headers;
+	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
 	HttpRequest(int fd);
     void Parse();
-	
+    void setTimeOutAt( long timeOutAt);
+    bool isTimeOut();
   	//Getters
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}
@@ -80,9 +79,17 @@ public:
         return this->BodyFileName;
     }
     int GetBodyFd(){return open(BodyFileName.c_str(), O_RDONLY);}
-    std::string GetHeadersValueOfKey(std::string key){return Headers.find(key)->second;}
-    std::string GetParamsValueOfKey(std::string key){return Params.find(key)->second;}
-    std::map<std::string, std::string> GetHeaders(){ return Headers; }
+    std::string GetHeadersValueOfKey(std::string key){
+        if (Headers.find(key) != Headers.end())
+            return Headers[key];
+        return std::string ();
+    }
+    std::string GetParamsValueOfKey(std::string key){
+        if (Params.find(key) != Params.end())
+            return Params[key];
+        return std::string ();
+    }
+    std::map<std::string, std::string,compareStringIgnoreCase> GetHeaders(){ return Headers; }
     std::map<std::string, std::string> GetParams() { return Params; }
     int getStatusCode() { return StatusCode; }
 
