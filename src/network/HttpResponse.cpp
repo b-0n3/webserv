@@ -28,7 +28,7 @@ void HttpResponse::writeToFd(int i) {
         write(i, std::to_string(this->contentLength).c_str(),
               std::to_string(this->contentLength).length());
         write(i, "\r\n", 2);
-        write(i, "Keep-Alive: timeout=5, max=1000", strlen("Keep-Alive: timeout=5, max=1000") );
+        write(i, "Connection: keep-alive", strlen("Connection: keep-alive") );
         write(i, "\r\n", 2);
         for (int j  = 0; j < this->cookies.size(); j++)
         {

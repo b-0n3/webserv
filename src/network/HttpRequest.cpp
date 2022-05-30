@@ -24,9 +24,10 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
     Headers.clear(), Params.clear();
     this->setTimeOutAt(20L );
 	srand(StartedAt);
-
-	this->BodyFileName = "/tmp/" + std::to_string(rand());
-	this->TmpBodyFileName = "/tmp/" + std::to_string(rand());
+    std::string tmpDir = getenv("PWD");
+    tmpDir += "/.tmp/";
+	this->BodyFileName = tmpDir + std::to_string(rand());
+	this->TmpBodyFileName = tmpDir + std::to_string(rand());
 
 //	std::cout << "body" << BodyFileName << std::endl;
 //	std::cout << "tmp" << TmpBodyFileName << std::endl;

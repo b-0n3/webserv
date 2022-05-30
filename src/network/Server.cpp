@@ -2,6 +2,7 @@
 // Created by Abdelouahad Ait hamd on 4/18/22.
 //
 #include <set>
+#include <sys/stat.h>
 #include "../config/ConfigParser.h"
 #include "HttpServlet.h"
 #include "../exceptions/IllegalStateException.h"
@@ -15,6 +16,19 @@ std::set<int> getPorts(std::vector<Server *> servers) {
     }
     return ports;
 }
+void initTmpDir()
+{
+    std::string tmpDir = getenv("PWD");
+    tmpDir += "/.tmp";
+
+    struct stat st = {0};
+    if( is_directory(tmpDir.c_str()))
+        rmdir(tmpDir.c_str());
+
+    if (mkdir(tmpDir.c_str(), 0777) == -1) {
+            throw IllegalStateException("Could not create tmp directory");
+    }
+}
 
 int main(int argc, char *argv[]) {
     if (argc != 2)
@@ -26,6 +40,7 @@ int main(int argc, char *argv[]) {
     std::vector<Server *> servers;
     std::vector<HttpServlet *> servlets;
     try {
+        initTmpDir();
         ConfigParser configFileParser(argv[1]);
         configFileParser.tokenizeConfigFiles(nullptr, nullptr, -1, -1);
         servers = configFileParser.validateAst();
