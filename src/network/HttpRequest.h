@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <map>
-
+#include "StatusCode.h"
 #include <fcntl.h>
 #include "../tools/Utils.h"
 
@@ -67,7 +67,7 @@ public:
     
 	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
 	HttpRequest(int fd);
-    void Parse();
+    void Parse(unsigned  long long maxBodySize);
     void setTimeOutAt( long timeOutAt);
     bool isTimeOut();
   	//Getters

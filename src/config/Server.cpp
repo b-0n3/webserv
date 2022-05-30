@@ -51,7 +51,7 @@ Server::Server() {
     this->host = "localhost";
     this->port = 80;
     this->root = "/var/www/html";
-    this->maxBodySize = 1024;
+    this->maxBodySize = 2;
     this->setTimeOut(10);
     this->initParsingMethods();
 }
@@ -126,8 +126,8 @@ void Server::setRootRir(const std::string &rootRir) {
     Server::rootRir = rootRir;
 }
 
-unsigned long Server::getMaxBodySize() const {
-    return maxBodySize;
+unsigned long  Server::getMaxBodySize() const {
+    return maxBodySize ;
 }
 
 void Server::setMaxBodySize(unsigned long maxBodySize) {
@@ -193,7 +193,7 @@ void Server::initLocations() {
             this->locations[i]->setIndexFiles(indexFiles);
         if (this->locations[i]->getRootRir().empty())
             this->locations[i]->setRootRir(this->root);
-        if (this->locations[i]->getMaxBodySize() == 0)
+        if (this->locations[i]->getMaxBodySize() == -1)
             this->locations[i]->setMaxBodySize(maxBodySize);
         if (this->locations[i]->getTimeOut() == -1)
             this->locations[i]->setTimeOut(timeOut);
@@ -378,5 +378,12 @@ long Server::getTimeOut() const {
 
 void Server::setTimeOut(long timeOut) {
     Server::timeOut = timeOut ;
+}
+
+unsigned long long Server::getMaxBodySize(HttpRequest *request) {
+    Location *l = this->getLocation(request->GetPath());
+    if (l != NULL)
+        return l->getMaxBodySize() * 1e6;
+    return this->maxBodySize * 1e6;
 }
 

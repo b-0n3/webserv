@@ -119,6 +119,7 @@ Location::Location() {
     this->allowedMethods = std::vector<std::string>();
     this->stripPrefix = false;
     this->timeOut = -1;
+    this->maxBodySize = -1;
     initParsingMethods();
 }
 

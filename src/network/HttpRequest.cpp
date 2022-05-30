@@ -30,7 +30,7 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
 
 //	std::cout << "body" << BodyFileName << std::endl;
 //	std::cout << "tmp" << TmpBodyFileName << std::endl;
-    Parse();
+    Parse(0);
 }
 
 size_t CountFileSize(const char *filename) {
@@ -178,7 +178,8 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 
 }
 
-void    HttpRequest::Parse() {
+void    HttpRequest::Parse(unsigned  long long maxBodySize)
+{
     
     int ret = 0;
     // To Check if this correct
@@ -204,6 +205,7 @@ void    HttpRequest::Parse() {
 
         SetHeaderParsed(true);
 		request = request.substr(request.find("\r\n\r\n") + 4);
+        return;
     }
 
     //Use form data postman
@@ -214,7 +216,17 @@ void    HttpRequest::Parse() {
             SetBodyParsed(true);
             return;
         }
-            if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
+        unsigned long long contentLength = std::stoull(Headers["Content-Length"]);
+        std::cout << "Content-Length: " << contentLength << std::endl;
+        std::cout << "max body size: " << maxBodySize << std::endl;
+
+        if (contentLength > maxBodySize) {
+            StatusCode = MAX_BODY_SIZE_EXCEEDED;
+            SetBodyParsed(true);
+            return;
+        }
+
+        if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{
 			TmpBodyFd.open(TmpBodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary ) ;
             std::cout << request<< std::endl;

@@ -114,8 +114,10 @@ void HttpServlet::handleRequests() {
                 }
 
             if (!this->requests[fd]->IsFinished()) {
-                this->requests[fd]->Parse();
-
+                if (this->requests[fd]->IsHeaderParsed())
+                    this->requests[fd]->Parse(this->getMaxBodySize(requests[fd]));
+                else
+                    this->requests[fd]->Parse(0);
                 if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd]);
@@ -245,6 +247,16 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
         response->setStatusCode(BAD_GATEWAY);
     }
     this->handleRequest(request, response, server);
+}
+
+unsigned long long HttpServlet::getMaxBodySize(HttpRequest *request) {
+    std::string server = request->GetHeadersValueOfKey("host");
+    if (this->servers.find(server) == this->servers.end()) {
+        return 0;
+    }
+    Server *s = this->servers[server];
+
+    return s->getMaxBodySize(request);
 }
 
 
