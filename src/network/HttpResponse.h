@@ -20,11 +20,14 @@ private:
     bool writingBody;
     TempFile tempFile;
     bool finished;
+    std::stringstream  responseHeadersString;
+    size_t headerWrited;
     int bodySkiped;
     std::map<std::string, std::string,compareStringIgnoreCase> headers;
     std::vector<std::string> cookies;
     unsigned  long cgiHeaderSize;
     int cgiReadFd;
+    void buildResponseHeaders();
 public:
     unsigned long getContentLength() const;
     void setContentLength(unsigned long contentLength);
@@ -62,6 +65,10 @@ public:
     void writeToFd(int i);
 
     void parseHeaders(std::string &headers);
+
+    std::string statusCodeToString(int statusCode);
+
+    bool responseBuilted;
 };
 
 

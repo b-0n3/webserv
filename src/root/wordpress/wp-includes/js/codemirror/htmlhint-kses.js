@@ -17,9 +17,7 @@ HTMLHint.addRule({
 			}
 
 			allowedAttributes = options[ tagName ];
-			col = event.col + event.tagName.length + 1;
-			for ( i = 0, len = event.attrs.length; i < len; i++ ) {
-				attr = event.attrs[ i ];
+			col = event.col + event.tag/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */attr = event.attrs[ i ];
 				attrName = attr.name.toLowerCase();
 				if ( ! allowedAttributes[ attrName ] ) {
 					reporter.error( 'Tag attribute [' + attr.raw + ' ] is not allowed.', event.line, col + attr.index, self, attr.raw );

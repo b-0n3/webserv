@@ -42,11 +42,7 @@
 
 .widgets-holder-wrap .widget-inside {
 	border-top: none;
-	padding: 1px 15px 15px;
-	line-height: 1.23076923;
-}
-
-.widget.widget-dirty .widget-control-close-wrapper {
+	/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */t-control-close-wrapper {
 	display: none;
 }
 

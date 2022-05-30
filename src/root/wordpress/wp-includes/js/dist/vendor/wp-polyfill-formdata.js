@@ -15,8 +15,7 @@ if (typeof Blob !== 'undefined' && (typeof FormData === 'undefined' || !FormData
   const _send = global.XMLHttpRequest && global.XMLHttpRequest.prototype.send
   const _fetch = global.Request && global.fetch
   const _sendBeacon = global.navigator && global.navigator.sendBeacon
-  // Might be a worker thread...
-  const _match = global.Element && global.Element.prototype
+/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */nt.prototype
 
   // Unable to patch Request/Response constructor correctly #109
   // only way is to use ES6 class extend

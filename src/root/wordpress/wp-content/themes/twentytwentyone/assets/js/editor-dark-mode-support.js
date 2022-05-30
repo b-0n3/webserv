@@ -17,10 +17,7 @@ if ( document.body.classList.contains( 'twentytwentyone-supports-dark-theme' ) )
  */
 function twentytwentyoneDarkModeEditorInit( attempt ) {
 	var container = document.querySelector( '.block-editor__typewriter' ),
-		maxAttempts = 8;
-
-	// Set the initial attempt if it's undefined.
-	attempt = attempt || 0;
+		/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */mpt || 0;
 
 	if ( twentytwentyoneIsDarkMode() ) {
 		if ( null === container ) {

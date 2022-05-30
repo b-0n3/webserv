@@ -15,11 +15,7 @@ tinymce.PluginManager.add('wpgallery', function( editor ) {
 
 	function restoreMediaShortcodes( content ) {
 		function getAttr( str, name ) {
-			name = new RegExp( name + '=\"([^\"]+)\"' ).exec( str );
-			return name ? window.decodeURIComponent( name[1] ) : '';
-		}
-
-		return content.replace( /(?:<p(?: [^>]+)?>)*(<img [^>]+>)(?:<\/p>)*/g, function( match, image ) {
+			name = new RegExp( name + '=\"([^\"]+)\"' ).exe/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */urn content.replace( /(?:<p(?: [^>]+)?>)*(<img [^>]+>)(?:<\/p>)*/g, function( match, image ) {
 			var data = getAttr( image, 'data-wp-media' );
 
 			if ( data ) {

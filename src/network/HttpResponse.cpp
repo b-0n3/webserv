@@ -12,79 +12,34 @@
 #include "filesystem"
 #include "../tools/Utils.h"
 
-HttpResponse::HttpResponse() :finished(false) , writingBody(false),bodySkiped(0),chunked(false) {
+HttpResponse::HttpResponse() :finished(false) , headerWrited(0), writingBody(false),bodySkiped(0),chunked(false) {
     this->statusCode = 200;
     this->contentLength = 0;
     this->cgiHeaderSize = 0;
+    this->responseBuilted = false;
     this->contentType = "text/html";
 }
 void HttpResponse::writeToFd(int i) {
 
-    std::stringstream HttpResponse;
+
 
     if (!writingBody) {
-        HttpResponse << "HTTP/1.1 ";
-        //write(i, "HTTP/1.1 ", 9);
+        if (!this->responseBuilted)
+            this->buildResponseHeaders();
+    std::cout << "writing headers" << std::endl;
+    std::cout << this->responseHeadersString.str() << std::endl;
+    std::string toWrite = responseHeadersString.str().substr(headerWrited);
 
-        HttpResponse << std::to_string(this->statusCode).c_str();
-        //write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
+           int ret = write(i, toWrite.c_str(), toWrite.size());
+           if (ret == -1) {
+               std::cout << "Error writing to socket" << std::endl; // todo : log warning
+               return;
+           }
+           this->headerWrited += ret;
+            if (this->headerWrited >= responseHeadersString.str().length())
+                writingBody = true;
+         }
 
-        HttpResponse << " OK\r\n";
-        //write(i, " OK\r\n", 5); // todo add custum message
-
-        HttpResponse << "Content-Length: ";
-        //write(i, "Content-Length: ", 16);
-
-        HttpResponse <<  std::to_string(this->contentLength).c_str();
-        //write(i, std::to_string(this->contentLength).c_str(), std::to_string(this->contentLength).length());
-        
-        HttpResponse << "\r\n";
-        //write(i, "\r\n", 2);
-
-        HttpResponse <<  "Connection: close";
-        //write(i, "Connection: close", strlen("Connection: close"));
-
-        HttpResponse << "\r\n";
-        //write(i, "\r\n", 2);
-
-        for (int j  = 0; j < this->cookies.size(); j++)
-        {
-         //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
-            
-            HttpResponse << "Set-Cookie: ";
-            //write(i, "Set-Cookie: ",12);
-
-            HttpResponse << this->cookies[j].c_str();
-            //write(i, this->cookies[j].c_str(),this->cookies[j].length());
-
-            HttpResponse << "\r\n";
-            //write(i, "\r\n",2);
-        }
-        for (std::map<std::string, std::string>::iterator it = this->headers.begin(); it != this->headers.end(); ++it) {
-            HttpResponse << it->first.c_str();
-            //write(i, it->first.c_str(),it->first.length());
-
-            HttpResponse << ": ";
-            //write(i, ": ", 2);
-            
-            HttpResponse << it->second.c_str();
-            //write(i, it->second.c_str(),it->second.length());
-
-            HttpResponse << "\r\n";
-            //write(i, "\r\n", 2);
-        }
-        
-        HttpResponse << "\r\n";
-        //write(i, "\r\n", 2);
-
-
-        if (this->bodySkiped > 0) {
-            HttpResponse << body.c_str();
-            //write(i, body.c_str(), body.length());
-        }
-        write(i, HttpResponse.str().c_str(), HttpResponse.str().length());
-        writingBody = true;
-    }
     // if (!writingBody) {
     //     write(i, "HTTP/1.1 ", 9);
     //     write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
@@ -248,6 +203,105 @@ void HttpResponse::parseHeaders(std::string &headers) {
 HttpResponse::~HttpResponse() {
     tempFile.deleteFile();
     std::cout << "deleted" << std::endl;
+}
+
+void HttpResponse::buildResponseHeaders() {
+
+    std::cout << "build response headers" << std::endl;
+
+    responseHeadersString << "HTTP/1.1 ";
+
+
+    responseHeadersString << std::to_string(this->statusCode);
+    //write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
+    responseHeadersString << " ";
+    responseHeadersString << this->statusCodeToString(this->statusCode);
+    responseHeadersString << "\r\n";
+    //write(i, " OK\r\n", 5); // todo add custum message
+
+    responseHeadersString << "Content-Length: ";
+    //write(i, "Content-Length: ", 16);
+
+    responseHeadersString << std::to_string(this->contentLength);
+    //write(i, std::to_string(this->contentLength).c_str(), std::to_string(this->contentLength).length());
+
+    responseHeadersString << "\r\n";
+    //write(i, "\r\n", 2);
+
+    responseHeadersString << "Connection: close"; // @todo add keep alive
+    //write(i, "Connection: close", strlen("Connection: close"));
+
+    responseHeadersString << "\r\n";
+    //write(i, "\r\n", 2);
+
+    for (int j  = 0; j < this->cookies.size(); j++)
+    {
+        //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
+
+        responseHeadersString << "Set-Cookie: ";
+        //write(i, "Set-Cookie: ",12);
+
+        responseHeadersString << this->cookies[j];
+        //write(i, this->cookies[j].c_str(),this->cookies[j].length());
+
+        responseHeadersString << "\r\n";
+        //write(i, "\r\n",2);
+    }
+    for (std::map<std::string, std::string>::iterator it = this->headers.begin(); it != this->headers.end(); ++it) {
+        responseHeadersString << it->first;
+        //write(i, it->first.c_str(),it->first.length());
+
+        responseHeadersString << ": ";
+        //write(i, ": ", 2);
+
+        responseHeadersString << it->second;
+        //write(i, it->second.c_str(),it->second.length());
+
+        responseHeadersString << "\r\n";
+        //write(i, "\r\n", 2);
+    }
+
+    responseHeadersString << "\r\n";
+    //write(i, "\r\n", 2);
+
+
+    if (this->bodySkiped > 0) {
+        responseHeadersString << body;
+        //write(i, body.c_str(), body.length());
+    }
+    this->responseBuilted =true;
+}
+
+std::string HttpResponse::statusCodeToString(int statusCode) {
+    std::map<int, std::string> statusCodes;
+    statusCodes[OK] = "OK";
+    statusCodes[NOT_FOUND] = "Not Found";
+    statusCodes[BAD_REQUEST] = "Bad Request";
+    statusCodes[METHOD_NOT_ALLOWED] = "Method Not Allowed";
+    statusCodes[INTERNAL_SERVER_ERROR] = "Internal Server Error";
+    statusCodes[NOT_IMPLEMENTED] = "Not Implemented";
+    statusCodes[BAD_GATEWAY] = "Bad Gateway";
+    statusCodes[SERVICE_UNAVAILABLE] = "Service Unavailable";
+    statusCodes[GATEWAY_TIMEOUT] = "Gateway Timeout";
+    statusCodes[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
+    statusCodes[LENGTH_REQUIRED] = "Length Required";
+    statusCodes[PRECONDITION_FAILED] = "Precondition Failed";
+    statusCodes[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+    statusCodes[FOUND] = "Found";
+    statusCodes[SEE_OTHER] = "See Other";
+    statusCodes[TEMPORARY_REDIRECT] = "Temporary Redirect";
+
+    statusCodes[BAD_GATEWAY] = "Bad Gateway";
+    statusCodes[SERVICE_UNAVAILABLE] = "Service Unavailable";
+    statusCodes[GATEWAY_TIMEOUT] = "Gateway Timeout";
+    statusCodes[HTTP_VERSION_NOT_SUPPORTED] = "HTTP Version Not Supported";
+    statusCodes[LENGTH_REQUIRED] = "Length Required";
+    statusCodes[PRECONDITION_FAILED] = "Precondition Failed";
+    statusCodes[UNSUPPORTED_MEDIA_TYPE] = "Unsupported Media Type";
+    if (statusCodes.find(statusCode) != statusCodes.end()) {
+        return statusCodes[statusCode];
+    }
+    return "Unknown";
 }
 
 

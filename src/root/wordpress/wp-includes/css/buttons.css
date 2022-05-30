@@ -18,9 +18,7 @@ To display a primary button style, add the `.button-primary` class to a button.
 
 Button Sizes
 ------------
-Adjust a button's size by adding the `.button-large` or `.button-small` class.
-
-Button States
+Adjus/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */n States
 -------------
 Lock the state of a button by adding the name of the pseudoclass as
 an actual class (e.g. `.hover` for `:hover`).

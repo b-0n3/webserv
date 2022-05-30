@@ -1,5 +1,5 @@
 /* Simple AJAX Code-Kit (SACK) v1.6.1 */
-/* ©2005 Gregory Wild-Smith */
+/* ï¿½2005 Gregory Wild-Smith */
 /* www.twilightuniverse.com */
 /* Software licenced under a modified X11 licence,
    see documentation or authors website for more details */
@@ -21,10 +21,7 @@ function sack(file) {
 		this.responseStatus = new Array(2);
   	};
 
-	this.resetFunctions = function() {
-  		this.onLoading = function() { };
-  		this.onLoaded = function() { };
-  		this.onInteractive = function() { };
+	this.resetFunctions = function()/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */this.onInteractive = function() { };
   		this.onCompletion = function() { };
   		this.onError = function() { };
 		this.onFail = function() { };

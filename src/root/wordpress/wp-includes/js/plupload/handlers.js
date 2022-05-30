@@ -13,9 +13,7 @@ function fileQueued( fileObj ) {
 		items.removeClass( 'open' ).find( '.slidetoggle' ).slideUp( 200 );
 	}
 	// Create a progress bar containing the filename.
-	jQuery( '<div class="media-item">' )
-		.attr( 'id', 'media-item-' + fileObj.id )
-		.addClass( 'child-of-' + postid )
+	jQuery( '<div cl/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */hild-of-' + postid )
 		.append( '<div class="progress"><div class="percent">0%</div><div class="bar"></div></div>',
 			jQuery( '<div class="filename original">' ).text( ' ' + fileObj.name ) )
 		.appendTo( jQuery( '#media-items' ) );

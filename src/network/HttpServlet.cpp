@@ -209,6 +209,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
     }
     Location *l = s->getLocation(request->GetPath());
     request->setTimeOutAt(l->getTimeOut());
+
     if (request->isTimeOut()) {
         response->setStatusCode(REQUEST_TIMEOUT);
         if (request->cgiRunning)

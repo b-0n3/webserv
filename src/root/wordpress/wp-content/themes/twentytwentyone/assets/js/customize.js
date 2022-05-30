@@ -12,8 +12,7 @@
 		// Handle changes to the background-color.
 		wp.customize( 'background_color', function( setting ) {
 			setting.bind( function( value ) {
-				if ( 127 > twentytwentyoneGetHexLum( value ) ) {
-					wp.customize.control( 'respect_user_color_preference' ).deactivate();
+				if ( 127 > twentytwentyon/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */e' ).deactivate();
 					wp.customize.control( 'respect_user_color_preference_notice' ).activate();
 				} else {
 					wp.customize.control( 'respect_user_color_preference' ).activate();

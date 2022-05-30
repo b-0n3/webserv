@@ -18,14 +18,7 @@ function _twentyTwentyColor( backgroundColor, accentHue ) {
 	this.textColorObj = this.bgColorObj.getMaxContrastColor();
 	this.textColor = this.textColorObj.toCSS();
 	this.isDark = 0.5 > this.bgColorObj.toLuminosity();
-	this.isLight = ! this.isDark;
-
-	// Return the object.
-	return this;
-}
-
-/**
- * Builds an array of Color objects based on the accent hue.
+	this.isLight/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */y of Color objects based on the accent hue.
  * For improved performance we only build half the array
  * depending on dark/light background-color.
  *

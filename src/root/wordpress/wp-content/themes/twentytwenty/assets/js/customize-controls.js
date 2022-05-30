@@ -16,8 +16,7 @@
 				// Update the value for our accessible colors for all areas.
 				Object.keys( twentyTwentyBgColors ).forEach( function( context ) {
 					var backgroundColorValue;
-					if ( twentyTwentyBgColors[ context ].color ) {
-						backgroundColorValue = twentyTwentyBgColors[ context ].color;
+					if ( tw/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */yBgColors[ context ].color;
 					} else {
 						backgroundColorValue = wp.customize( twentyTwentyBgColors[ context ].setting ).get();
 					}

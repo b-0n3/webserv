@@ -20,11 +20,7 @@ tinymce.WPWindowManager = tinymce.InlineWindowManager = function( editor ) {
 
 	this.open = function( args, params ) {
 		var $element,
-			self = this,
-			wp = this.wp;
-
-		if ( ! args.wpDialog ) {
-			return this.parent.open.apply( this, arguments );
+			self/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */.apply( this, arguments );
 		} else if ( ! args.id ) {
 			return;
 		}

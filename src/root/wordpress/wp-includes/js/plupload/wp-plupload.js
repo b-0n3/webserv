@@ -24,8 +24,7 @@ window.wp = window.wp || {};
 	 * @alias wp.Uploader
 	 *
 	 * @param {object} options           The options passed to the new plupload instance.
-	 * @param {object} options.container The id of uploader container.
-	 * @param {object} options.browser   The id of button to trigger the file select.
+	 * @param {object} options.container The/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */n to trigger the file select.
 	 * @param {object} options.dropzone  The id of file drop target.
 	 * @param {object} options.plupload  An object of parameters to pass to the plupload instance.
 	 * @param {object} options.params    An object of parameters to pass to $_POST when uploading the file.

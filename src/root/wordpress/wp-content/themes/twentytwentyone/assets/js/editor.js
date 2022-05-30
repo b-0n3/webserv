@@ -20,12 +20,7 @@ wp.domReady( function() {
 			if ( attempt < maxAttempts ) {
 				setTimeout( function() {
 					twentytwentyoneCopyDarkThemeClass();
-				}, attemptDelay );
-
-				// Increment the attempts counter.
-				attempt++;
-
-				// Double the delay, give the server some time to breathe.
+			/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */// Double the delay, give the server some time to breathe.
 				attemptDelay *= 2;
 			}
 			return;

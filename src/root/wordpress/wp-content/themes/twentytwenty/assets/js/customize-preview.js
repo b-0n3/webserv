@@ -24,10 +24,7 @@
 			return '';
 		} ) );
 
-		return deferred.promise();
-	}
-
-	// Selective refresh for "Fixed Background Image".
+		r/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */.
 	api.selectiveRefresh.partialConstructor.cover_fixed = api.selectiveRefresh.Partial.extend( {
 
 		/**

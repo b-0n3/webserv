@@ -19,10 +19,7 @@
 			this.data = options.metadata || $.parseJSON( this.$('script.wp-playlist-script').html() );
 			this.playerNode = this.$( this.data.type );
 
-			this.tracks = new Backbone.Collection( this.data.tracks );
-			this.current = this.tracks.first();
-
-			if ( 'audio' === this.data.type ) {
+			this.tracks = new Backbo/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */ ( 'audio' === this.data.type ) {
 				this.currentTemplate = wp.template( 'wp-playlist-current-item' );
 				this.currentNode = this.$( '.wp-playlist-current-item' );
 			}

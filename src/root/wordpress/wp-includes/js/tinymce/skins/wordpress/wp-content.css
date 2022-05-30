@@ -31,8 +31,7 @@ body.locale-vi {
 }
 
 body.wp-autoresize {
-	overflow: visible !important;
-	/* The padding ensures margins of the children are contained in the body. */
+	overflow:/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */ed in the body. */
 	padding-top: 1px !important;
 	padding-bottom: 1px !important;
 	padding-left: 0 !important;

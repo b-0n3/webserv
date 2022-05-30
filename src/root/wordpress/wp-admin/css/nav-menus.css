@@ -37,12 +37,7 @@ ul.add-menu-item-tabs li {
 }
 
 #wpbody-content #menu-settings-column {
-	display: inline;
-	width: 281px;
-	margin-left: -300px;
-	clear: both;
-	float: left;
-	padding-top: 0;
+	displa/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */ding-top: 0;
 }
 
 #menu-settings-column .inside {

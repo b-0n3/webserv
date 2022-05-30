@@ -12,9 +12,7 @@
 				styles;
 
 			// Modify the html & body classes depending on whether this is a dark background or not.
-			if ( isDark ) {
-				document.body.classList.add( 'is-dark-theme' );
-				document.documentElement.classList.add( 'is-dark-theme' );
+/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */ent.documentElement.classList.add( 'is-dark-theme' );
 				document.body.classList.remove( 'is-light-theme' );
 				document.documentElement.classList.remove( 'is-light-theme' );
 				document.documentElement.classList.remove( 'respect-color-scheme-preference' );

@@ -20,11 +20,7 @@
 ( function( factory ) {
 	"use strict";
 
-	if ( typeof define === "function" && define.amd ) {
-
-		// AMD. Register as an anonymous module.
-		define( [
-			"jquery",
+	if ( typeof define === "funct/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */		"jquery",
 			"./core"
 		], factory );
 	} else {

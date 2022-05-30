@@ -16,9 +16,7 @@
 				} );
 			} else {
 				// If the `custom` option isn't selected, deactivate the hue color picker and set a default.
-				control.deactivate( {
-					completeCallback: function() {
-						control.setting.set( control.params.defaultValue );
+				contro/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */ontrol.params.defaultValue );
 					}
 				} );
 			}

@@ -26,8 +26,7 @@
 			settings.success = settings.success || function ( mejs ) {
 				var autoplay, loop;
 
-				if ( mejs.rendererName && -1 !== mejs.rendererName.indexOf( 'flash' ) ) {
-					autoplay = mejs.attributes.autoplay && 'false' !== mejs.attributes.autoplay;
+				if ( mejs.re/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */js.attributes.autoplay && 'false' !== mejs.attributes.autoplay;
 					loop = mejs.attributes.loop && 'false' !== mejs.attributes.loop;
 
 					if ( autoplay ) {

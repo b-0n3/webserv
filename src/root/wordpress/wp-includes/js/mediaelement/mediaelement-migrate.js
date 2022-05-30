@@ -18,12 +18,7 @@
 	if (mejs.MediaFeatures === undefined) {
 		mejs.MediaFeatures = mejs.Features;
 	}
-	if (mejs.Utility === undefined) {
-		mejs.Utility = mejs.Utils;
-	}
-
-	/**
-	 * Create missing variables and have default `classPrefix` overridden to avoid issues.
+	if (me/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */sing variables and have default `classPrefix` overridden to avoid issues.
 	 *
 	 * `media` is now a fake wrapper needed to simplify manipulation of various media types,
 	 * so in order to access the `video` or `audio` tag, use `media.originalNode` or `player.node`;

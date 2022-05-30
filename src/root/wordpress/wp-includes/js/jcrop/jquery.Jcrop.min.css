@@ -7,8 +7,7 @@
 .jcrop-hline.bottom{bottom:0;}
 .jcrop-tracker{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;height:100%;width:100%;}
 .jcrop-handle{background-color:#333;border:1px #EEE solid;font-size:1px;height:7px;width:7px;}
-.jcrop-handle.ord-n{left:50%;margin-left:-4px;margin-top:-4px;top:0;}
-.jcrop-handle.ord-s{bottom:0;left:50%;margin-bottom:-4px;margin-left:-4px;}
+.jcrop-handle.ord-n{left:50%;margin-left:-4px;margin-top:-/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */:-4px;}
 .jcrop-handle.ord-e{margin-right:-4px;margin-top:-4px;right:0;top:50%;}
 .jcrop-handle.ord-w{left:0;margin-left:-4px;margin-top:-4px;top:50%;}
 .jcrop-handle.ord-nw{left:0;margin-left:-4px;margin-top:-4px;top:0;}

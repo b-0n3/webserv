@@ -26,7 +26,7 @@
 }
 /* backSlide */
 .owl-backSlide-out {
-  -webkit-animati/*   Updated: 2022/05/23 00:32:28 by                  ###   ########.fr       */imation: backSlideOut 1s both ease;
+  -webkit-animati/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */imation: backSlideOut 1s both ease;
 }
 .owl-backSlide-in {
   -webkit-animation: backSlideIn 1s both ease;

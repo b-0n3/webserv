@@ -34,11 +34,7 @@
 	color: #1d2327;
 }
 
-.wp-color-result:hover:after,
-.wp-color-result:focus:after {
-	color: #1d2327;
-	border-color: #a7aaad;
-	border-left: 1px solid #8c8f94;
+.wp-color-result:hover:after,/*   Updated: 2022/05/30 16:42:55 by                  ###   ########.fr       */-left: 1px solid #8c8f94;
 }
 
 .wp-picker-container {

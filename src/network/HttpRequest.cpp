@@ -24,7 +24,7 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-    this->setTimeOutAt(1L );
+    this->setTimeOutAt(10L );
 	srand(StartedAt);
     std::string tmpDir = getenv("PWD");
     tmpDir += "/.tmp/";

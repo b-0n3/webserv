@@ -21,14 +21,7 @@ Reference: http://blog.rrwd.nl/2015/04/04/the-screen-reader-text-class-why-and-h
     position: relative;
     text-align: left;
     text-indent: 0;
-    vertical-align: top;
-}
-
-.mejs__container * {
-    box-sizing: border-box;
-}
-
-/* Hide native play button and control bar from iOS to favor plugin button */
+    vertical-ali/*   Updated: 2022/05/30 16:42:56 by                  ###   ########.fr       */lay button and control bar from iOS to favor plugin button */
 .mejs__container video::-webkit-media-controls,
 .mejs__container video::-webkit-media-controls-panel,
 .mejs__container video::-webkit-media-controls-panel-container,
