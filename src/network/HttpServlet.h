@@ -38,6 +38,7 @@ public:
     ~HttpServlet();
     HttpServlet(int port);
     void addServer(std::string name, Server * server);
+    unsigned  long long getMaxBodySize(HttpRequest *request);
     void start();
     void handleRequests();
 

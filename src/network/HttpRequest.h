@@ -13,11 +13,11 @@
 #include <fstream>
 #include <sstream>
 #include <map>
-
+#include "StatusCode.h"
 #include <fcntl.h>
 #include "../tools/Utils.h"
 
-#define BUFFER_SIZE 5001
+#define BUFFER_SIZE 20000
 #define TIMEOUT 60
 
 class HttpRequest {
@@ -67,7 +67,7 @@ public:
     
 	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
 	HttpRequest(int fd);
-    void Parse();
+    void Parse(unsigned  long long maxBodySize);
     void setTimeOutAt( long timeOutAt);
     bool isTimeOut();
   	//Getters

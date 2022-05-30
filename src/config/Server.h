@@ -11,8 +11,9 @@
 #include "Token.h"
 #include "../tools/Utils.h"
 #include "Redirect.h"
+#include "../network/HttpRequest.h"
 
-class Server;
+
 
 class Server {
 private:
@@ -31,7 +32,7 @@ private:
     std::vector<Redirect *> redirects;
     typedef  void (Server::*func)(Node<Token *> *);
     std::map<std::string, func> parsingMethods;
-    unsigned  long maxBodySize;
+    unsigned  long long maxBodySize;
     long timeOut;
 public:
     long getTimeOut() const;
@@ -72,7 +73,7 @@ public:
     void addAllowedMethod(String method);
 
     void addCgi(Cgi *cgi);
-
+    unsigned  long long getMaxBodySize(HttpRequest *request);
     void addErrorPage(Page *page);
     void setHost(const std::string &host);
 

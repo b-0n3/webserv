@@ -32,7 +32,6 @@ private:
     bool stripPrefix;
     std::string rootRir;
     bool autoIndexParsed;
-
     std::map<std::string, func> parsingMethods;
     unsigned  long maxBodySize;
     long timeOut;

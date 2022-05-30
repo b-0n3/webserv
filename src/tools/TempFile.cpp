@@ -8,7 +8,10 @@
 
 TempFile::TempFile() {
 	//@todo generate a unique file name
-	char tmp[] = "/tmp/uniqueXXXXXX";
+
+//    std:tmpDir += ".tmp/";
+////	char *tmp = (tmpDir +"uniqueXXXXXX").c_str();
+    char tmp[] = ".tmp/uniqueXXXXXX";
     this->fd = mkstemp(tmp);
     fileName = tmp;
     isMoved = false;
