@@ -9,6 +9,7 @@
 #include <map>
 #include <vector>
 #include "../tools/TempFile.h"
+#include "../tools/Utils.h"
 class HttpResponse {
 private:
     int statusCode;
@@ -20,7 +21,7 @@ private:
     TempFile tempFile;
     bool finished;
     int bodySkiped;
-    std::map<std::string, std::string> headers;
+    std::map<std::string, std::string,compareStringIgnoreCase> headers;
     std::vector<std::string> cookies;
     unsigned  long cgiHeaderSize;
     int cgiReadFd;
@@ -47,14 +48,14 @@ public:
     bool isFinished(){return finished;};
     int getBodyFileDescriptor(){return tempFile.getFd();};
     TempFile &getTempFile(){return tempFile;}
-    std::map<std::string, std::string> getHeaders();
+    std::map<std::string, std::string,compareStringIgnoreCase> getHeaders();
     void setStatusCode(int statusCode);
     void setStatusMessage(std::string statusMessage);
     void setContentType(std::string contentType);
 
     void setBody(std::string const &body);
 
-    void setHeaders(std::map<std::string, std::string> headers);
+    void setHeaders(std::map<std::string, std::string,compareStringIgnoreCase> headers);
 
     void addHeader(std::string const &key, std::string  const &value);
 

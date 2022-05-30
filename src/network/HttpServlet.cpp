@@ -169,7 +169,7 @@ void HttpServlet::handleRequests() {
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
 //    if (request->isTimedOut())
 //    {
-//        response->setStatus(408);
+//        response->setStatus(REQUEST_TIMEOUT);
 //        response->setFinished(true);
 //        return;
 //    }
@@ -233,19 +233,14 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
-    std::string server = request->GetHeadersValueOfKey("Host");
+    std::string server = request->GetHeadersValueOfKey("host");
 
     if (request->getStatusCode() != 200)
     {
         response->setStatusCode(request->getStatusCode());
-        response->setBody("Bad Request");
-
     }
     if (server.empty()) {
-        response->setStatusCode(BAD_REQUEST);
-        std::string body = "<html><body><h1>400 Bad Request</h1></body></html>";
-        response->setBody(body);
-
+        response->setStatusCode(BAD_GATEWAY);
     }
     this->handleRequest(request, response, server);
 }

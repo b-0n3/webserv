@@ -153,6 +153,15 @@ size_t countFileSize(const char *filename) {
         return st.st_size ;
     return -1;
 }
+
+std::string toUpper(std::string &str)
+{
+    std::string result = str;
+    for (int i = 0; i < result.size(); i++) {
+        result[i] = toupper(result[i]);
+    }
+    return result;
+}
 std::string readFileAndReturnString(std::string filePath) {
     std::ifstream file(filePath);
     std::stringstream buffer;

@@ -69,7 +69,7 @@ void HttpResponse::writeToFd(int i) {
 }
 
 void HttpResponse::addHeader(std::string const &key, std::string const  &value) {
-    if (key == "Set-Cookie") {
+    if (key == "Set-Cookie" || key == "set-cookie") {
         this->cookies.push_back(value);
         std::cout <<value<< std::endl;
     }
@@ -93,7 +93,7 @@ std::string HttpResponse::getBody() {
     return body;
 }
 
-std::map<std::string, std::string> HttpResponse::getHeaders() {
+std::map<std::string, std::string,compareStringIgnoreCase> HttpResponse::getHeaders() {
     return headers;
 }
 
@@ -101,7 +101,7 @@ void HttpResponse::setStatusMessage(std::string statusMessage) {
 
 }
 
-void HttpResponse::setHeaders(std::map<std::string, std::string> headers) {
+void HttpResponse::setHeaders(std::map<std::string, std::string,compareStringIgnoreCase> headers) {
     this->headers = headers;
 }
 
