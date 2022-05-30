@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
+#include <sstream>
 #include <sys/stat.h>
 #include "HttpResponse.h"
 #include "StatusCode.h"
@@ -19,39 +20,102 @@ HttpResponse::HttpResponse() :finished(false) , writingBody(false),bodySkiped(0)
 }
 void HttpResponse::writeToFd(int i) {
 
+    std::stringstream HttpResponse;
+
     if (!writingBody) {
-        write(i, "HTTP/1.1 ", 9);
-        write(i, std::to_string(this->statusCode).c_str(),
-              std::to_string(this->statusCode).length());
-        write(i, " OK\r\n", 5); // todo add custum message
-        write(i, "Content-Length: ", 16);
-        write(i, std::to_string(this->contentLength).c_str(),
-              std::to_string(this->contentLength).length());
-        write(i, "\r\n", 2);
-        write(i, "Connection: close", strlen("Connection: close"));
-        write(i, "\r\n", 2);
+        HttpResponse << "HTTP/1.1 ";
+        //write(i, "HTTP/1.1 ", 9);
+
+        HttpResponse << std::to_string(this->statusCode).c_str();
+        //write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
+
+        HttpResponse << " OK\r\n";
+        //write(i, " OK\r\n", 5); // todo add custum message
+
+        HttpResponse << "Content-Length: ";
+        //write(i, "Content-Length: ", 16);
+
+        HttpResponse <<  std::to_string(this->contentLength).c_str();
+        //write(i, std::to_string(this->contentLength).c_str(), std::to_string(this->contentLength).length());
+        
+        HttpResponse << "\r\n";
+        //write(i, "\r\n", 2);
+
+        HttpResponse <<  "Connection: close";
+        //write(i, "Connection: close", strlen("Connection: close"));
+
+        HttpResponse << "\r\n";
+        //write(i, "\r\n", 2);
+
         for (int j  = 0; j < this->cookies.size(); j++)
         {
          //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
-            write(i, "Set-Cookie: ",12);
-            write(i, this->cookies[j].c_str(),this->cookies[j].length());
-            write(i, "\r\n",2);
+            
+            HttpResponse << "Set-Cookie: ";
+            //write(i, "Set-Cookie: ",12);
+
+            HttpResponse << this->cookies[j].c_str();
+            //write(i, this->cookies[j].c_str(),this->cookies[j].length());
+
+            HttpResponse << "\r\n";
+            //write(i, "\r\n",2);
         }
-        for (std::map<std::string, std::string>::iterator it = this->headers.begin();
-             it != this->headers.end(); ++it) {
-            write(i, it->first.c_str(),
-                  it->first.length());
-            write(i, ": ", 2);
-            write(i, it->second.c_str(),
-                  it->second.length());
-            write(i, "\r\n", 2);
+        for (std::map<std::string, std::string>::iterator it = this->headers.begin(); it != this->headers.end(); ++it) {
+            HttpResponse << it->first.c_str();
+            //write(i, it->first.c_str(),it->first.length());
+
+            HttpResponse << ": ";
+            //write(i, ": ", 2);
+            
+            HttpResponse << it->second.c_str();
+            //write(i, it->second.c_str(),it->second.length());
+
+            HttpResponse << "\r\n";
+            //write(i, "\r\n", 2);
         }
-        write(i, "\r\n", 2);
+        
+        HttpResponse << "\r\n";
+        //write(i, "\r\n", 2);
+
+
         if (this->bodySkiped > 0) {
-            write(i, body.c_str(), body.length());
+            HttpResponse << body.c_str();
+            //write(i, body.c_str(), body.length());
         }
+        write(i, HttpResponse.str().c_str(), HttpResponse.str().length());
         writingBody = true;
     }
+    // if (!writingBody) {
+    //     write(i, "HTTP/1.1 ", 9);
+    //     write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
+    //     write(i, " OK\r\n", 5); // todo add custum message
+    //     write(i, "Content-Length: ", 16);
+    //     write(i, std::to_string(this->contentLength).c_str(), std::to_string(this->contentLength).length());
+    //     write(i, "\r\n", 2);
+    //     write(i, "Connection: close", strlen("Connection: close"));
+    //     write(i, "\r\n", 2);
+    //     for (int j  = 0; j < this->cookies.size(); j++)
+    //     {
+    //      //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
+    //         write(i, "Set-Cookie: ",12);
+    //         write(i, this->cookies[j].c_str(),this->cookies[j].length());
+    //         write(i, "\r\n",2);
+    //     }
+    //     for (std::map<std::string, std::string>::iterator it = this->headers.begin();
+    //          it != this->headers.end(); ++it) {
+    //         write(i, it->first.c_str(),
+    //               it->first.length());
+    //         write(i, ": ", 2);
+    //         write(i, it->second.c_str(),
+    //               it->second.length());
+    //         write(i, "\r\n", 2);
+    //     }
+    //     write(i, "\r\n", 2);
+    //     if (this->bodySkiped > 0) {
+    //         write(i, body.c_str(), body.length());
+    //     }
+    //     writingBody = true;
+    // }
     if (this->contentLength > 0) {
         int BUFFER_SIZE = 20000;
         char buff[BUFFER_SIZE];
