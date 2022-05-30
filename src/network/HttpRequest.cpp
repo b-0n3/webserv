@@ -10,19 +10,21 @@
 
 HttpRequest::HttpRequest(int fd) : Socketfd(fd),
                                    buffer(new char[BUFFER_SIZE]),
+                                   bodyRemainingFromHeaders(""),
                                    request(""),
                                    Method(""),
                                    Path(""),
                                    port(80),
                                    Version(""),
                                    StartedAt(time(NULL)),
+                                   lastPacket(time(NULL)),
                                    cgiRunning(false),
                                    HeaderParsed(false),
                                    BodyParsed(false),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
-    this->setTimeOutAt(20L );
+    this->setTimeOutAt(1L );
 	srand(StartedAt);
     std::string tmpDir = getenv("PWD");
     tmpDir += "/.tmp/";
@@ -31,7 +33,7 @@ HttpRequest::HttpRequest(int fd) : Socketfd(fd),
 
 //	std::cout << "body" << BodyFileName << std::endl;
 //	std::cout << "tmp" << TmpBodyFileName << std::endl;
-    Parse(0);
+   // Parse(-1);
 }
 
 size_t CountFileSize(const char *filename) {
@@ -181,22 +183,24 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 
 void    HttpRequest::Parse(unsigned  long long maxBodySize)
 {
+
     
     int ret = 0;
     // To Check if this correct
-    if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0 )
+    if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0  || this->isTimeOut())
     {
         StatusCode = TIMEOUT;
         SetBodyParsed(true);
         SetHeaderParsed(true);
         return;
     }
+
 	buffer[ret] = '\0';
 
     if (!IsHeaderParsed())
     	this->request.append(buffer, ret);
 	else
-		this->request  = std::string(buffer, ret);
+		request  = std::string(buffer, ret);
 
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
@@ -207,11 +211,11 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
 		ParseHeaders(request.substr(request.find("\r\n") + 2, request.find("\r\n\r\n")));
 
         SetHeaderParsed(true);
-		request = request.substr(request.find("\r\n\r\n") + 4);
-
+		this->bodyRemainingFromHeaders = request.substr(request.find("\r\n\r\n") + 4);
+        // std::cout << "request: " << request << std::endl;
         return;
     }
-
+    this->lastPacket = time(NULL);
     //Use form data postman
     //if has body and header parsed and body not parsed yet
     if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed() ) {
@@ -224,34 +228,55 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
 //        std::cout << "Content-Length: " << contentLength << std::endl;
 //        std::cout << "max body size: " << maxBodySize << std::endl;
 
-        if (contentLength > maxBodySize) {
+        if (contentLength > maxBodySize && maxBodySize != -1) {
             StatusCode = MAX_BODY_SIZE_EXCEEDED;
             SetBodyParsed(true);
             return;
         }
-
+        size_t fileSize;
         if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{
+
 			TmpBodyFd.open(TmpBodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary ) ;
-            //std::cout << request<< std::endl;
+            if (!bodyRemainingFromHeaders.empty())
+            {
+                TmpBodyFd.write(bodyRemainingFromHeaders.c_str(), bodyRemainingFromHeaders.size());
+                bodyRemainingFromHeaders.clear();
+            }
 			TmpBodyFd.write(request.c_str() , request.size());
-			if (IsChunkedBodyFinished())
-			{
-				ProcessChunkedBody();
-				if (CountFileSize(BodyFileName.c_str()) >=contentLength)
-					SetBodyParsed(true);
-                std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
+             fileSize = CountFileSize(BodyFileName.c_str());
+			if (IsChunkedBodyFinished()) {
+                ProcessChunkedBody();
+                if (fileSize == contentLength)
+                    SetBodyParsed(true);
+                if (fileSize > contentLength) {
+                    StatusCode = BAD_REQUEST;
+                    std::cout << fileSize << " " << contentLength << std::endl;
+                    SetBodyParsed(true);
+                }
+              //  std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght " << contentLength<< std::endl;
 			}
 			TmpBodyFd.close();
 		}
 		else
 		{
 			BodyFd.open(BodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary);
+            if (!bodyRemainingFromHeaders.empty())
+            {
+                BodyFd.write(bodyRemainingFromHeaders.c_str(), bodyRemainingFromHeaders.size());
+                bodyRemainingFromHeaders.clear();
+            }
 			BodyFd.write(request.c_str() , request.size());
 			BodyFd.close();
-			if (CountFileSize(BodyFileName.c_str()) >= contentLength)
+             fileSize = CountFileSize(BodyFileName.c_str());
+			if (fileSize == contentLength)
 				SetBodyParsed(true);
-            std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
+            if (fileSize > contentLength) {
+                StatusCode = BAD_REQUEST;
+                SetBodyParsed(true);
+                std::cout << fileSize << " " << contentLength << std::endl;
+            }
+         //   std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght unchenked " << contentLength<< std::endl;
 		}
     }
 }
@@ -287,11 +312,19 @@ HttpRequest::~HttpRequest() {
         delete [] buffer;
 }
 
-void HttpRequest::setTimeOutAt( long timeOutAt) {
-    this->timeOutAt = StartedAt + (timeOutAt);
+void HttpRequest::setTimeOutAt(long timeOutAt) {
+    this->timeOutAt = lastPacket + (timeOutAt);
 }
 
 bool HttpRequest::isTimeOut() {
 
     return timeOutAt < time(NULL);
+}
+
+long HttpRequest::getLastPacket() const {
+    return lastPacket;
+}
+
+void HttpRequest::setLastPacket(long lastPacket) {
+    HttpRequest::lastPacket = lastPacket;
 }

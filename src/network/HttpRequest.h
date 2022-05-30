@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include "../tools/Utils.h"
 
-#define BUFFER_SIZE 20000
+#define BUFFER_SIZE 50000
 #define TIMEOUT 60
 
 class HttpRequest {
@@ -37,6 +37,13 @@ private:
     std::string     realPath;
       long       timeOutAt;
       long startTimestamp;
+      long lastPacket;
+public:
+    long getLastPacket() const;
+
+    void setLastPacket(long lastPacket);
+
+private:
     // change this
     std::map<std::string, std::string> Params;
 
@@ -125,6 +132,7 @@ public:
     bool cgiRunning;
 	/////////////////
 
+     std::string bodyRemainingFromHeaders;
 };
 
 #endif //WEBSERV_HTTPREQUEST_H

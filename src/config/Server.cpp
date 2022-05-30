@@ -387,3 +387,10 @@ unsigned long long Server::getMaxBodySize(HttpRequest *request) {
     return this->maxBodySize * 1e6;
 }
 
+long Server::getTimeOutAt(HttpRequest *request) {
+    Location *l = this->getLocation(request->GetPath());
+    if (l != NULL)
+        return l->getTimeOut();
+    return 60;
+}
+

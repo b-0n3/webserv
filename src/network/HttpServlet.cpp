@@ -32,8 +32,8 @@ void HttpServlet::start() {
     int i = 1;
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int));
     int set = 1;
-    //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-    signal(SIGPIPE, SIG_IGN);
+    setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+   // signal(SIGPIPE, SIG_IGN);
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) == -1) {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
@@ -63,6 +63,7 @@ void HttpServlet::acceptNewClient(struct pollfd pfd) {
     {
         client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
         fcntl(client_sock, F_SETFL, O_NONBLOCK);
+        //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
         if (client_sock == -1) {
             perror("accept");
             return;
@@ -71,6 +72,8 @@ void HttpServlet::acceptNewClient(struct pollfd pfd) {
             clientPfd.fd = client_sock;
             clientPfd.events = POLLIN;
             this->pollfd_list.push_back(clientPfd);
+        this->requests[client_sock] = new HttpRequest(client_sock);
+        this->responses[client_sock] = new HttpResponse();
 
     }
 }
@@ -97,19 +100,29 @@ void HttpServlet::handleRequests() {
                 this->pollfd_list[i].events = POLLOUT;
             continue;
         }
-
-        if (pollfd_list[i].revents & POLLIN) {
-            if (this->requests.find(fd) == this->requests.end()) {
-                this->requests[fd] = new HttpRequest(fd);
-                this->responses[fd] = new HttpResponse();
-                if (this->requests[fd]->IsFinished()) {
-                    this->handleRequest(this->requests[fd],
-                                        this->responses[fd]);
-                    if (!requests[fd]->cgiRunning)
-                       this->pollfd_list[i].events = POLLOUT;
-                }
+        if (requests[fd]->isTimeOut())
+        {
+            if (!requests[fd]->IsHeaderParsed() || responses[fd]->isWritingBody())
+            {
+                to_delete.push_back(fd);
                 continue;
             }
+            responses[fd]->setStatusCode(TIMEOUT);
+            this->pollfd_list[i].events = POLLOUT;
+            continue;
+        }
+        if (pollfd_list[i].revents & POLLIN) {
+            std::cout << "reading" << std::endl;
+//            if (this->requests.find(fd) == this->requests.end()) {
+//
+//                if (this->requests[fd]->IsFinished()) {
+//                    this->handleRequest(this->requests[fd],
+//                                        this->responses[fd]);
+//                    if (!requests[fd]->cgiRunning)
+//                       this->pollfd_list[i].events = POLLOUT;
+//                }
+//                continue;
+//            }
 
             if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
@@ -121,9 +134,12 @@ void HttpServlet::handleRequests() {
 
             if (!this->requests[fd]->IsFinished()) {
                 if (this->requests[fd]->IsHeaderParsed())
+                {
                     this->requests[fd]->Parse(this->getMaxBodySize(requests[fd]));
+                    this->requests[fd]->setTimeOutAt(this->getTimeOut(requests[fd]));
+                }
                 else
-                    this->requests[fd]->Parse(0);
+                    this->requests[fd]->Parse(-1);
                 if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd]);
@@ -134,9 +150,11 @@ void HttpServlet::handleRequests() {
             }
         }
        else  if (pollfd_list[i].revents & POLLOUT) {
+            std::cout << "writing" << std::endl;
             // @ todo check if the request is still not served
             if (!this->responses[fd]->isFinished()) {
                 this->responses[fd]->writeToFd(fd);
+                this->requests[fd]->setLastPacket(time(NULL));
                 pollfd_list[i].events = POLLOUT;
             } else
                 to_delete.push_back(fd);
@@ -263,6 +281,17 @@ unsigned long long HttpServlet::getMaxBodySize(HttpRequest *request) {
     Server *s = this->servers[server];
 
     return s->getMaxBodySize(request);
+}
+
+long HttpServlet::getTimeOut(HttpRequest *request) {
+    std::string server = request->GetHeadersValueOfKey("host");
+    if (this->servers.find(server) == this->servers.end()) {
+        return 60;
+    }
+    Server *s = this->servers[server];
+
+    return s->getTimeOutAt(request);
+
 }
 
 

@@ -23,16 +23,16 @@ void HttpResponse::writeToFd(int i) {
         write(i, "HTTP/1.1 ", 9);
         write(i, std::to_string(this->statusCode).c_str(),
               std::to_string(this->statusCode).length());
-        write(i, " OK\r\n", 5);
+        write(i, " OK\r\n", 5); // todo add custum message
         write(i, "Content-Length: ", 16);
         write(i, std::to_string(this->contentLength).c_str(),
               std::to_string(this->contentLength).length());
         write(i, "\r\n", 2);
-        write(i, "Connection: keep-alive", strlen("Connection: keep-alive") );
+        write(i, "Connection: close", strlen("Connection: close"));
         write(i, "\r\n", 2);
         for (int j  = 0; j < this->cookies.size(); j++)
         {
-            std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
+         //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
             write(i, "Set-Cookie: ",12);
             write(i, this->cookies[j].c_str(),this->cookies[j].length());
             write(i, "\r\n",2);

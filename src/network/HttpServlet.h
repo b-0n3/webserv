@@ -42,6 +42,7 @@ public:
     void start();
     void handleRequests();
 
+    long getTimeOut(HttpRequest *pRequest);
 };
 
 

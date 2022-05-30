@@ -110,6 +110,8 @@ public:
     unsigned long getMaxBodySize() const;
 
     void setMaxBodySize(unsigned long maxBodySize);
+
+    long getTimeOutAt(HttpRequest *request);
 };
 
 

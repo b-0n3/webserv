@@ -76,19 +76,19 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
         throw IllegalArgumentException("cgi node must have ext child");
     return new Cgi(path, ext);
 }
-void headerToEnv(std::pair<std::string, std::string> header)
+void headerToEnv(std::map<std::string,std::string>::iterator  header)
 {
     std::string env = "HTTP_";
-    for (int i = 0; i < (header).first.size(); i++)
+    for (int i = 0; i < (*header).first.size(); i++)
     {
-        if ((header).first[i] == '-')
+        if ((*header).first[i] == '-')
             env += '_';
         else
-            env += std::toupper(header.first[i]);
+            env += std::toupper((*header).first[i]);
     }
    // env += "=";
    // env += header.second;
-    setenv(env.c_str(),  header.second.c_str(), 1);
+    setenv(env.c_str(),  (*header).second.c_str(), 1);
 
 }
 void createEnv(HttpRequest *request)
@@ -129,7 +129,9 @@ void createEnv(HttpRequest *request)
         setenv("CONTENT_LENGTH" , request->GetHeadersValueOfKey("Content-Length").c_str(),1);
     }
 
-   for(std::pair<std::string , std::string > it : request->GetHeaders())
+   for(std::map<std::string,std::string>::iterator it = request->GetHeaders().begin();
+   it != request->GetHeaders().end();
+   it++)
     {
         headerToEnv(it);
     }
@@ -182,12 +184,7 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
                 dup2(  pResponse->getBodyFileDescriptor() , STDOUT_FILENO);
                 close(pRequest->GetBodyFd());
                 close(pResponse->getBodyFileDescriptor());
-               // write(STDERR_FILENO, "FSDF\n", 5);
-//               // dup2(out, STDERR_FILENO );
-//                close(readPipe[0]);
-//                close(writePipe[1]);
-//                close(readPipe[1]);
-//                close(writePipe[0]);
+
             } else {
                // close(readPipe[0]);
                 dup2( pResponse->getBodyFileDescriptor() , STDOUT_FILENO );
