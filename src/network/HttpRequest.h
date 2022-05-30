@@ -18,6 +18,7 @@
 #include "../tools/Utils.h"
 
 #define BUFFER_SIZE 5001
+#define TIMEOUT 60
 
 class HttpRequest {
 private:
@@ -32,10 +33,10 @@ private:
     // @Todo change to ../tools tempFile.cpp
     std::fstream 	BodyFd;
     std::fstream 	TmpBodyFd;
-    time_t          startedAt;
+    time_t          StartedAt;
     std::string     realPath;
-    unsigned  long       timeOutAt;
-    unsigned  long startTimestamp;
+      long       timeOutAt;
+      long startTimestamp;
     // change this
     std::map<std::string, std::string> Params;
 
@@ -67,7 +68,8 @@ public:
 	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
 	HttpRequest(int fd);
     void Parse();
-	
+    void setTimeOutAt( long timeOutAt);
+    bool isTimeOut();
   	//Getters
     std::string GetMethod() { return Method; }
     std::string GetPath(){return Path;}

@@ -115,6 +115,7 @@ void HttpServlet::handleRequests() {
 
             if (!this->requests[fd]->IsFinished()) {
                 this->requests[fd]->Parse();
+
                 if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd]);
@@ -167,12 +168,7 @@ void HttpServlet::handleRequests() {
 
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
-//    if (request->isTimedOut())
-//    {
-//        response->setStatus(REQUEST_TIMEOUT);
-//        response->setFinished(true);
-//        return;
-//    }
+
     if (this->servers.find(server) == this->servers.end()) {
         response->setStatusCode(BAD_GATEWAY);
         return;
@@ -186,22 +182,28 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 
     }
     Location *l = s->getLocation(request->GetPath());
+    request->setTimeOutAt(l->getTimeOut());
+    if (request->isTimeOut()) {
+        response->setStatusCode(REQUEST_TIMEOUT);
+        if (request->cgiRunning)
+        {
+            response->setStatusCode(GATEWAY_TIMEOUT);
+            kill(request->cgiPid, SIGKILL);
+            request->cgiRunning = false;
+        }
+    }
+
     if (response->getStatusCode() == 200) {
         if (request->GetPath().empty() || request->GetPath() == " ") {
             response->setStatusCode(MOVED_PERMANENTLY);
             response->addHeader("Location", "/");
             return;
         }
-
-//        if (std::atoi(request->GetHeadersValueOfKey("Content-Length").c_str()) > s->getMaxBodySize()) { // @todo change this one to
-//            response->setStatusCode(BAD_REQUEST);
-//        }
         if (l == nullptr) {
             response->setStatusCode(NOT_FOUND);
             return;
         }
         request->root = l->getRootRir();
-//    request->SetPath(request->GetPath().substr(l->getRout().size()));
         request->location = l->getRout();
         if (l->isAllowedMethod(request->GetMethod())) {
             if (l->getCgiIfExists(request->GetPath()))

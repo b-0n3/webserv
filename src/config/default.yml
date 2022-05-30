@@ -5,6 +5,7 @@ servers:   # list of servers
       listen: 8080
       root: ${PWD}/src/root
       client_max_body_size: 1000
+      timeout: 10
       redirects:
         - /test-redirect-static:
             status: 301
@@ -87,6 +88,7 @@ servers:   # list of servers
         listen: 80
         root: ${PWD}/src/root
         client_max_body_size: 1000
+        timeout: 10
         redirects:
          - /test-redirect-static:
              status: 301

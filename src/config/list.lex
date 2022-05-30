@@ -4,6 +4,7 @@ servers array
     client_max_body_size string
     listen string
     root string
+    timeout  timeout duration in milliseconds
     location array
        index string
        error_page array
