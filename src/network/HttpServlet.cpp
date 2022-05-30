@@ -84,7 +84,13 @@ void HttpServlet::handleRequests() {
     std::vector<int> to_delete;
     for (int i = 1; i < size; i++) {
         int fd = this->pollfd_list[i].fd;
-        if (this->requests.find(fd)!= this->requests.end() && this->requests[fd]->cgiRunning) {
+        if (pollfd_list[i].revents & POLLHUP||
+        pollfd_list[i].revents & POLLERR ||
+        pollfd_list[i].revents & POLLNVAL) {
+            to_delete.push_back(fd);
+            continue;
+        }
+        if (this->requests.find(fd) != this->requests.end() && this->requests[fd]->cgiRunning) {
             this->handleRequest(this->requests[fd],
                                 this->responses[fd]);
             if (!requests[fd]->cgiRunning)
@@ -132,12 +138,12 @@ void HttpServlet::handleRequests() {
             if (!this->responses[fd]->isFinished()) {
                 this->responses[fd]->writeToFd(fd);
                 pollfd_list[i].events = POLLOUT;
-            }
-            else
+            } else
                 to_delete.push_back(fd);
 
-          //  std::cout << close(fd) << std::endl;
-       }
+            //  std::cout << close(fd) << std::endl;
+        }
+
     }
     for (int i = 0; i < to_delete.size(); i++)
     {

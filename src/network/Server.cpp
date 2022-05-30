@@ -21,9 +21,9 @@ void initTmpDir()
     std::string tmpDir = getenv("PWD");
     tmpDir += "/.tmp";
 
-    struct stat st = {0};
+
     if( is_directory(tmpDir.c_str()))
-        rmdir(tmpDir.c_str());
+        return;
 
     if (mkdir(tmpDir.c_str(), 0777) == -1) {
             throw IllegalStateException("Could not create tmp directory");

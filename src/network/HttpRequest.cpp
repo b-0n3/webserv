@@ -184,9 +184,11 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
     
     int ret = 0;
     // To Check if this correct
-    if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0)
+    if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0 )
     {
-        StatusCode = 400;
+        StatusCode = TIMEOUT;
+        SetBodyParsed(true);
+        SetHeaderParsed(true);
         return;
     }
 	buffer[ret] = '\0';
@@ -206,6 +208,7 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
 
         SetHeaderParsed(true);
 		request = request.substr(request.find("\r\n\r\n") + 4);
+
         return;
     }
 
@@ -218,8 +221,8 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
             return;
         }
         unsigned long long contentLength = std::stoull(Headers["Content-Length"]);
-        std::cout << "Content-Length: " << contentLength << std::endl;
-        std::cout << "max body size: " << maxBodySize << std::endl;
+//        std::cout << "Content-Length: " << contentLength << std::endl;
+//        std::cout << "max body size: " << maxBodySize << std::endl;
 
         if (contentLength > maxBodySize) {
             StatusCode = MAX_BODY_SIZE_EXCEEDED;
@@ -230,13 +233,12 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
         if (Headers.count("Transfer-Encoding") !=  0 && GetHeadersValueOfKey("Transfer-Encoding") == "chunked")
 		{
 			TmpBodyFd.open(TmpBodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary ) ;
-            std::cout << request<< std::endl;
+            //std::cout << request<< std::endl;
 			TmpBodyFd.write(request.c_str() , request.size());
 			if (IsChunkedBodyFinished())
 			{
 				ProcessChunkedBody();
-				if (CountFileSize(BodyFileName.c_str()) >=
-                std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
+				if (CountFileSize(BodyFileName.c_str()) >=contentLength)
 					SetBodyParsed(true);
                 std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
 			}
@@ -247,7 +249,7 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
 			BodyFd.open(BodyFileName,  std::fstream::in | std::fstream::out | std::fstream::app | std::ios::binary);
 			BodyFd.write(request.c_str() , request.size());
 			BodyFd.close();
-			if (CountFileSize(BodyFileName.c_str()) >= std::atoi(GetHeadersValueOfKey("Content-Length").c_str()))
+			if (CountFileSize(BodyFileName.c_str()) >= contentLength)
 				SetBodyParsed(true);
             std::cout << CountFileSize(BodyFileName.c_str()) << std::endl;
 		}
@@ -263,11 +265,26 @@ void HttpRequest::setRealPath(const std::string &realPath) {
 }
 
 HttpRequest::~HttpRequest() {
+    std::cout << "HttpRequest Destructor" << std::endl;
     if (TmpBodyFd.is_open())
         TmpBodyFd.close();
     if (BodyFd.is_open())
         BodyFd.close();
-    delete [] buffer;
+   int fd = open(TmpBodyFileName.c_str(), O_RDONLY);
+   if (fd != -1)
+   {
+       close(fd);
+       remove(TmpBodyFileName.c_str());
+   }
+   fd = open(BodyFileName.c_str(), O_RDONLY);
+   if (fd != -1)
+   {
+       close(fd);
+       remove(BodyFileName.c_str());
+   }
+
+
+        delete [] buffer;
 }
 
 void HttpRequest::setTimeOutAt( long timeOutAt) {

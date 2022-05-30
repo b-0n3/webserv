@@ -17,7 +17,7 @@
 #include <fcntl.h>
 #include "../tools/Utils.h"
 
-#define BUFFER_SIZE 5001
+#define BUFFER_SIZE 20000
 #define TIMEOUT 60
 
 class HttpRequest {
