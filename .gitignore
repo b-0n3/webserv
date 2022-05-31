@@ -2,3 +2,5 @@ webserv
 webserv.*
 .vscode
 .vscode/*
+.tmp
+.tmp/*
