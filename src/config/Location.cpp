@@ -292,8 +292,8 @@ void Location::handlePost(HttpRequest *req, HttpResponse *res) {
             + req->getBodyFileName() + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
         filePath =    this->uploadDir +"/" + bodyFilename
             + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
-        std::cout << "filename: " << filename << std::endl;
-    std::cout << "filePaht: " << req->getBodyFileName() << std::endl;
+        // std::cout << "filename: " << filename << std::endl;
+    // std::cout << "filePaht: " << req->getBodyFileName() << std::endl;
     if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
 
         res->setStatusCode(200);

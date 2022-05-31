@@ -180,9 +180,9 @@ void ConfigParser::replaceEnv() {
         if (last == std::string::npos) {
             break;
         }
-        std::cout << "first "<< first << " last " << last << std::endl;
+        // std::cout << "first "<< first << " last " << last << std::endl;
         std::string env = this->currentLine.substr(first + 2, last - first - 2 );
-        std::cout << "env" << env<< std::endl;
+        // std::cout << "env" << env<< std::endl;
         start = last + 1;
         char *value = std::getenv(env.c_str());
         if (value == nullptr)

@@ -69,12 +69,12 @@ public:
     void printNode(Node<T> *root){
         if (root == nullptr)
             return;
-        std::cout  << "{"<<*root->getData() << "}"<<std::endl;
-        std::cout << "{children}"<<std::endl;
+        // std::cout  << "{"<<*root->getData() << "}"<<std::endl;
+        // std::cout << "{children}"<<std::endl;
         for(int i = 0; i < root->getChildren().size(); i++){
             printNode(root->getChildren()[i]);
         }
-        std::cout << "{end of"<<*root->getData()<<std::endl;
+        // std::cout << "{end of"<<*root->getData()<<std::endl;
     }
     bool operator==(Node<T> *node){
         if (node == nullptr)

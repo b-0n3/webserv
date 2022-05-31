@@ -26,8 +26,8 @@ void HttpResponse::writeToFd(int i) {
     if (!writingBody) {
         if (!this->responseBuilted)
             this->buildResponseHeaders();
-    std::cout << "writing headers" << std::endl;
-    std::cout << this->responseHeadersString.str() << std::endl;
+    // std::cout << "writing headers" << std::endl;
+    // std::cout << this->responseHeadersString.str() << std::endl;
     std::string toWrite = responseHeadersString.str().substr(headerWrited);
 
            int ret = write(i, toWrite.c_str(), toWrite.size());
@@ -202,12 +202,12 @@ void HttpResponse::parseHeaders(std::string &headers) {
 
 HttpResponse::~HttpResponse() {
     tempFile.deleteFile();
-    std::cout << "deleted" << std::endl;
+    // std::cout << "deleted" << std::endl;
 }
 
 void HttpResponse::buildResponseHeaders() {
 
-    std::cout << "build response headers" << std::endl;
+    // std::cout << "build response headers" << std::endl;
 
     responseHeadersString << "HTTP/1.1 ";
 

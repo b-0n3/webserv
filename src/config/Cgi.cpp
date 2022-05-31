@@ -29,7 +29,7 @@ Cgi::~Cgi() {
 
 }
 
- bool Cgi::isCgi(std::string const path) const {
+bool Cgi::isCgi(std::string const path) const {
     if (path.find('.') == std::string::npos)
         return false;
     std::string e = path.substr(path.find_last_of('.') );
@@ -41,8 +41,6 @@ Cgi::~Cgi() {
 std::string Cgi::getBinaryPath() {
     return this->binaryPath;
 }
-
-
 
 std::vector <std::string> Cgi::getExt() {
     return this->ext;
@@ -77,7 +75,6 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
     return new Cgi(path, ext);
 }
 
-
 void headerToEnv(std::string key, std::string value)
 {
     std::string env = "HTTP_";
@@ -102,8 +99,7 @@ void headerToEnv(std::string key, std::string value)
 //     }
 //    // env += "=";
 //    // env += header.second;
-//     setenv(env.c_str(),  (*header).second.c_str(), 1);
-
+//     setenv(env.c_str(),  (*header).second.c_str(), 1)
 // }
 void createEnv(HttpRequest *request)
 {
@@ -143,10 +139,11 @@ void createEnv(HttpRequest *request)
         setenv("CONTENT_LENGTH" , request->GetHeadersValueOfKey("Content-Length").c_str(),1);
     }
 
-   for(std::map<std::string,std::string>::iterator it = request->GetHeaders().begin();
+   for( std::map<std::string, std::string,compareStringIgnoreCase>::iterator it = request->GetHeaders().begin();
         it != request->GetHeaders().end(); it++)
     {
-        headerToEnv(it->first,it->second);
+        std::cerr << (*it).first << " " << (*it).second << std::endl;
+        headerToEnv( (*it).first, (*it).second);
     }
 
 //    char **_envp = new char*[envp_vect.size()];
@@ -179,7 +176,7 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         args[2] = nullptr;
 
         std::cerr << "CGI: " << this->binaryPath << " " << path << std::endl;
-
+        int err = dup(STDERR_FILENO);
         pid_t pid = fork();
         if (pid == -1) {
             pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
@@ -187,11 +184,12 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         }
         if (pid == 0) {
 
-            std::cout << "methode =" << pRequest->GetMethod() << std::endl;
+            // std::cout << "methode =" << pRequest->GetMethod() << std::endl;
             // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
+             dup2(err, STDERR_FILENO);
              createEnv(pRequest);
          //   std::cout << "execve" << std::endl;
-            std::cout << this->binaryPath<< std::endl;
+            // std::cout << this->binaryPath<< std::endl;
             if (pRequest->IsHasBody()) {
                 dup2( pRequest->GetBodyFd(),  STDIN_FILENO);
                 dup2(  pResponse->getBodyFileDescriptor() , STDOUT_FILENO);
@@ -214,7 +212,7 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
             if (pRequest->IsHasBody()) {
                // close(writePipe[0]);
                     close(pRequest->GetBodyFd());
-                   std::cout << "writing body to cgi" << std::endl;
+                //    std::cout << "writing body to cgi" << std::endl;
                    // @Todo: change this to nonBlocking
 //                char buff[1056];
 //                int ret;

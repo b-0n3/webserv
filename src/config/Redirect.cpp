@@ -57,7 +57,7 @@ void Redirect::parseUrl(Node<Token *> *n) {
     std::string value;
     if (!this->url.empty())
         throw IllegalArgumentException("Redirect url already set");
-    std::cout << n->getChildren().size() << std::endl;
+    // std::cout << n->getChildren().size() << std::endl;
     if (n->getChildren().size() != 2)
         throw IllegalArgumentException("Redirect url must have 1 child");
     value = n->getData()->getValue();

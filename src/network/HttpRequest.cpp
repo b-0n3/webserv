@@ -78,7 +78,7 @@ size_t  HttpRequest::ParseHexaLine()
 	while (1)
 	{
 		TmpBodyFd.read(&c, 1);
-		std::cout << c << std::endl;
+		// std::cout << c << std::endl;
 		if (c == '\r')
 			break;
 		buffer[count++] = c;
@@ -108,14 +108,14 @@ void HttpRequest::ProcessChunkedBody()
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
 {
 	Method = FirstLine.substr(0, FirstLine.find(' '));
-    std::cout << "method =- "  << Method << std::endl;
+    // std::cout << "method =- "  << Method << std::endl;
     Path = FirstLine.substr(FirstLine.find(' ') + 1);
     Path = Path.substr(0, Path.find(' '));
 
 	//std::cout << "Method: " << Method << std::endl;
     //std::cout << FirstLine<<std::endl;
 	//Path = FirstLine.substr(FirstLine.find(' '), FirstLine.find("HTTP/") - 5 );
-	std::cout << "Path: " << Path << std::endl;
+	// std::cout << "Path: " << Path << std::endl;
 
     //If there is Host with path "GET http://wwww.1337.ma/index.html HTTP/1.1"
     if (Path.find("http://") != std::string::npos) {
@@ -251,7 +251,7 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
                     SetBodyParsed(true);
                 if (fileSize > contentLength) {
                     StatusCode = BAD_REQUEST;
-                    std::cout << fileSize << " " << contentLength << std::endl;
+                    // std::cout << fileSize << " " << contentLength << std::endl;
                     SetBodyParsed(true);
                 }
               //  std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght " << contentLength<< std::endl;
@@ -274,7 +274,7 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
             if (fileSize > contentLength) {
                 StatusCode = BAD_REQUEST;
                 SetBodyParsed(true);
-                std::cout << fileSize << " " << contentLength << std::endl;
+                // std::cout << fileSize << " " << contentLength << std::endl;
             }
          //   std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght unchenked " << contentLength<< std::endl;
 		}
@@ -290,7 +290,7 @@ void HttpRequest::setRealPath(const std::string &realPath) {
 }
 
 HttpRequest::~HttpRequest() {
-    std::cout << "HttpRequest Destructor" << std::endl;
+    // std::cout << "HttpRequest Destructor" << std::endl;
     if (TmpBodyFd.is_open())
         TmpBodyFd.close();
     if (BodyFd.is_open())

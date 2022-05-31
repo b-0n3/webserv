@@ -112,7 +112,7 @@ void HttpServlet::handleRequests() {
             continue;
         }
         if (pollfd_list[i].revents & POLLIN) {
-            std::cout << "reading" << std::endl;
+            // std::cout << "reading" << std::endl;
 //            if (this->requests.find(fd) == this->requests.end()) {
 //
 //                if (this->requests[fd]->IsFinished()) {
@@ -150,14 +150,34 @@ void HttpServlet::handleRequests() {
             }
         }
        else  if (pollfd_list[i].revents & POLLOUT) {
-            std::cout << "writing" << std::endl;
+            // std::cout << "writing" << std::endl;
             // @ todo check if the request is still not served
             if (!this->responses[fd]->isFinished()) {
                 this->responses[fd]->writeToFd(fd);
                 this->requests[fd]->setLastPacket(time(NULL));
                 pollfd_list[i].events = POLLOUT;
             } else
-                to_delete.push_back(fd);
+            {
+                // if this connection is keep-Alive  we should not close it
+                if (this->requests[fd]->IsKeepAlive())
+                {
+                    this->requests[fd]->setLastPacket(time(NULL));
+                    HttpResponse *r = this->responses[fd];
+                    HttpRequest *rq = this->requests[fd];
+                    std::map<int , HttpResponse *>::iterator
+                    response = this->responses.find(fd);
+                    std::map<int , HttpRequest *>::iterator
+                    req = this->requests.find(fd);
+                    this->requests.erase(req);
+                    this->responses.erase(response);
+                    delete r;
+                    delete rq;
+                    pollfd_list[i].events = POLLIN;
+                    //this->responses[fd]->reset();
+                }
+                else
+                    to_delete.push_back(fd);
+            }
 
             //  std::cout << close(fd) << std::endl;
         }
@@ -177,7 +197,7 @@ void HttpServlet::handleRequests() {
                     response = this->responses.find(fd);
 
                     std::map<int , HttpRequest *>::iterator
-                            req = this->requests.find(fd);
+                    req = this->requests.find(fd);
                     this->requests.erase(req);
                     this->responses.erase(response);
                     delete r;

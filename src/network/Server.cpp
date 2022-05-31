@@ -11,7 +11,7 @@ std::set<int> getPorts(std::vector<Server *> servers) {
 
     std::set<int> ports;
     for (int i = 0; i < servers.size(); i++) {
-        std::cout << "port " << servers[i]->getPort() << std::endl;
+        // std::cout << "port " << servers[i]->getPort() << std::endl;
         ports.insert(servers[i]->getPort());
     }
     return ports;

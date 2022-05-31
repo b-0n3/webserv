@@ -116,6 +116,8 @@ public:
 
     bool IsHasBody() { return Method == "POST" || Method == "DELETE"; }
 
+    bool IsKeepAlive() { return GetHeadersValueOfKey("Connection") == "keep-alive"; }
+
 
 	bool IsChunkedBodyFinished();
 	void ProcessChunkedBody();
