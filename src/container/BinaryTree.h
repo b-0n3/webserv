@@ -46,6 +46,7 @@ public:
         for (int i = 0; i < root->getChildren().size(); i++) {
             deleteTree(root->getChildren()[i]);
         }
-       // delete root;
+        if (root->getParent() != nullptr)
+            delete root;
     }
 };

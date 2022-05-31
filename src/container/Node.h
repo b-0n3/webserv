@@ -20,9 +20,7 @@ public:
         parent = nullptr;
     }
     ~Node(){
-//        for(int i = 0; i < children.size(); i++){
-//            delete children[i];
-//        }
+        delete data;
     }
     Node(T data, Node<T> *parent){
         this->data = data;

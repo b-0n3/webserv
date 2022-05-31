@@ -10,9 +10,12 @@ NAME=webserv
 all: $(NAME)
 
 $(NAME): $(SRC)
-	c++  -g  -o $(NAME) $(SRC)  #-fsanitize=address
+	c++  -g  -o $(NAME) $(SRC)
 clean:
 	rm -rf *.o
+debug: fclean
+	c++  -g  -o $(NAME) $(SRC)  -fsanitize=address
+	./webserv src/config/default.yml
 fclean:
 	rm -rf $(NAME)
 re: fclean all

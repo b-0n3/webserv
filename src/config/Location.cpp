@@ -361,17 +361,22 @@ Location  *Location::fromNode(Node<Token *> *root) {
     if (root == nullptr)
         throw IllegalArgumentException("unexpected token");
     l = new Location();
-    l->setRoute(root->getData()->getValue());
-    for (int i = 0; i < root->getChildren().size(); i++) {
-        String value = root->getChildren()[i]->getData()->getValue();
-        if (l->parsingMethods.find(value) != l->parsingMethods.end())
-        {
-            func f = l->parsingMethods[value];
-            (l->*f)(root->getChildren()[i]);
+    try {
+        l->setRoute(root->getData()->getValue());
+        for (int i = 0; i < root->getChildren().size(); i++) {
+            String value = root->getChildren()[i]->getData()->getValue();
+            if (l->parsingMethods.find(value) != l->parsingMethods.end()) {
+                func f = l->parsingMethods[value];
+                (l->*f)(root->getChildren()[i]);
+            } else
+                throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
         }
-        else
-            throw IllegalArgumentException(root->getChildren()[i]->getData()->getValue() + " : unexpected token");
     }
+    catch (std::exception &e) {
+        delete l;
+        throw e;
+    }
+
     return l;
 }
 
@@ -508,6 +513,7 @@ Location::~Location() {
     for (int i = 0; i < this->getErrorPages().size(); i++) {
         delete this->getErrorPages()[i];
     }
+
     for (int i = 0; i < this->getCgis().size(); i++) {
         delete this->getCgis()[i];
     }

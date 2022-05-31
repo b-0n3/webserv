@@ -211,19 +211,24 @@ Server *Server::fromNode(Node<Token *> *root) {
     if (root->getChildren().empty())
         throw IllegalArgumentException("empty server not allowed");
     s = new Server();
-    for(int i = 0; i < root->getChildren().size(); i++)
-    {
-        value = root->getChildren()[i]->getData()->getValue();
-        if (s->parsingMethods.find(value) != s->parsingMethods.end()) {
-            func f = s->parsingMethods[value];
-            (s->*f)(root->getChildren()[i]);
+    try {
+        for (int i = 0; i < root->getChildren().size(); i++) {
+            value = root->getChildren()[i]->getData()->getValue();
+            if (s->parsingMethods.find(value) != s->parsingMethods.end()) {
+                func f = s->parsingMethods[value];
+                (s->*f)(root->getChildren()[i]);
+            } else
+                throw IllegalArgumentException("unexpected token" + root->getChildren()[i]->getData()->getValue());
         }
-        else
-            throw IllegalArgumentException("unexpected token" + root->getChildren()[i]->getData()->getValue());
+        if (s->locations.empty())
+            throw IllegalArgumentException("no locations defined");
+        s->initLocations();
+    }catch (std::exception &e)
+    {
+        delete s;
+        throw e;
     }
-    if (s->locations.empty())
-        throw IllegalArgumentException("no locations defined");
-    s->initLocations();
+
     return s;
 }
 
@@ -231,6 +236,8 @@ Server *Server::fromNode(Node<Token *> *root) {
 
 
 void Server::parseHost(Node<Token *> *n) {
+    if (n->getChildren().empty())
+        throw IllegalArgumentException("empty host not allowed");
     this->host = n->getChildren()[0]->getData()->getValue();
     if(root.empty())
         throw IllegalArgumentException("no root defined");

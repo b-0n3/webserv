@@ -43,6 +43,7 @@ bool isArrayElment(std::string &line)
 void ConfigParser::tokenizeConfigFiles(Node<Token *> *parent,Node<Token *> *root, int lastIndentation, int currentIndentation) {
     int indentation;
     Node<Token *> *currentNode = root;
+
     if (std::getline(*this->configFile, this->currentLine).eof())
         return;// @todo:  Change and call other function to convert ast into a vector of server;// @todo:  Change and call other function to convert ast into a vector of server
     this->replaceEnv();
@@ -135,6 +136,8 @@ Node<Token *> *ConfigParser::getNextToken() {
         if (this->currentLine.find_first_of('#') != std::string::npos) {
             this->currentLine = this->currentLine.substr(0, this->currentLine.find_first_of('#'));
         }
+        if (trim(this->currentLine).empty())
+            return node;
         node->addChild(new Node<Token *>(new Token(trim(this->currentLine), VALUE)));
         return node;
 }

@@ -102,14 +102,14 @@ void HttpServlet::handleRequests() {
         }
         if (requests[fd]->isTimeOut())
         {
-            if (!requests[fd]->IsHeaderParsed() || responses[fd]->isWritingBody())
-            {
-                to_delete.push_back(fd);
-                continue;
-            }
-            responses[fd]->setStatusCode(TIMEOUT);
+//            if (!requests[fd]->IsHeaderParsed() || responses[fd]->isWritingBody())
+//            {
+//                to_delete.push_back(fd);
+//                continue;
+//            }
+            responses[fd]->setStatusCode(GATEWAY_TIMEOUT);
             this->pollfd_list[i].events = POLLOUT;
-            continue;
+
         }
         if (pollfd_list[i].revents & POLLIN) {
             std::cout << "reading" << std::endl;

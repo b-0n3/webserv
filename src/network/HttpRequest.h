@@ -1,4 +1,5 @@
 //
+//
 // Created by b0n3 on 4/17/22.
 //
 //
@@ -71,7 +72,7 @@ public:
     const std::string &getRealPath() const;
     ~HttpRequest();
     void setRealPath(const std::string &realPath);
-    
+    typedef std::map<std::string, std::string, compareStringIgnoreCase> HeadersMap;
 	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
 	HttpRequest(int fd);
     void Parse(unsigned  long long maxBodySize);
@@ -96,7 +97,7 @@ public:
             return Params[key];
         return std::string ();
     }
-    std::map<std::string, std::string,compareStringIgnoreCase> GetHeaders(){ return Headers; }
+    HeadersMap &GetHeaders(){ return Headers; }
     std::map<std::string, std::string> GetParams() { return Params; }
     int getStatusCode() { return StatusCode; }
 

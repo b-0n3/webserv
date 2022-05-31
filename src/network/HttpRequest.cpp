@@ -201,23 +201,29 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
     	this->request.append(buffer, ret);
 	else
 		request  = std::string(buffer, ret);
-
+    std::cout << "request: " << request << std::endl;
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
 		// Parse the first line
+        std::cout << "First Line: " << " somthing " << std::endl;
 		ParseFirstLine(request.substr(0, request.find("\r\n")));
 
         // Parse headers
 		ParseHeaders(request.substr(request.find("\r\n") + 2, request.find("\r\n\r\n")));
 
         SetHeaderParsed(true);
+        unsigned long long contentLength = GetHeadersValueOfKey("Content-Length").empty() ? 0 : std::stoull(GetHeadersValueOfKey("Content-Length"));
 		this->bodyRemainingFromHeaders = request.substr(request.find("\r\n\r\n") + 4);
+        if (this->bodyRemainingFromHeaders.size() < contentLength)
+            return ;
+        else
+            request = std::string();
         // std::cout << "request: " << request << std::endl;
-        return;
     }
     this->lastPacket = time(NULL);
     //Use form data postman
     //if has body and header parsed and body not parsed yet
+    std::cout << "bodyRemainingFromHeaders: " << bodyRemainingFromHeaders << std::endl;
     if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed() ) {
 		//change compare of the map
         if (Headers.count("Content-Length") == 0) {
@@ -276,7 +282,7 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
                 SetBodyParsed(true);
                 std::cout << fileSize << " " << contentLength << std::endl;
             }
-         //   std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght unchenked " << contentLength<< std::endl;
+             //   std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght unchenked " << contentLength<< std::endl;
 		}
     }
 }

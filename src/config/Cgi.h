@@ -27,7 +27,7 @@ public:
 
     static Cgi *fromNode(Node<Token *> *root);
 
-    void execute(HttpRequest *pRequest, HttpResponse *pResponse);
+    void execute(HttpRequest *request, HttpResponse *response);
 };
 
 

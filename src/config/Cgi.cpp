@@ -133,21 +133,22 @@ void createEnv(HttpRequest *request)
     setenv("FCGI_ROLE","RESPONDER",1);                                               /* =RESPONDER */
     setenv("REQUEST_SCHEME","http",1);                                          /* =http */
     setenv("SERVER_SOFTWARE","webserv/1.1",1);                                         /* =webserv/1.1 (Linux) */
-    setenv("PATH" , std::getenv("PATH"),1);                                                    /* =/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin */
+   // setenv("PATH" , std::getenv("PATH"),1);                                                    /* =/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin */
     setenv("REMOTE_ADDR","0.0.0.0" ,1/*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
     setenv("REMOTE_PORT","0",1  /**+ std::to_string(request->port)*/);                                             /* =0 */
-
+    for(HttpRequest::HeadersMap::iterator it = request->GetHeaders().begin();
+        it != request->GetHeaders().end();
+        ++it)
+    {
+        headerToEnv((*it).first,(*it).second);
+    }
     if (request->IsHasBody() )
     {
         setenv("CONTENT_TYPE" , request->GetHeadersValueOfKey("Content-Type").c_str(),1);
         setenv("CONTENT_LENGTH" , request->GetHeadersValueOfKey("Content-Length").c_str(),1);
     }
 
-   for(std::map<std::string,std::string>::iterator it = request->GetHeaders().begin();
-        it != request->GetHeaders().end(); it++)
-    {
-        headerToEnv(it->first,it->second);
-    }
+
 
 //    char **_envp = new char*[envp_vect.size()];
 //    size_t i = 0;
@@ -170,9 +171,10 @@ std::string getParams(std::map<std::string, std::string> params) {
 }
 
 // @todo: write a function that will return a Cgi object from a node
-void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
-    if (!pRequest->cgiRunning) {
-        std::string path = pRequest->root + pRequest->GetPath();
+void Cgi::execute(HttpRequest *request, HttpResponse *response) {
+    if (!request->cgiRunning) {
+        std::string path = request->root + request->GetPath();
+       // const char *headers[request->GetHeaders().size() + 1];
         const char *args[3];
         args[0] = this->binaryPath.c_str();
         args[1] = path.c_str();
@@ -182,26 +184,27 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
 
         pid_t pid = fork();
         if (pid == -1) {
-            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+            response->setStatusCode(INTERNAL_SERVER_ERROR);
             return;
         }
+
         if (pid == 0) {
 
-            std::cout << "methode =" << pRequest->GetMethod() << std::endl;
+            std::cout << "methode =" << request->GetMethod() << std::endl;
             // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
-             createEnv(pRequest);
+             createEnv(request);
          //   std::cout << "execve" << std::endl;
             std::cout << this->binaryPath<< std::endl;
-            if (pRequest->IsHasBody()) {
-                dup2( pRequest->GetBodyFd(),  STDIN_FILENO);
-                dup2(  pResponse->getBodyFileDescriptor() , STDOUT_FILENO);
-                close(pRequest->GetBodyFd());
-                close(pResponse->getBodyFileDescriptor());
+            if (request->IsHasBody()) {
+                dup2(request->GetBodyFd(), STDIN_FILENO);
+                dup2(response->getBodyFileDescriptor() , STDOUT_FILENO);
+                close(request->GetBodyFd());
+                close(response->getBodyFileDescriptor());
 
             } else {
                // close(readPipe[0]);
-                dup2( pResponse->getBodyFileDescriptor() , STDOUT_FILENO );
-                close(pResponse->getBodyFileDescriptor());
+                dup2(response->getBodyFileDescriptor() , STDOUT_FILENO );
+                close(response->getBodyFileDescriptor());
                 close(0);
              //  dup2(readPipe[1] , STDERR_FILENO );
               // close(readPipe[1]);
@@ -211,51 +214,51 @@ void Cgi::execute(HttpRequest *pRequest, HttpResponse *pResponse) {
         } else {
          //   dup2(STDERR_FILENO, out);
           //  delete []   env;
-            if (pRequest->IsHasBody()) {
+            if (request->IsHasBody()) {
                // close(writePipe[0]);
-                    close(pRequest->GetBodyFd());
+                    close(request->GetBodyFd());
                    std::cout << "writing body to cgi" << std::endl;
                    // @Todo: change this to nonBlocking
 //                char buff[1056];
 //                int ret;
-//                while ((ret = read(pRequest->GetBodyFd(), buff, 1056)) >0 )
+//                while ((ret = read(request->GetBodyFd(), buff, 1056)) >0 )
 //                {
 //                    write(writePipe[1], buff, ret);
 //                    write(1, buff, ret);
 //                }
-//                close(pRequest->GetBodyFd());
+//                close(request->GetBodyFd());
 //                close(writePipe[1]);
 
             }
           // close(readPipe[1]);
-            pRequest->cgiPid = pid;
-            pRequest->cgiRunning = true;
-         //   pResponse->setCgiReadFd(readPipe[0]);
+            request->cgiPid = pid;
+            request->cgiRunning = true;
+         //   response->setCgiReadFd(readPipe[0]);
         }
     }else
     {
       //  std::cout << "Cgi::execute: cgi already running" << std::endl;
         int state;
-        int status = waitpid(pRequest->cgiPid, &state, WNOHANG);
+        int status = waitpid(request->cgiPid, &state, WNOHANG);
         if ( status == -1)
         {
-            pResponse->setStatusCode(INTERNAL_SERVER_ERROR);\
-            pRequest->cgiRunning = false;
+            response->setStatusCode(INTERNAL_SERVER_ERROR);\
+            request->cgiRunning = false;
             return;
         }
         else if (status != 0)
         {
             if (WIFEXITED(state) == 0)
             {
-                pResponse->setStatusCode(INTERNAL_SERVER_ERROR);
+                response->setStatusCode(INTERNAL_SERVER_ERROR);
 
-                pRequest->cgiRunning = false;
+                request->cgiRunning = false;
                 return;
             }
-            pResponse->getTempFile()._close();
-            pResponse->getTempFile()._open();
-            pResponse->readFromCgi();
-            pRequest->cgiRunning = false;
+            response->getTempFile()._close();
+            response->getTempFile()._open();
+            response->readFromCgi();
+            request->cgiRunning = false;
         }
 
     }

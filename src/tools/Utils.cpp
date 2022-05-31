@@ -130,8 +130,8 @@ std::string getExtensionByContentType(std::string type)
     values["application/x-tar"] = "tar" ;
     values["application/x-gzip"] = "gz";
     values["application/x-bzip2"] = "bz2" ;
-    if (values.find(type) != values.end()) {
-        return "."+values[type];
+    if (values.count(type) != 0) {
+        return "." + values[type];
     }
     return ".txt";
 }
