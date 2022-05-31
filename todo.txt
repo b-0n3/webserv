@@ -1,1 +1,18 @@
 leaks if no config file provided
+leaks on runtime
+
+AST free on catch section 
+
+replce earse with reset
+keep buffer of remain request !!!!
+
+responce keep-alive/connection-close
+
+logger : 
+         - print log when responce is sent and going to reset
+         - print syscall failure [read/write failure]
+         - 
+
+fix change header to env 
+
+

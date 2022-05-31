@@ -44,7 +44,7 @@ servers:   # list of servers
               - GET
               - DELETE
             cgi:
-              path: /Users/${USER}/.brew/bin/php-cgi
+              path: /usr/sbin/php-fpm
               ext:
                 - .php
                 - .php5
@@ -73,7 +73,7 @@ servers:   # list of servers
               - GET
               - DELETE
             cgi:
-              path: /Users/${USER}/.brew/bin/php-cgi
+              path: /usr/sbin/php-fpm
               ext:
                 - .php
                 - .php5
@@ -132,7 +132,7 @@ servers:   # list of servers
                 - GET
                 - DELETE
               cgi:
-                path: /Users/${USER}/.brew/bin/php-cgi
+                path: /usr/sbin/php-fpm
                 ext:
                   - .php
                   - .php5
@@ -195,6 +195,6 @@ servers:   # list of servers
                   - GET
                   - DELETE
               cgi:
-                  path: /Users/aait-ham/.brew/bin/python3
+                  path: /usr/local/bin/python3
                   ext:
                     - .py

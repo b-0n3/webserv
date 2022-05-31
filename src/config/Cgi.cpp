@@ -76,21 +76,35 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
         throw IllegalArgumentException("cgi node must have ext child");
     return new Cgi(path, ext);
 }
-void headerToEnv(std::map<std::string,std::string>::iterator  header)
+
+
+void headerToEnv(std::string key, std::string value)
 {
     std::string env = "HTTP_";
-    for (int i = 0; i < (*header).first.size(); i++)
-    {
-        if ((*header).first[i] == '-')
+    for (int i = 0; i < key.size(); i++) {
+        if (key[i] == '-')
             env += '_';
         else
-            env += std::toupper((*header).first[i]);
+            env += std::toupper(key[i]);
     }
-   // env += "=";
-   // env += header.second;
-    setenv(env.c_str(),  (*header).second.c_str(), 1);
-
+    setenv(env.c_str(), value.c_str() , 1);
 }
+
+// void headerToEnv(std::map<std::string,std::string>::iterator  header)
+// {
+//     std::string env = "HTTP_";
+//     for (int i = 0; i < (*header).first.size(); i++)
+//     {
+//         if ((*header).first[i] == '-')
+//             env += '_';
+//         else
+//             env += std::toupper((*header).first[i]);
+//     }
+//    // env += "=";
+//    // env += header.second;
+//     setenv(env.c_str(),  (*header).second.c_str(), 1);
+
+// }
 void createEnv(HttpRequest *request)
 {
   //  std::vector<std::string> envp_vect;
@@ -106,7 +120,7 @@ void createEnv(HttpRequest *request)
     setenv("REQUEST_URI",(request->getRealPath()+"?" + query_string).c_str() ,1);                                            /* =/cgi-bin/php/hello.php */
     setenv("SCRIPT_NAME",  script_name.c_str(),1);/* =/cgi-bin/php/hello.php */
   //  setenv("PATH_INFO=" +request->GetPath().substr(0, request->GetPath().find_last_of('/') + 1));
-   setenv("SCRIPT_FILENAME",script_path.c_str(),1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
+    setenv("SCRIPT_FILENAME",script_path.c_str(),1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
     setenv("PATH_TRANSLATED",script_path.c_str(),1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
     setenv("QUERY_STRING" ,query_string.c_str(),1);                                            /* = */
     setenv("SERVER_NAME" ,request->GetHeadersValueOfKey("Host").c_str(),1 /*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
@@ -130,10 +144,9 @@ void createEnv(HttpRequest *request)
     }
 
    for(std::map<std::string,std::string>::iterator it = request->GetHeaders().begin();
-   it != request->GetHeaders().end();
-   it++)
+        it != request->GetHeaders().end(); it++)
     {
-        headerToEnv(it);
+        headerToEnv(it->first,it->second);
     }
 
 //    char **_envp = new char*[envp_vect.size()];
