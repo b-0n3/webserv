@@ -66,7 +66,20 @@ int main(int argc, char *argv[]) {
         for (int i = 0; i < servlets.size(); i++) {
             servlets[i]->start();
         }
-        while (true) {
+    }
+    catch (const char * message)
+    {
+        std::cout << "Error: while parsing config file "  << std::endl;
+        std::cout << message << std::endl;
+        system("leaks webserv");
+        return 1;
+    }
+    catch (std::exception &e) {
+        std::cout << e.what() << std::endl;
+        system("leaks webserv");
+        return 1;
+    }
+    while (true) {
             try {
                 // @Todo : use poll here to handle the requests
                 std::vector<struct pollfd> pList;
@@ -89,17 +102,20 @@ int main(int argc, char *argv[]) {
                     // perror("step1");
                 }
             }
-            catch (std::exception &e)
+            catch (const char * message)
             {
+                std::cout << message << std::endl;
+                system("leaks webserv");
+                return 1;
+            }
+            catch (std::exception &e) {
                 std::cout << e.what() << std::endl;
-                //perror(str);
+                system("leaks webserv");
+                return 1;
             }
         }
-    } catch (std::exception &e) {
-        std::cout << "Error while parsing the config file :" << std::endl <<e.what() << std::endl;
 
-    }
-   // perror("sdfd");
+
    system("leaks webserv");
    return 0;
 }

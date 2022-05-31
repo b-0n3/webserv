@@ -154,8 +154,19 @@ std::vector<Server *> ConfigParser::validateAst() {
     if (root->getChildren().empty())
         throw IllegalArgumentException("no servers found");
     for (int i = 0; i < root->getChildren().size(); i++) {
-        Server *s  = Server::fromNode(root->getChildren()[i]);
-        servers.push_back(s);
+        Server *s;
+        try {
+            s = Server::fromNode(root->getChildren()[i]);
+            servers.push_back(s);
+        }
+        catch(std::exception &e){
+            servers.push_back(s);
+            for (int i = 0; i < servers.size(); i++) {
+                delete servers[i];
+                servers.erase(servers.begin() + i);
+            }
+            throw e;
+        }
     }
 
     return servers;

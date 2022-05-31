@@ -381,6 +381,8 @@ Location  *Location::fromNode(Node<Token *> *root) {
 }
 
 void Location::parseRoot(Node<Token *> *n) {
+    if (n->getChildren().size() != 1)
+        throw IllegalArgumentException("root must have  one child");
     this->rootRir = n->getChildren()[0]->getData()->getValue();
     if (rootRir[rootRir.size() -1] == '/')
         rootRir.pop_back();
@@ -388,6 +390,8 @@ void Location::parseRoot(Node<Token *> *n) {
 
 
 void Location::parseAutoIndex(Node<Token *> *n) {
+    if (n->getChildren().size() != 1)
+        throw IllegalArgumentException("autoIndex must have  one child");
     this->setAutoIndex(n->getChildren()[0]->getData()->getValue());
 
 }
@@ -440,6 +444,9 @@ void Location::parseAllowedMethods(Node<Token *> *node) {
 }
 
 void Location::parseMaxBodySize(Node<Token *> *node) {
+    if (node->getChildren().size() != 1)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected one value");
     std::string value = node->getChildren()[0]->getData()->getValue();
     if (!is_digits(value))
         throw IllegalArgumentException("client_max_body_size must be a number");
@@ -447,12 +454,18 @@ void Location::parseMaxBodySize(Node<Token *> *node) {
 
 }
 void Location::parseStripPrefix(Node<Token *> *node)  {
+    if (node->getChildren().size() != 1)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected one value");
     std::string value = node->getChildren()[0]->getData()->getValue();
 
     this->setStripPrefix(value);
 }
 
 void Location::parseTimeOut(Node<Token *> *node) {
+    if (node->getChildren().size() != 1)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected one value");
     std::string value = node->getChildren()[0]->getData()->getValue();
     if (!is_digits(value))
         throw IllegalArgumentException("timeout must be a number");
