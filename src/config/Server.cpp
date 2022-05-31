@@ -252,25 +252,31 @@ void Server::parsePort(Node<Token *> *node) {
 }
 
 void Server::parseRoot(Node<Token *> *node) {
+    if (node->getChildren().empty())
+        throw IllegalArgumentException("empty root not allowed");
     this->root = node->getChildren()[0]->getData()->getValue();
     if (root[root.size() -1] == '/')
         root.pop_back();
 }
 
 void Server::parseLocation(Node<Token *> *node) {
+    if (node->getChildren().empty())
+        throw IllegalArgumentException("empty location not allowed");
     for (int j = 0; j < node->getChildren().size();j ++) {
         this->locations.push_back(Location::fromNode(node->getChildren()[j]));
     }
 }
 
 void Server::parseAutoIndex(Node<Token *> *n) {
+    if (n->getChildren().empty())
+        throw IllegalArgumentException("empty autoindex not allowed");
     this->setAutoIndex(
             n->getChildren()[0]->getData()->getValue());
 
 }
 
 void Server::parseUploadDir(Node<Token *> *n) {
-    if (n->getChildren().size() == 0)
+    if (n->getChildren().empty() )
         throw IllegalArgumentException(
                 n->getData()->getValue() + " : expected array of values");
     this->setUploadDir(n->getChildren()[0]->getData()->getValue());
@@ -319,6 +325,9 @@ void Server::parseAllowedMethods(Node<Token *> *node) {
 }
 
 void Server::parseMaxBodySize(Node<Token *> *node) {
+    if (node->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
     std::string value = node->getChildren()[0]->getData()->getValue();
     if (!is_digits(value))
         throw IllegalArgumentException("client_max_body_size must be a number");
@@ -359,6 +368,8 @@ Server::~Server() {
 
     for (int i = 0; i < this->cgis.size(); i++)
         delete this->cgis[i];
+    for ( int i = 0; i< this->redirects.size(); i++)
+        delete this->redirects[i];
 
 
 }
@@ -372,6 +383,9 @@ Redirect *Server::getRedirect(std::string path) {
 }
 
 void Server::parseTimeOut(Node<Token *> *node) {
+    if (node->getChildren().size() == 0)
+        throw IllegalArgumentException(
+                node->getData()->getValue() + " : expected array of values");
     std::string value =
             node->getChildren()[0]->getData()->getValue();
     if (!is_digits(value))

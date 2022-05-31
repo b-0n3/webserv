@@ -27,22 +27,30 @@ std::string &Redirect::getLocation() {
 Redirect *Redirect::fromNode(Node<Token *> *node) {
     Redirect *redirect = new Redirect();
     std::string value = node->getData()->getValue();
-    if (value.empty())
-        throw IllegalArgumentException("Redirect url empty");
-     func f =redirect->parseFunctions["url"];
-    (redirect->*f)(node);
+    try {
 
-    if (node->getChildren().empty() || node->getChildren().size() != 2) {
-        throw  IllegalArgumentException("Redirect node must have 2 children");
+
+        if (value.empty())
+            throw IllegalArgumentException("Redirect url empty");
+        func f = redirect->parseFunctions["url"];
+        (redirect->*f)(node);
+
+        if (node->getChildren().empty() || node->getChildren().size() != 2) {
+            throw IllegalArgumentException("Redirect node must have 2 children");
+        }
+        for (int i = 0; i < node->getChildren().size(); i++) {
+            value = node->getChildren()[i]->getData()->getValue();
+            if (redirect->parseFunctions
+                        .find(value) == redirect->parseFunctions.end())
+                throw IllegalArgumentException(value + "unexpected token  in redirect");
+            f = redirect->parseFunctions[value];
+            (redirect->*f)(node->getChildren()[i]);
+        }
     }
-    for (int i = 0; i< node->getChildren().size(); i++)
+    catch(std::exception &e)
     {
-        value = node->getChildren()[i]->getData()->getValue();
-        if (redirect->parseFunctions
-        .find(value) == redirect->parseFunctions.end())
-            throw IllegalArgumentException(value + "unexpected token  in redirect");
-         f = redirect->parseFunctions[value];
-        (redirect->*f)(node->getChildren()[i]);
+        delete redirect;
+        throw e;
     }
     return redirect;
 }
