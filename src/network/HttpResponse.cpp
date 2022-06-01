@@ -227,6 +227,8 @@ void HttpResponse::buildResponseHeaders() {
 
     responseHeadersString << "\r\n";
     //write(i, "\r\n", 2);
+    
+                    //responseHeadersString << "Content-Type: text/html\r\n"; // ADDED IN DEBUGGING
 
     responseHeadersString << "Connection: close"; // @todo add keep alive
     //write(i, "Connection: close", strlen("Connection: close"));

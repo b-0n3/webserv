@@ -40,6 +40,7 @@ struct compareStringIgnoreCase {
         std::string *bLower = toUpper(b);
         bool res = *aLower < *bLower;
         delete aLower;
+        delete bLower;
         return res;
     }
 };

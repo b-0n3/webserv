@@ -262,6 +262,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
+    
     std::string server = request->GetHeadersValueOfKey("host");
 
     if (request->getStatusCode() != 200)
