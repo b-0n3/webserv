@@ -21,6 +21,8 @@
 #define BUFFER_SIZE 50000
 #define TIMEOUT 60
 
+#define Nothing(Type) *(Type*)nullptr
+
 class HttpRequest {
 private:
     int				Socketfd;
@@ -36,13 +38,13 @@ private:
     std::fstream 	TmpBodyFd;
     time_t          StartedAt;
     std::string     realPath;
-      long       timeOutAt;
-      long startTimestamp;
-      long lastPacket;
-public:
-    long getLastPacket() const;
-
-    void setLastPacket(long lastPacket);
+    long          timeOutAt;
+    long          startTimestamp;
+    long lastPacket;
+    
+    public:
+        long getLastPacket() const;
+        void setLastPacket(long lastPacket);
 
 private:
     // change this
@@ -69,40 +71,51 @@ private:
         Params.insert(std::pair<std::string, std::string>(key, value));
     }
 public:
-    const std::string &getRealPath() const;
+	HttpRequest(int fd);
     ~HttpRequest();
-    void setRealPath(const std::string &realPath);
+    
+    const std::string   &getRealPath() const;
+    void                setRealPath(const std::string &realPath);
+    void                SetPath(std::string path){Path = path;}
+
+    
+    
     typedef std::map<std::string, std::string, compareStringIgnoreCase> HeadersMap;
 	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
-	HttpRequest(int fd);
-    void Parse(unsigned  long long maxBodySize);
+    //std::map<std::string, std::string> Headers;
+
+    void Parse(unsigned long long maxBodySize);
     void setTimeOutAt( long timeOutAt);
-    bool isTimeOut();
+
   	//Getters
-    std::string GetMethod() { return Method; }
-    std::string GetPath(){return Path;}
-    void SetPath(std::string path){Path = path;}
+    std::string &GetMethod() { return Method; }
+    std::string &GetPath(){return Path;}
+    
     std::string GetVersion(){return Version;}
     std::string &getBodyFileName(){
         return this->BodyFileName;
     }
     int GetBodyFd(){return open(BodyFileName.c_str(), O_RDONLY);}
-    std::string GetHeadersValueOfKey(std::string key){
+    
+    std::string &GetHeadersValueOfKey(std::string key){
         if (Headers.find(key) != Headers.end())
             return Headers[key];
-        return std::string ();
+        return Nothing(std::string);
     }
-    std::string GetParamsValueOfKey(std::string key){
+    std::string &GetParamsValueOfKey(std::string key){
         if (Params.find(key) != Params.end())
             return Params[key];
-        return std::string ();
+        return Nothing(std::string); 
     }
+    
+    
     HeadersMap &GetHeaders(){ return Headers; }
-    std::map<std::string, std::string> GetParams() { return Params; }
+    //std::map<std::string, std::string> &GetHeaders() { return Params; }
+    std::map<std::string, std::string> &GetParams() { return Params; }
     int getStatusCode() { return StatusCode; }
 
     // Utils
-	void ParseFirstLine( std::string );
+	void ParseFirstLine(std::string);
 
 	void ParseHeaders( std::string );
 
@@ -110,19 +123,19 @@ public:
 
     bool IsHeaderParsed() { return HeaderParsed; }
 
-
     bool IsBodyParsed() { return BodyParsed; }
 
     bool IsFinished() { return (IsHasBody() && IsBodyParsed()) || (!IsHasBody() && IsHeaderParsed()); }
 
     bool IsHasBody() { return Method == "POST" || Method == "DELETE"; }
 
+	bool    IsChunkedBodyFinished();
 
-	bool IsChunkedBodyFinished();
-	void ProcessChunkedBody();
+	void    ProcessChunkedBody();
+
 	size_t  ParseHexaLine();
 
-
+    bool isTimeOut();
 
 	/////////////////
 	std::string root;

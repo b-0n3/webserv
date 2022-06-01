@@ -166,6 +166,12 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 		SetHeaders(token.substr(0, token.find(":")), token.substr(token.find(":") + 2));
 	}
 
+    if (Headers.count("Host") ==  0)
+    {
+        StatusCode = 400;
+        SetHeaders("HOST", "");
+        return;
+    }
     std::string host = GetHeadersValueOfKey("Host");
     if (host.find_first_of(':') != std::string::npos) {
         this->port = std::atoi(host.substr(host.find_first_of(':') + 1).c_str());
@@ -212,7 +218,9 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
 		ParseHeaders(request.substr(request.find("\r\n") + 2, request.find("\r\n\r\n")));
 
         SetHeaderParsed(true);
-        unsigned long long contentLength = GetHeadersValueOfKey("Content-Length").empty() ? 0 : std::stoull(GetHeadersValueOfKey("Content-Length"));
+        unsigned long long contentLength = 0;
+        if(Headers.count("Content-Length") !=  0)
+            contentLength = std::stoull(GetHeadersValueOfKey("Content-Length"));
 		this->bodyRemainingFromHeaders = request.substr(request.find("\r\n\r\n") + 4);
         if (this->bodyRemainingFromHeaders.size() < contentLength)
             return ;

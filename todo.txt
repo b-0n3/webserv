@@ -16,3 +16,14 @@ logger :
 fix change header to env 
 
 
+fix auto autoIndex
+
+
+
+verfiy if content type is text/html in debuggin mode only in head
+
+
+if headers are empty
+
+
+VERfiy STAtus CODDEDEDE
