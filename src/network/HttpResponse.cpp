@@ -75,7 +75,8 @@ void HttpResponse::writeToFd(int i) {
         int BUFFER_SIZE = 20000;
         char buff[BUFFER_SIZE];
         int ret = read(this->getBodyFileDescriptor(), buff, BUFFER_SIZE);
-        if (ret == 0)
+
+        if (ret <= 0)
             this->finished = true;
         else
             write(i, buff, ret);

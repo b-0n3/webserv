@@ -197,8 +197,9 @@ void Server::initLocations() {
             this->locations[i]->setMaxBodySize(maxBodySize);
         if (this->locations[i]->getTimeOut() == -1)
             this->locations[i]->setTimeOut(timeOut);
-    //        if (this->locations[i]->isAutoIndexParsed() == false)
-    //            this->locations[i]->setAutoIndex(autoIndex);
+        if (!this->locations[i]->isAutoIndexParsed() ) {
+            this->locations[i]->setAutoIndex(this->autoIndex);
+        }
     }
 }
 

@@ -4,6 +4,7 @@ servers:   # list of servers
       server_name: localhost
       listen: 8080
       root: ${PWD}/src/root
+      auto_index: true
       client_max_body_size: 10
       timeout: 10
       redirects:

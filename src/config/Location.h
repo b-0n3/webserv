@@ -90,7 +90,8 @@ public:
     bool isAutoIndex() const;
 
     const std::string &getUploadDir() const;
-    void setAutoIndex(String uploadDir) ;
+    void setAutoIndex(String autoIndex);
+    void setAutoIndex(bool autoIndex);
     void setUploadDir(const std::string &uploadDir);
     std::string getIndexFile(String dir);
     const std::vector<std::string> &getIndexFiles() const;

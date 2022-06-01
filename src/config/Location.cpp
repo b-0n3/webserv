@@ -114,7 +114,7 @@ void Location::addIndexFile(String indexFile) {
 
 Location::Location() {
     this->route = "";
-    this->autoIndex = nullptr;
+    this->autoIndex = false;
     this->indexFiles = std::vector<std::string>();
     this->allowedMethods = std::vector<std::string>();
     this->stripPrefix = false;
@@ -221,7 +221,7 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
             }
         if (this->autoIndex) {
 
-            if (autoIndexRead( res->getBodyFileDescriptor(), filePath)){
+            if (!autoIndexRead( res->getBodyFileDescriptor(), filePath)){
                 res->setStatusCode(NOT_FOUND);
                 return;
             }
@@ -550,6 +550,10 @@ long Location::getTimeOut() const {
 
 void Location::setTimeOut(long timeOut) {
     Location::timeOut = timeOut ;
+}
+
+void Location::setAutoIndex(bool autoIndex) {
+    this->autoIndex = autoIndex;
 }
 
 

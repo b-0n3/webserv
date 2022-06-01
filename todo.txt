@@ -16,7 +16,7 @@ logger :
 fix change header to env 
 
 
-fix auto autoIndex
+ done / fix auto autoIndex
 
 
 
