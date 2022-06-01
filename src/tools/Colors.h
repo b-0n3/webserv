@@ -11,8 +11,8 @@
 #define KCYN  "\x1B[36m"
 #define KWHT  "\x1B[37m"
 
-#define FRED(x) KRED x RST
-#define FGRN(x) KGRN x RST
+#define FRED(x) KRED << x <<RST
+#define FGRN(x) KGRN << x << RST
 #define FYEL(x) KYEL x RST
 #define FBLU(x) KBLU x RST
 #define FMAG(x) KMAG x RST

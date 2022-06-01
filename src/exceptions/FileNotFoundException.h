@@ -6,6 +6,7 @@
 #define WEBSERV_FILENOTFOUNDEXCEPTION_H
 #include <string>
 #include <exception>
+#include "../tools/Logger.h"
 
 
 class FileNotFoundException : virtual public std::exception {

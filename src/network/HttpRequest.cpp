@@ -239,8 +239,6 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
             return;
         }
         unsigned long long contentLength = std::stoull(Headers["Content-Length"]);
-//        std::cout << "Content-Length: " << contentLength << std::endl;
-//        std::cout << "max body size: " << maxBodySize << std::endl;
 
         if (contentLength > maxBodySize && maxBodySize != -1) {
             StatusCode = MAX_BODY_SIZE_EXCEEDED;

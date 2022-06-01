@@ -12,5 +12,6 @@ class   Logger
             LOG_LEVEL_WARNING,
             LOG_LEVEL_ERROR
         };
+        static void log(LogLevel level,std::string message);
         static void log(LogLevel level ,const HttpRequest &request, const HttpResponse &response);
 };

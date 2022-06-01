@@ -34,6 +34,7 @@ int main(int argc, char *argv[]) {
     if (argc != 2)
     {
         std::cout<< "Usage: " << argv[0] << " configFile Path" << std::endl;
+
         exit(1);
     }
 
@@ -56,9 +57,14 @@ int main(int argc, char *argv[]) {
 
            for (int j = 0; j < servers.size(); j++) {
                if (servers[j]->getPort() == *it) {
-
-                   s->addServer(servers[j]->getHost(),
-                                servers[j]);
+                   try {
+                       s->addServer(servers[j]->getHost(),
+                                    servers[j]);
+                   }catch (std::exception &e)
+                   {
+                       delete s;
+                       throw s;
+                   }
                }
            }
            servlets.push_back(s);
@@ -71,12 +77,12 @@ int main(int argc, char *argv[]) {
     {
         std::cout << "Error: while parsing config file "  << std::endl;
         std::cout << message << std::endl;
-        system("leaks webserv");
+       // system("leaks webserv");
         return 1;
     }
     catch (std::exception &e) {
         std::cout << e.what() << std::endl;
-        system("leaks webserv");
+      //  system("leaks webserv");
         return 1;
     }
     while (true) {
@@ -105,12 +111,12 @@ int main(int argc, char *argv[]) {
             catch (const char * message)
             {
                 std::cout << message << std::endl;
-                system("leaks webserv");
+               // system("leaks webserv");
                 return 1;
             }
             catch (std::exception &e) {
                 std::cout << e.what() << std::endl;
-                system("leaks webserv");
+               // system("leaks webserv");
                 return 1;
             }
         }

@@ -4,13 +4,28 @@ void Logger::log(LogLevel level ,const HttpRequest &request, const HttpResponse 
     switch (level)
     {
         case LOG_LEVEL_DEBUG:
-            std::cout << "DEBUG: " << FGRN()  << std::endl;
+            std::cout << "DEBUG: " << FGRN("")  << std::endl;
             break;
         case LOG_LEVEL_WARNING:
-            std::cout << "WARNING: " << FRED() << std::endl;
+            std::cout << "WARNING: " << FRED("") << std::endl;
             break;
         case LOG_LEVEL_ERROR:
-            std::cout << "ERROR: " << FRED()  << std::endl;
+            std::cout << "ERROR: " << FRED("")  << std::endl;
+            break;
+    }
+}
+
+void Logger::log(Logger::LogLevel level, std::string message) {
+    switch (level)
+    {
+        case LOG_LEVEL_DEBUG:
+            std::cout << "DEBUG: " << FGRN(message)  << std::endl;
+            break;
+        case LOG_LEVEL_WARNING:
+            std::cout << "WARNING: " << FRED(message) << std::endl;
+            break;
+        case LOG_LEVEL_ERROR:
+            std::cout << "ERROR: " << FRED(message)  << std::endl;
             break;
     }
 }
