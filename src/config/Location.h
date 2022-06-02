@@ -1,6 +1,4 @@
-//
-// Created by Abdelouahad Ait hamd on 4/7/22.
-//
+
 
 #ifndef WEBSERV_LOCATION_H
 #define WEBSERV_LOCATION_H
@@ -17,9 +15,13 @@
 #include "../network/HttpRequest.h"
 #include "../network/HttpResponse.h"
 #include "../network/StatusCode.h"
+
 class Location;
+
 typedef std::string String;
-typedef  void (Location::*func)(Node<Token *> *);
+
+typedef void (Location::*func)(Node<Token *> *);
+
 class Location {
 private:
     std::string route;
@@ -27,19 +29,21 @@ private:
     bool autoIndex;
     std::string uploadDir;
     std::vector<std::string> indexFiles;
-    std::vector<Page*> errorPages;
-    std::vector<Cgi*> cgis;
+    std::vector<Page *> errorPages;
+    std::vector<Cgi *> cgis;
     bool stripPrefix;
     std::string rootRir;
     bool autoIndexParsed;
     std::map<std::string, func> parsingMethods;
-    long   long maxBodySize;
+    long long maxBodySize;
     long timeOut;
 public:
     void setAutoIndex1(bool autoIndex);
 
     bool isStripPrefix() const;
+
     ~Location();
+
     void setStripPrefix(std::string &stripPrefix);
 
     const std::map<std::string, func> &getParsingMethods() const;
@@ -48,8 +52,7 @@ public:
 
     long long getMaxBodySize() const;
 
-    void setMaxBodySize(long  long maxBodySize);
-
+    void setMaxBodySize(long long maxBodySize);
 
 
     bool isAutoIndexParsed() const;
@@ -62,17 +65,29 @@ public:
 
 public:
     Location();
+
     void initParsingMethods();
+
     void parseRoot(Node<Token *> *node);
+
     void parseStripPrefix(Node<Token *> *node);
-    void parseAutoIndex(Node<Token*> *node);
-    void parseUploadDir(Node<Token*> *node);
-    void parseIndexFiles(Node<Token*> *node);
-    void parseErrorPages(Node<Token*> *node);
-    void parseCgi(Node<Token*> *node);
-    void parseAllowedMethods(Node<Token*> *node);
-    void parseMaxBodySize(Node<Token*> *node);
-    void parseTimeOut(Node<Token*> *node);
+
+    void parseAutoIndex(Node<Token *> *node);
+
+    void parseUploadDir(Node<Token *> *node);
+
+    void parseIndexFiles(Node<Token *> *node);
+
+    void parseErrorPages(Node<Token *> *node);
+
+    void parseCgi(Node<Token *> *node);
+
+    void parseAllowedMethods(Node<Token *> *node);
+
+    void parseMaxBodySize(Node<Token *> *node);
+
+    void parseTimeOut(Node<Token *> *node);
+
     std::string getRout() const;
 
     void setRoute(const std::string &rout);
@@ -90,23 +105,37 @@ public:
     bool isAutoIndex() const;
 
     const std::string &getUploadDir() const;
+
     void setAutoIndex(String autoIndex);
+
     void setAutoIndex(bool autoIndex);
+
     void setUploadDir(const std::string &uploadDir);
+
     std::string getIndexFile(String dir);
+
     const std::vector<std::string> &getIndexFiles() const;
 
     void setIndexFiles(const std::vector<std::string> &indexFiles);
+
     const std::vector<Page *> &getErrorPages() const;
+
     void setErrorPages(const std::vector<Page *> &errorPages);
+
     const std::vector<Cgi *> &getCgis() const;
+
     void setCgis(const std::vector<Cgi *> &cgis);
+
     bool isAllowedMethod(const std::string &method) const;
+
     bool isInLocation(const std::string &path) const;
-    Cgi  *getCgiIfExists(const std::string &path) const;
+
+    Cgi *getCgiIfExists(const std::string &path) const;
 
     static Location *fromNode(Node<Token *> *root);
+
     void addIndexFile(String indexFile);
+
     void addAllowedMethod(String method);
 
     void addCgi(Cgi *cgi);
@@ -118,12 +147,14 @@ public:
     void handleCgi(HttpRequest *pRequest, HttpResponse *pResponse);
 
     void handleGet(HttpRequest *req, HttpResponse *res);
+
     void handlePost(HttpRequest *req, HttpResponse *res);
+
     void handleDelete(HttpRequest *req, HttpResponse *res);
 
     bool is_file(std::string path);
 
-    void redirect( HttpResponse *res, std::string path);
+    void redirect(HttpResponse *res, std::string path);
 };
 
 

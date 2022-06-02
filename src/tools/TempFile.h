@@ -4,6 +4,7 @@
 
 #ifndef WEBSERV_TEMPFILE_H
 #define WEBSERV_TEMPFILE_H
+
 #include <stdlib.h>
 #include <string>
 #include <fcntl.h>
@@ -16,13 +17,21 @@ private:
     bool isMoved;
 public:
     TempFile();
+
     ~TempFile();
+
     int _open();
+
     void _close();
+
     void setFd(int fd);
+
     int getFd();
+
     void deleteFile();
-   std::string &getFileName();
+
+    std::string &getFileName();
+
     bool transferTo(std::string path);
 };
 

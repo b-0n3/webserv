@@ -4,6 +4,7 @@
 
 #ifndef WEBSERV_TOKEN_H
 #define WEBSERV_TOKEN_H
+
 #include <iostream>
 
 typedef enum {
@@ -20,15 +21,17 @@ private:
     TokenType type;
 public:
     int indentation;
+
     Token(std::string value, TokenType type);
-    std::string getValue() ;
+
+    std::string getValue();
+
     TokenType getType();
+
     void setValue(std::string value);
+
     void setType(TokenType type);
 };
-
-
-
 
 
 #endif //WEBSERV_TOKEN_H

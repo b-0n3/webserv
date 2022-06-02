@@ -1,24 +1,20 @@
-//
-// Created by b0n3 on 4/17/22.
-//
 
 
 #include <csignal>
 #include "HttpServlet.h"
 
 
-
-
 void HttpServlet::addServer(std::string name, Server *server) {
-    if (server == nullptr  || name != server->getHost())
+    if (server == nullptr || name != server->getHost())
         throw IllegalArgumentException("invalid server");
     if (this->servers.find(name) != this->servers.end())
         throw IllegalArgumentException("server already exists");
     this->servers[name] = server;
 
 }
+
 HttpServlet::~HttpServlet() {
-    while(close(this->sock) == -1);
+    while (close(this->sock) == -1);
 }
 
 void HttpServlet::start() {
@@ -28,12 +24,11 @@ void HttpServlet::start() {
     address.sin_addr.s_addr = htonl(INADDR_ANY);
 
     sock = socket(AF_INET, SOCK_STREAM, 0);
-    fcntl( sock, F_SETFL, O_NONBLOCK);
+    fcntl(sock, F_SETFL, O_NONBLOCK);
     int i = 1;
     setsockopt(this->sock, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int));
     int set = 1;
-    setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
-   // signal(SIGPIPE, SIG_IGN);
+    setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *) &set, sizeof(int));
     memset(address.sin_zero, '\0', sizeof address.sin_zero);
     if (bind(sock, (struct sockaddr *) &address, sizeof(address)) == -1) {
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
@@ -54,26 +49,25 @@ HttpServlet::HttpServlet(int port) {
     this->port = port;
 
 }
+
 void HttpServlet::acceptNewClient(struct pollfd pfd) {
     struct sockaddr_in client;
     socklen_t client_len = sizeof(client);
     int client_sock;
 
-    if (pfd.revents & POLLIN)
-    {
+    if (pfd.revents & POLLIN) {
         client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
         fcntl(client_sock, F_SETFL, O_NONBLOCK);
 
-        //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
         if (client_sock == -1) {
             perror("accept");
             return;
         }
-            struct pollfd clientPfd = {};
-            clientPfd.fd = client_sock;
-            clientPfd.events = POLLIN;
-            this->pollfd_list.push_back(clientPfd);
-        this->requests[client_sock] = new HttpRequest(client_sock,inet_ntoa(client.sin_addr));
+        struct pollfd clientPfd = {};
+        clientPfd.fd = client_sock;
+        clientPfd.events = POLLIN;
+        this->pollfd_list.push_back(clientPfd);
+        this->requests[client_sock] = new HttpRequest(client_sock, inet_ntoa(client.sin_addr));
         this->responses[client_sock] = new HttpResponse();
 
     }
@@ -102,8 +96,7 @@ void HttpServlet::handleRequests() {
             continue;
         }
         if (requests[fd]->isTimeOut()) {
-            if (!requests[fd]->IsHeaderParsed() && !responses[fd]->isWritingBody())
-            {
+            if (!requests[fd]->IsHeaderParsed() && !responses[fd]->isWritingBody()) {
                 to_delete.push_back(fd);
                 continue;
             }
@@ -114,17 +107,17 @@ void HttpServlet::handleRequests() {
         if (pollfd_list[i].revents & POLLIN) {
 
 
-                if (this->requests[fd]->IsFinished()) {
-                    this->handleRequest(this->requests[fd],
-                                        this->responses[fd]);
-                    if (!requests[fd]->cgiRunning)
-                       this->pollfd_list[i].events = POLLOUT;
-                    continue;
-                }
+            if (this->requests[fd]->IsFinished()) {
+                this->handleRequest(this->requests[fd],
+                                    this->responses[fd]);
+                if (!requests[fd]->cgiRunning)
+                    this->pollfd_list[i].events = POLLOUT;
+                continue;
+            }
 
 
             if (this->requests[fd]->IsFinished()) {
-                this->handleRequest(this->requests[fd],this->responses[fd]);
+                this->handleRequest(this->requests[fd], this->responses[fd]);
                 if (!requests[fd]->cgiRunning)
                     this->pollfd_list[i].events = POLLOUT;
                 continue;
@@ -146,7 +139,6 @@ void HttpServlet::handleRequests() {
             }
         } else if (pollfd_list[i].revents & POLLOUT) {
 
-            // @ todo check if the request is still not served
             if (!this->responses[fd]->isFinished()) {
                 this->responses[fd]->writeToFd(fd);
                 this->requests[fd]->setLastPacket(time(NULL));
@@ -155,16 +147,15 @@ void HttpServlet::handleRequests() {
                 to_delete.push_back(fd);
                 if (this->responses[fd]->getStatusCode() >= 300 && this->responses[fd]->getStatusCode() <= 399)
                     Logger::log(Logger::LOG_LEVEL_WARNING, this->requests[fd], this->responses[fd]);
-                else  if (this->responses[fd]->getStatusCode() >= 400 && this->responses[fd]->getStatusCode() <= 499)
-                  Logger::log(Logger::LOG_LEVEL_ERROR, this->requests[fd], this->responses[fd]);
-                else  if (this->responses[fd]->getStatusCode() >= 500 && this->responses[fd]->getStatusCode() <= 599)
+                else if (this->responses[fd]->getStatusCode() >= 400 && this->responses[fd]->getStatusCode() <= 499)
+                    Logger::log(Logger::LOG_LEVEL_ERROR, this->requests[fd], this->responses[fd]);
+                else if (this->responses[fd]->getStatusCode() >= 500 && this->responses[fd]->getStatusCode() <= 599)
                     Logger::log(Logger::LOG_LEVEL_DEBUG, this->requests[fd], this->responses[fd]);
                 else
                     Logger::log(Logger::LOG_LEVEL_INFO, this->requests[fd], this->responses[fd]);
 
             }
 
-            //  std::cout << close(fd) << std::endl;
         }
 
     }
@@ -199,8 +190,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
     }
     Server *s = this->servers[server];
     Redirect *r = s->getRedirect(request->GetPath());
-    if (r != NULL)
-    {
+    if (r != NULL) {
         response->setStatusCode(r->getStatus());
         response->addHeader("Location", r->getLocation());
 
@@ -210,8 +200,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 
     if (request->isTimeOut()) {
         response->setStatusCode(REQUEST_TIMEOUT);
-        if (request->cgiRunning)
-        {
+        if (request->cgiRunning) {
             response->setStatusCode(GATEWAY_TIMEOUT);
             kill(request->cgiPid, SIGKILL);
             request->cgiRunning = false;
@@ -250,8 +239,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
                 break;
             }
         }
-        if (fd != -1 && p != nullptr)
-        {
+        if (fd != -1 && p != nullptr) {
             response->getTempFile().setFd(fd);
             response->setContentLength(countFileSize(p->getContentPath().c_str()));
             response->setContentType(getContentTypeFromFileName(p->getContentPath()));
@@ -260,11 +248,10 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
 }
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response) {
-    
+
     std::string server = request->GetHeadersValueOfKey("host");
 
-    if (request->getStatusCode() != 200)
-    {
+    if (request->getStatusCode() != 200) {
         response->setStatusCode(request->getStatusCode());
     }
     if (server.empty()) {

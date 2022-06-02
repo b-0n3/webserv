@@ -107,21 +107,21 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
     Path = FirstLine.substr(FirstLine.find(' ') + 1);
     Path = Path.substr(0, Path.find(' '));
 
-    //If there is Host with path "GET http://wwww.1337.ma/index.html HTTP/1.1"
+
     if (Path.find("http://") != std::string::npos) {
-        Path = Path.substr(7);//to skip http://
-        //set Host: 
+        Path = Path.substr(7);
+
         SetHeaders("Host", Path.substr(0, Path.find("/")));
         Path = Path.substr(Path.find(" "));
     }
     
-    //If there is Params with path "GET http://wwww.1337.ma/index.html?user=razaha&promo=2019 HTTP/1.1"
+
     if (Path.find("?") != std::string::npos){
 		
         std::string params = Path.substr(Path.find("?") + 1);
         Path = Path.substr(0, Path.find("?"));
 		std::stringstream ss(params);
-        //parse params
+
         while (1)
         {
             std::string token;
@@ -165,7 +165,7 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 void    HttpRequest::Parse(  long long maxBodySize)
 {
     int ret = 0;
-    // To Check if this correct
+
     if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0  || this->isTimeOut())
     {
         StatusCode = TIMEOUT;
@@ -181,12 +181,12 @@ void    HttpRequest::Parse(  long long maxBodySize)
 	else
 		request  = std::string(buffer, ret);
 
-    //if header is finished and not parsed
+
     if (IsHeaderFinished() && !IsHeaderParsed()) {
-		// Parse the first line
+
        	ParseFirstLine(request.substr(0, request.find("\r\n")));
 
-        // Parse headers
+
 		ParseHeaders(request.substr(request.find("\r\n") + 2, request.find("\r\n\r\n")));
 
         SetHeaderParsed(true);
@@ -198,13 +198,12 @@ void    HttpRequest::Parse(  long long maxBodySize)
             return ;
         else
             request = std::string();
-        // std::cout << "request: " << request << std::endl;
+
     }
     this->lastPacket = time(NULL);
-    //Use form data postman
-    //if has body and header parsed and body not parsed yet
+
      if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed() ) {
-		//change compare of the map
+
         if (Headers.count("Content-Length") == 0) {
             SetBodyParsed(true);
             return;

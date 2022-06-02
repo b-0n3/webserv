@@ -7,10 +7,7 @@
 #include "TempFile.h"
 
 TempFile::TempFile() {
-	//@todo generate a unique file name
 
-//    std:tmpDir += ".tmp/";
-////	char *tmp = (tmpDir +"uniqueXXXXXX").c_str();
     char tmp[] = ".tmp/uniqueXXXXXX";
     this->fd = mkstemp(tmp);
     fileName = tmp;
@@ -25,7 +22,7 @@ void TempFile::_close() {
     close(this->fd);
 }
 
-int  TempFile::_open() {
+int TempFile::_open() {
     this->fd = open(fileName.c_str(), O_RDWR);
     return this->fd;
 }
@@ -37,7 +34,7 @@ std::string &TempFile::getFileName() {
 bool TempFile::transferTo(std::string path) {
     if (rename(fileName.c_str(), path.c_str()) == 0) {
         isMoved = true;
-        this->fileName  = path;
+        this->fileName = path;
         return true;
     }
     return false;
@@ -49,7 +46,7 @@ int TempFile::getFd() {
 
 void TempFile::setFd(int fd) {
     close(this->fd);
-    this->fd  = fd;
+    this->fd = fd;
 }
 
 void TempFile::deleteFile() {

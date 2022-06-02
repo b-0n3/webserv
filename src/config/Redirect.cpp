@@ -1,6 +1,3 @@
-//
-// Created by Abdelouahad Ait hamd on 5/29/22.
-//
 
 #include "Redirect.h"
 
@@ -8,7 +5,7 @@
 Redirect::Redirect() {
     this->url = "";
     this->status = 0;
-    this->location ="";
+    this->location = "";
     this->initParseFunctions();
 }
 
@@ -17,7 +14,7 @@ std::string &Redirect::getUrl() {
 }
 
 int Redirect::getStatus() {
-        return status;
+    return status;
 }
 
 std::string &Redirect::getLocation() {
@@ -47,8 +44,7 @@ Redirect *Redirect::fromNode(Node<Token *> *node) {
             (redirect->*f)(node->getChildren()[i]);
         }
     }
-    catch(std::exception &e)
-    {
+    catch (std::exception &e) {
         delete redirect;
         throw e;
     }
@@ -76,7 +72,7 @@ void Redirect::parseUrl(Node<Token *> *n) {
 
 void Redirect::parseStatus(Node<Token *> *n) {
     std::string value;
-    int  allowdRedirectStatusCodes[] = {301, 302, 303, 307};
+    int allowdRedirectStatusCodes[] = {301, 302, 303, 307};
     if (this->status != 0)
         throw IllegalArgumentException("Redirect status already set");
     if (n->getChildren().size() != 1)
@@ -87,7 +83,7 @@ void Redirect::parseStatus(Node<Token *> *n) {
     this->status = std::stoi(value);
     if (std::find(std::begin(allowdRedirectStatusCodes),
                   std::end(allowdRedirectStatusCodes), this->status)
-                  == std::end(allowdRedirectStatusCodes))
+        == std::end(allowdRedirectStatusCodes))
         throw IllegalArgumentException("Redirect status not allowed");
 }
 

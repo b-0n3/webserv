@@ -1,6 +1,4 @@
-//
-// Created by Abdelouahad Ait hamd on 4/7/22.
-//
+
 
 #include <fstream>
 #include "Page.h"
@@ -8,8 +6,7 @@
 #include "../tools/Utils.h"
 
 
-
-Page::Page(std::string errorCode,  std::string contentPath) {
+Page::Page(std::string errorCode, std::string contentPath) {
 
     if (errorCode.empty()) {
         throw IllegalArgumentException("errorCode is empty");
@@ -17,29 +14,25 @@ Page::Page(std::string errorCode,  std::string contentPath) {
     if (contentPath.empty()) {
         throw IllegalArgumentException("contentPath is empty");
     }
-    if (errorCode.find_first_of('x') != std::string::npos)
-    {
-        std::replace( errorCode.begin(), errorCode.end(), 'x', '0');
+    if (errorCode.find_first_of('x') != std::string::npos) {
+        std::replace(errorCode.begin(), errorCode.end(), 'x', '0');
         this->minErorrCode = std::stoi(errorCode);
         this->maxErrorCode = this->minErorrCode / 100;
         this->maxErrorCode *= 100;
         this->maxErrorCode += 99;
-    }
-    else
-    {
+    } else {
         this->minErorrCode = std::stoi(errorCode);
         this->maxErrorCode = this->minErorrCode;
     }
     if (this->minErorrCode < 0 || this->minErorrCode > 999) {
         throw IllegalArgumentException("errorCode is not valid");
     }
-    std::ofstream file(contentPath,std::ios::in |std::ios::app);
+    std::ofstream file(contentPath, std::ios::in | std::ios::app);
     if (!file.is_open())
         throw IllegalArgumentException("bad content file :" + contentPath + " File not found");
     file.close();
     this->contentPath = contentPath;
 }
-
 
 
 std::string Page::getContentPath() {
@@ -48,30 +41,23 @@ std::string Page::getContentPath() {
 
 Page *Page::fromNode(Node<Token *> *root) {
     std::string errorCode = "-1";
-    std::string contentPath ;
+    std::string contentPath;
     if (root == nullptr)
         throw IllegalArgumentException("root must not be null");
-    if (root->getData()->getValue() != "code")
-    {
+    if (root->getData()->getValue() != "code") {
         throw IllegalArgumentException("root must be a code node");
     }
-    for (size_t i = 0; i< root->getChildren().size(); i++)
-    {
+    for (size_t i = 0; i < root->getChildren().size(); i++) {
 
-               if (is_digits(root->getChildren()[i]->getData()->getValue()))
-               {
-                   if (errorCode != "-1")
-                       throw IllegalArgumentException("duplicated code");
-                   errorCode =root->getChildren()[i]->getData()->getValue();
-               }
-               else if (root->getChildren()[i]->getData()->getValue() == "content")
-               {
-                   contentPath = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
-               }
-               else
-               {
-                   throw IllegalArgumentException("unexpected token " + root->getChildren()[i]->getData()->getValue());
-               }
+        if (is_digits(root->getChildren()[i]->getData()->getValue())) {
+            if (errorCode != "-1")
+                throw IllegalArgumentException("duplicated code");
+            errorCode = root->getChildren()[i]->getData()->getValue();
+        } else if (root->getChildren()[i]->getData()->getValue() == "content") {
+            contentPath = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
+        } else {
+            throw IllegalArgumentException("unexpected token " + root->getChildren()[i]->getData()->getValue());
+        }
     }
 
     return new Page(errorCode, contentPath);

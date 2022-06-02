@@ -11,18 +11,16 @@
 #include "../network/StatusCode.h"
 
 
-
-
 std::string getParams(std::map<std::string, std::string> params);
 
-Cgi::Cgi(std::string  path, std::vector<std::string>  ext) {
-int fd = open(path.c_str(), O_RDONLY);
-  if (fd == -1) {
-      throw FileNotFoundException("cgi File not found");
-  }
-  close(fd);
-   if (ext.size() == 0)
-       throw  IllegalArgumentException("extension not found");
+Cgi::Cgi(std::string path, std::vector<std::string> ext) {
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd == -1) {
+        throw FileNotFoundException("cgi File not found");
+    }
+    close(fd);
+    if (ext.size() == 0)
+        throw IllegalArgumentException("extension not found");
     this->binaryPath = path;
     this->ext = ext;
 }
@@ -31,10 +29,10 @@ Cgi::~Cgi() {
 
 }
 
- bool Cgi::isCgi(std::string const path) const {
+bool Cgi::isCgi(std::string const path) const {
     if (path.find('.') == std::string::npos)
         return false;
-    std::string e = path.substr(path.find_last_of('.') );
+    std::string e = path.substr(path.find_last_of('.'));
     if (std::find(this->ext.begin(), this->ext.end(), e) != this->ext.end())
         return true;
     return false;
@@ -45,31 +43,27 @@ std::string Cgi::getBinaryPath() {
 }
 
 
-
-std::vector <std::string> Cgi::getExt() {
+std::vector<std::string> Cgi::getExt() {
     return this->ext;
 }
 
 Cgi *Cgi::fromNode(Node<Token *> *root) {
-   std::string path = "";
-   std::vector<std::string> ext;
+    std::string path = "";
+    std::vector<std::string> ext;
     if (root->getChildren().size() != 2)
         throw IllegalArgumentException("cgi node must have 2 children");
-    for (unsigned long i = 0; i < root->getChildren().size(); i++)
-    {
+    for (unsigned long i = 0; i < root->getChildren().size(); i++) {
         if (root->getChildren()[i]->getData()->getValue() == "path") {
             if (root->getChildren()[i]->getChildren().size() != 1)
                 throw IllegalArgumentException("path node must have 1 child");
             path = root->getChildren()[i]->getChildren()[0]->getData()->getValue();
-        }
-       else if (root->getChildren()[i]->getData()->getValue() == "ext") {
+        } else if (root->getChildren()[i]->getData()->getValue() == "ext") {
             if (root->getChildren()[i]->getChildren().empty())
                 throw IllegalArgumentException("ext node must have at least 1 child");
             for (unsigned long j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {
                 ext.push_back(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
             }
-        }
-        else
+        } else
             throw IllegalArgumentException("cgi node must have path and ext children");
     }
     if (path.empty())
@@ -80,8 +74,7 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
 }
 
 
-void headerToEnv(std::string key, std::string value)
-{
+void headerToEnv(std::string key, std::string value) {
     std::string env = "HTTP_";
     for (unsigned long i = 0; i < key.size(); i++) {
         if (key[i] == '-')
@@ -89,65 +82,55 @@ void headerToEnv(std::string key, std::string value)
         else
             env += std::toupper(key[i]);
     }
-    setenv(env.c_str(), value.c_str() , 1);
+    setenv(env.c_str(), value.c_str(), 1);
 }
 
 
-void createEnv(HttpRequest *request)
-{
-  //  std::vector<std::string> envp_vect;
-    std::string script_name = request->GetPath();
-         //   .substr( request->GetPath().find_last_of('/') );
-//    script_name.substr(request->location.size());
+void createEnv(HttpRequest *request) {
 
-    std::string script_path = request->root+
-            request->GetPath();
+    std::string script_name = request->GetPath();
+
+
+    std::string script_path = request->root +
+                              request->GetPath();
     std::string query_string = getParams(request->GetParams());
 
-    setenv("DOCUMENT_URI",request->getRealPath().c_str(),1);                 /* =/cgi-bin/php/hello.php */
-    setenv("REQUEST_URI",(request->getRealPath()+"?" + query_string).c_str() ,1);                                            /* =/cgi-bin/php/hello.php */
-    setenv("SCRIPT_NAME",  script_name.c_str(),1);/* =/cgi-bin/php/hello.php */
-  //  setenv("PATH_INFO=" +request->GetPath().substr(0, request->GetPath().find_last_of('/') + 1));
-    setenv("SCRIPT_FILENAME",script_path.c_str(),1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
-    setenv("PATH_TRANSLATED",script_path.c_str(),1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
-    setenv("QUERY_STRING" ,query_string.c_str(),1);                                            /* = */
-    setenv("SERVER_NAME" ,request->GetHeadersValueOfKey("Host").c_str(),1 /*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
-    setenv("SERVER_PORT" ,std::to_string(request->port).c_str(),1);                                             /* =82 */
-    setenv("REQUEST_METHOD", request->GetMethod().c_str(),1);                                          /* =GET */
-    setenv("DOCUMENT_ROOT", request->root.c_str(),1);                                           /* =/APP/examples */
-    setenv("GETAWAY_INTERFACE","CGI/1.1",1);                                       /* =CGI/1.1 */
-    setenv("SERVER_PROTOCOL","HTTP/1.1",1);                                         /* =HTTP/1.1 */
-    setenv("REDIRECT_STATUS","200",1);                                         /* =200 */
-    setenv("FCGI_ROLE","RESPONDER",1);                                               /* =RESPONDER */
-    setenv("REQUEST_SCHEME","http",1);                                          /* =http */
-    setenv("SERVER_SOFTWARE","webserv/1.1",1);                                         /* =webserv/1.1 (Linux) */
-   // setenv("PATH" , std::getenv("PATH"),1);                                                    /* =/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin */
-    setenv("REMOTE_ADDR","0.0.0.0" ,1/*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
-    setenv("REMOTE_PORT","0",1  /**+ std::to_string(request->port)*/);                                             /* =0 */
-    for(HeadersMap::iterator it = request->GetHeaders().begin();
-        it != request->GetHeaders().end();
-        ++it)
-    {
-        headerToEnv((*it).first,(*it).second);
+    setenv("DOCUMENT_URI", request->getRealPath().c_str(), 1);                 /* =/cgi-bin/php/hello.php */
+    setenv("REQUEST_URI", (request->getRealPath() + "?" + query_string).c_str(),
+           1);                                            /* =/cgi-bin/php/hello.php */
+    setenv("SCRIPT_NAME", script_name.c_str(), 1);/* =/cgi-bin/php/hello.php */
+    //  setenv("PATH_INFO=" +request->GetPath().substr(0, request->GetPath().find_last_of('/') + 1));
+    setenv("SCRIPT_FILENAME", script_path.c_str(),
+           1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
+    setenv("PATH_TRANSLATED", script_path.c_str(),
+           1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
+    setenv("QUERY_STRING", query_string.c_str(), 1);                                            /* = */
+    setenv("SERVER_NAME", request->GetHeadersValueOfKey("Host").c_str(),
+           1 /*+ request.getHeaders(response.get_server()[response.getServerIndex()].get_server_names()[response.getServerIndex()])*/);                                             /* =localhost */
+    setenv("SERVER_PORT", std::to_string(request->port).c_str(),
+           1);                                             /* =82 */
+    setenv("REQUEST_METHOD", request->GetMethod().c_str(), 1);                                          /* =GET */
+    setenv("DOCUMENT_ROOT", request->root.c_str(), 1);                                           /* =/APP/examples */
+    setenv("GETAWAY_INTERFACE", "CGI/1.1", 1);                                       /* =CGI/1.1 */
+    setenv("SERVER_PROTOCOL", "HTTP/1.1", 1);                                         /* =HTTP/1.1 */
+    setenv("REDIRECT_STATUS", "200", 1);                                         /* =200 */
+    setenv("FCGI_ROLE", "RESPONDER", 1);                                               /* =RESPONDER */
+    setenv("REQUEST_SCHEME", "http", 1);                                          /* =http */
+    setenv("SERVER_SOFTWARE", "webserv/1.1", 1);                                         /* =webserv/1.1 (Linux) */
+
+    setenv("REMOTE_ADDR", "0.0.0.0",
+           1/*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
+    setenv("REMOTE_PORT", "0",
+           1  /**+ std::to_string(request->port)*/);                                             /* =0 */
+    for (HeadersMap::iterator it = request->GetHeaders().begin();
+         it != request->GetHeaders().end();
+         ++it) {
+        headerToEnv((*it).first, (*it).second);
     }
-    if (request->IsHasBody() )
-    {
-        setenv("CONTENT_TYPE" , request->GetHeadersValueOfKey("Content-Type").c_str(),1);
-        setenv("CONTENT_LENGTH" , request->GetHeadersValueOfKey("Content-Length").c_str(),1);
+    if (request->IsHasBody()) {
+        setenv("CONTENT_TYPE", request->GetHeadersValueOfKey("Content-Type").c_str(), 1);
+        setenv("CONTENT_LENGTH", request->GetHeadersValueOfKey("Content-Length").c_str(), 1);
     }
-
-
-
-//    char **_envp = new char*[envp_vect.size()];
-//    size_t i = 0;
-//    while (i < envp_vect.size())
-//    {
-//        _envp[i] = (char *)envp_vect[i].c_str();
-//       std::cout << "envp: [" << _envp[i] << "]" << std::endl;
-//        i++;
-//    }
-//    _envp[i] = NULL;
-
 
 }
 
@@ -158,11 +141,11 @@ std::string getParams(std::map<std::string, std::string> params) {
     return ss.str();
 }
 
-// @todo: write a function that will return a Cgi object from a node
+
 void Cgi::execute(HttpRequest *request, HttpResponse *response) {
     if (!request->cgiRunning) {
         std::string path = request->root + request->GetPath();
-       // const char *headers[request->GetHeaders().size() + 1];
+
         const char *args[3];
         args[0] = this->binaryPath.c_str();
         args[1] = path.c_str();
@@ -178,64 +161,43 @@ void Cgi::execute(HttpRequest *request, HttpResponse *response) {
 
         if (pid == 0) {
 
-          // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
-             createEnv(request);
-         //   std::cout << "execve" << std::endl;
-
+            createEnv(request);
             if (request->IsHasBody()) {
                 dup2(request->GetBodyFd(), STDIN_FILENO);
-                dup2(response->getBodyFileDescriptor() , STDOUT_FILENO);
+                dup2(response->getBodyFileDescriptor(), STDOUT_FILENO);
                 close(request->GetBodyFd());
                 close(response->getBodyFileDescriptor());
 
             } else {
-               // close(readPipe[0]);
-                dup2(response->getBodyFileDescriptor() , STDOUT_FILENO );
+
+                dup2(response->getBodyFileDescriptor(), STDOUT_FILENO);
                 close(response->getBodyFileDescriptor());
                 close(0);
-             //  dup2(readPipe[1] , STDERR_FILENO );
-              // close(readPipe[1]);
-            }
-          int s =   execvp( this->binaryPath.c_str(), (char *const *) args);
-            exit(s);
-        } else {
-         //   dup2(STDERR_FILENO, out);
-          //  delete []   env;
-            if (request->IsHasBody()) {
-               // close(writePipe[0]);
-                    close(request->GetBodyFd());
-                   // @Todo: change this to nonBlocking
-//                char buff[1056];
-//                int ret;
-//                while ((ret = read(request->GetBodyFd(), buff, 1056)) >0 )
-//                {
-//                    write(writePipe[1], buff, ret);
-//                    write(1, buff, ret);
-//                }
-//                close(request->GetBodyFd());
-//                close(writePipe[1]);
 
             }
-          // close(readPipe[1]);
+            int s = execvp(this->binaryPath.c_str(), (char *const *) args);
+            exit(s);
+        } else {
+
+            if (request->IsHasBody()) {
+
+                close(request->GetBodyFd());
+            }
+
             request->cgiPid = pid;
             request->cgiRunning = true;
-         //   response->setCgiReadFd(readPipe[0]);
+
         }
-    }else
-    {
-      //  std::cout << "Cgi::execute: cgi already running" << std::endl;
+    } else {
+
         int state;
         int status = waitpid(request->cgiPid, &state, WNOHANG);
-        if ( status == -1)
-        {
+        if (status == -1) {
             response->setStatusCode(INTERNAL_SERVER_ERROR);\
             request->cgiRunning = false;
             return;
-        }
-        else if (status != 0)
-        {
-            if (WIFEXITED(state) == 0)
-            {
+        } else if (status != 0) {
+            if (WIFEXITED(state) == 0) {
                 response->setStatusCode(INTERNAL_SERVER_ERROR);
 
                 request->cgiRunning = false;

@@ -1,6 +1,4 @@
-//
-// Created by Abdelouahad Ait hamd on 4/7/22.
-//
+
 
 #include "Server.h"
 
@@ -33,8 +31,8 @@ bool Server::requestBelongToThisServer(std::string host, int port) {
 
 Location *Server::getLocation(std::string path) {
     for (std::vector<Location *>::iterator it = this->locations.begin();
-    it != this->locations.end();
-    ++it) {
+         it != this->locations.end();
+         ++it) {
         if ((*it)->isInLocation(path)) {
             return *it;
         }
@@ -130,8 +128,8 @@ void Server::setRootRir(const std::string &rootRir) {
     Server::rootRir = rootRir;
 }
 
-long long  Server::getMaxBodySize() const {
-    return maxBodySize ;
+long long Server::getMaxBodySize() const {
+    return maxBodySize;
 }
 
 void Server::setMaxBodySize(long long maxBodySize) {
@@ -149,15 +147,14 @@ void Server::addAllowedMethod(String method) {
     if (std::count(this->allowedMethods.begin(), this->allowedMethods.end(), method) == 0) {
         String methods[] = {"GET", "POST", "DELETE"};
         this->allowedMethods.push_back(method);
-        for (unsigned long i = 0; i < methods->size(); i++)
-        {
+        for (unsigned long i = 0; i < methods->size(); i++) {
             if (method == methods[i]) {
                 this->allowedMethods.push_back(method);
-                return ;
+                return;
             }
         }
         throw IllegalArgumentException(method + " : unexpected value");
-    }else
+    } else
         throw IllegalArgumentException("method already exists");
 }
 
@@ -180,13 +177,12 @@ void Server::setAllowedMethods(const std::vector<std::string> &allowedMethods) {
 }
 
 void Server::initLocations() {
-    if (this->allowedMethods.empty())
-    {
+    if (this->allowedMethods.empty()) {
         allowedMethods.push_back("GET");
         allowedMethods.push_back("POST");
         allowedMethods.push_back("DELETE");
     }
-    for (unsigned long i = 0; i < this->locations.size();i++) {
+    for (unsigned long i = 0; i < this->locations.size(); i++) {
         if (this->locations[i]->getAllowedMethods().empty())
             this->locations[i]->setAllowedMethods(allowedMethods);
         if (this->locations[i]->getCgis().empty())
@@ -201,7 +197,7 @@ void Server::initLocations() {
             this->locations[i]->setMaxBodySize(maxBodySize);
         if (this->locations[i]->getTimeOut() == -1)
             this->locations[i]->setTimeOut(timeOut);
-        if (!this->locations[i]->isAutoIndexParsed() ) {
+        if (!this->locations[i]->isAutoIndexParsed()) {
             this->locations[i]->setAutoIndex(this->autoIndex);
         }
     }
@@ -228,8 +224,7 @@ Server *Server::fromNode(Node<Token *> *root) {
         if (s->locations.empty())
             throw IllegalArgumentException("no locations defined");
         s->initLocations();
-    }catch (std::exception &e)
-    {
+    } catch (std::exception &e) {
         delete s;
         throw e;
     }
@@ -238,13 +233,11 @@ Server *Server::fromNode(Node<Token *> *root) {
 }
 
 
-
-
 void Server::parseHost(Node<Token *> *n) {
     if (n->getChildren().empty())
         throw IllegalArgumentException("empty host not allowed");
     this->host = n->getChildren()[0]->getData()->getValue();
-    if(root.empty())
+    if (root.empty())
         throw IllegalArgumentException("no root defined");
 }
 
@@ -260,14 +253,14 @@ void Server::parseRoot(Node<Token *> *node) {
     if (node->getChildren().empty())
         throw IllegalArgumentException("empty root not allowed");
     this->root = node->getChildren()[0]->getData()->getValue();
-    if (root[root.size() -1] == '/')
+    if (root[root.size() - 1] == '/')
         root.pop_back();
 }
 
 void Server::parseLocation(Node<Token *> *node) {
     if (node->getChildren().empty())
         throw IllegalArgumentException("empty location not allowed");
-    for (unsigned long j = 0; j < node->getChildren().size();j ++) {
+    for (unsigned long j = 0; j < node->getChildren().size(); j++) {
         this->locations.push_back(Location::fromNode(node->getChildren()[j]));
     }
 }
@@ -281,7 +274,7 @@ void Server::parseAutoIndex(Node<Token *> *n) {
 }
 
 void Server::parseUploadDir(Node<Token *> *n) {
-    if (n->getChildren().empty() )
+    if (n->getChildren().empty())
         throw IllegalArgumentException(
                 n->getData()->getValue() + " : expected array of values");
     this->setUploadDir(n->getChildren()[0]->getData()->getValue());
@@ -316,7 +309,6 @@ void Server::parseCgi(Node<Token *> *node) {
 }
 
 
-
 void Server::parseAllowedMethods(Node<Token *> *node) {
     std::vector<Node<Token *> *> childs = node->getChildren();
     if (!this->getAllowedMethods().empty())
@@ -336,8 +328,9 @@ void Server::parseMaxBodySize(Node<Token *> *node) {
     std::string value = node->getChildren()[0]->getData()->getValue();
     if (!is_digits(value))
         throw IllegalArgumentException("client_max_body_size must be a number");
-    this->setMaxBodySize(  std::stoi(value));
+    this->setMaxBodySize(std::stoi(value));
 }
+
 void Server::parseRedirect(Node<Token *> *node) {
     if (node->getChildren().size() == 0)
         throw IllegalArgumentException(
@@ -368,12 +361,12 @@ Server::~Server() {
     for (unsigned long i = 0; i < this->locations.size(); i++)
         delete this->locations[i];
 
-    for (unsigned long i =0; i < this->errorPages.size(); i++)
+    for (unsigned long i = 0; i < this->errorPages.size(); i++)
         delete this->errorPages[i];
 
     for (unsigned long i = 0; i < this->cgis.size(); i++)
         delete this->cgis[i];
-    for ( unsigned long i = 0; i< this->redirects.size(); i++)
+    for (unsigned long i = 0; i < this->redirects.size(); i++)
         delete this->redirects[i];
 
 
@@ -403,10 +396,10 @@ long Server::getTimeOut() const {
 }
 
 void Server::setTimeOut(long timeOut) {
-    Server::timeOut = timeOut ;
+    Server::timeOut = timeOut;
 }
 
- long long Server::getMaxBodySize(HttpRequest *request) {
+long long Server::getMaxBodySize(HttpRequest *request) {
     Location *l = this->getLocation(request->GetPath());
     if (l != NULL)
         return l->getMaxBodySize() * 1e6;

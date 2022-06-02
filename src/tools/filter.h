@@ -4,8 +4,10 @@
 
 #ifndef WEBSERV_FILTER_H
 #define WEBSERV_FILTER_H
+
 #include <vector>
-template <typename T>
+
+template<typename T>
 std::vector<T> filter(std::vector<T> &c, bool (*f)(T)) {
     std::vector<T> result;
     for (typename std::vector<T>::iterator it = c.begin(); it != c.end(); ++it) {
@@ -15,4 +17,5 @@ std::vector<T> filter(std::vector<T> &c, bool (*f)(T)) {
     }
     return result;
 }
+
 #endif //WEBSERV_FILTER_H

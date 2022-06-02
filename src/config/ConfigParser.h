@@ -1,9 +1,8 @@
-//
-// Created by Abdelouahad Ait hamd on 4/8/22.
-//
+
 
 #ifndef WEBSERV_CONFIGPARSER_H
 #define WEBSERV_CONFIGPARSER_H
+
 #include "Server.h"
 #include <vector>
 #include <string>
@@ -20,19 +19,23 @@ private:
     std::string currentLine;
 
 
-
-
     std::stack<int> indentationStack;
 
-    BinaryTree<Token*> ast;
+    BinaryTree<Token *> ast;
     // Abstract Syntax Tree
 public:
     BinaryTree<Token *> getAst();
+
     ConfigParser(std::string configFilePath);
+
     ~ConfigParser();
-    void  tokenizeConfigFiles(Node<Token *> *parent, Node<Token *> *root, int lastIndentation, int currentIndentation);
+
+    void tokenizeConfigFiles(Node<Token *> *parent, Node<Token *> *root, int lastIndentation, int currentIndentation);
+
     Node<Token *> *getNextToken();
+
     int caluclateIndenetation();
+
     std::vector<Server *> validateAst();
 
     void replaceEnv();
