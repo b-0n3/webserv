@@ -11,6 +11,8 @@
 #include "../network/StatusCode.h"
 
 
+
+
 std::string getParams(std::map<std::string, std::string> params);
 
 Cgi::Cgi(std::string  path, std::vector<std::string>  ext) {
@@ -136,7 +138,7 @@ void createEnv(HttpRequest *request)
    // setenv("PATH" , std::getenv("PATH"),1);                                                    /* =/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin */
     setenv("REMOTE_ADDR","0.0.0.0" ,1/*+ request->remoteAddress*/);                                             /* =0.0.0.0 */
     setenv("REMOTE_PORT","0",1  /**+ std::to_string(request->port)*/);                                             /* =0 */
-    for(HttpRequest::HeadersMap::iterator it = request->GetHeaders().begin();
+    for(HeadersMap::iterator it = request->GetHeaders().begin();
         it != request->GetHeaders().end();
         ++it)
     {

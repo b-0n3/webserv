@@ -30,10 +30,6 @@ HttpRequest::HttpRequest(int fd,char *address) : Socketfd(fd),
     tmpDir += "/.tmp/";
 	this->BodyFileName = tmpDir + std::to_string(rand());
 	this->TmpBodyFileName = tmpDir + std::to_string(rand());
-
-//	std::cout << "body" << BodyFileName << std::endl;
-//	std::cout << "tmp" << TmpBodyFileName << std::endl;
-   // Parse(-1);
 }
 
 size_t CountFileSize(const char *filename) {
@@ -111,10 +107,6 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
     Path = FirstLine.substr(FirstLine.find(' ') + 1);
     Path = Path.substr(0, Path.find(' '));
 
-	//std::cout << "Method: " << Method << std::endl;
-    //std::cout << FirstLine<<std::endl;
-	//Path = FirstLine.substr(FirstLine.find(' '), FirstLine.find("HTTP/") - 5 );
-
     //If there is Host with path "GET http://wwww.1337.ma/index.html HTTP/1.1"
     if (Path.find("http://") != std::string::npos) {
         Path = Path.substr(7);//to skip http://
@@ -128,8 +120,6 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
 		
         std::string params = Path.substr(Path.find("?") + 1);
         Path = Path.substr(0, Path.find("?"));
-		// std::cout << "Path: " << Path << std::endl;
-
 		std::stringstream ss(params);
         //parse params
         while (1)
@@ -140,13 +130,9 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
 				break;
             SetParams(token.substr(0, token.find("=")), token.substr(token.find("=") + 1));
         }
-		//std::map<std::string, std::string> paramsss = GetParams();
-		// (std::map<std::string, std::string>::iterator it = paramsss.begin(); it != paramsss.end(); ++it)
-			//::cout << it->first << " *=> " << it->second << std::endl;
     }
     realPath = Path;
 	Version = FirstLine.substr(FirstLine.find("HTTP/") + 5, FirstLine.find("\r\n"));
-	//std::cout << "Version: " << Version << std::endl;
 }
 
 void  HttpRequest::ParseHeaders(std::string HeadersLine)
@@ -174,12 +160,6 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
         host = host.substr(0, host.find_first_of(':'));
     }
     this->Headers["Host"] = host;
-	// std::cout << "\rfff" << std::endl;
-	// std::map<std::string, std::string> headersss = GetHeaders();
-	// for (std::map<std::string, std::string>::iterator it = headersss.begin(); it != headersss.end(); ++it)
-	// 	std::cout << it->first << " => " << it->second << std::endl;
-	// 	std::cout << headersss["Transfer-Encoding"] << "====" << std::endl;
-	// 		print_memory(headersss["Transfer-Encoding"]);
 }
 
 void    HttpRequest::Parse(  long long maxBodySize)
@@ -256,8 +236,7 @@ void    HttpRequest::Parse(  long long maxBodySize)
                     StatusCode = BAD_REQUEST;
                      SetBodyParsed(true);
                 }
-              //  std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght " << contentLength<< std::endl;
-			}
+		}
 			TmpBodyFd.close();
 		}
 		else
@@ -277,7 +256,6 @@ void    HttpRequest::Parse(  long long maxBodySize)
                 StatusCode = BAD_REQUEST;
                 SetBodyParsed(true);
              }
-             //   std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght unchenked " << contentLength<< std::endl;
 		}
     }
 }
@@ -343,4 +321,56 @@ std::string HttpRequest::log() {
     ss << " ";
     ss << this->getRealPath();
     return ss.str();
+}
+
+
+bool HttpRequest::IsHasBody() { return Method == "POST" || Method == "DELETE"; }
+
+bool HttpRequest::IsFinished() { return (IsHasBody() && IsBodyParsed()) || (!IsHasBody() && IsHeaderParsed()); }
+
+bool HttpRequest::IsBodyParsed() { return BodyParsed; }
+
+bool HttpRequest::IsHeaderParsed() { return HeaderParsed; }
+
+
+HeadersMap &HttpRequest::GetHeaders(){ return Headers; }
+
+std::map<std::string, std::string> &HttpRequest::GetParams() { return Params; }
+
+int HttpRequest::getStatusCode() { return StatusCode; }
+
+
+std::string &HttpRequest::GetMethod() { return Method; }
+std::string &HttpRequest::GetPath(){return Path;}
+
+std::string HttpRequest::GetVersion(){return Version;}
+std::string &HttpRequest::getBodyFileName(){
+    return this->BodyFileName;
+}
+int HttpRequest::GetBodyFd(){return open(BodyFileName.c_str(), O_RDONLY);}
+
+std::string &HttpRequest::GetHeadersValueOfKey(std::string key){
+    if (Headers.find(key) != Headers.end())
+        return Headers[key];
+    return Nothing(std::string);
+}
+std::string &HttpRequest::GetParamsValueOfKey(std::string key){
+    if (Params.find(key) != Params.end())
+        return Params[key];
+    return Nothing(std::string); 
+}
+
+void  HttpRequest::SetPath(std::string path){Path = path;}
+
+
+void HttpRequest::SetHeaderParsed(bool parsed) { HeaderParsed = parsed; }
+void HttpRequest::SetBodyParsed(bool parsed) { BodyParsed = parsed; }
+void HttpRequest::SetMethod(int method) { Method = method; }
+void HttpRequest::SetVersion(std::string version) { Version = version; }
+
+void HttpRequest::SetHeaders(std::string key, std::string value) {
+    Headers.insert(std::pair<std::string, std::string>(key, value));
+}
+void HttpRequest::SetParams(std::string key, std::string value) {
+    Params.insert(std::pair<std::string, std::string>(key, value));
 }
