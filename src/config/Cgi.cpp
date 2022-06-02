@@ -90,21 +90,7 @@ void headerToEnv(std::string key, std::string value)
     setenv(env.c_str(), value.c_str() , 1);
 }
 
-// void headerToEnv(std::map<std::string,std::string>::iterator  header)
-// {
-//     std::string env = "HTTP_";
-//     for (int i = 0; i < (*header).first.size(); i++)
-//     {
-//         if ((*header).first[i] == '-')
-//             env += '_';
-//         else
-//             env += std::toupper((*header).first[i]);
-//     }
-//    // env += "=";
-//    // env += header.second;
-//     setenv(env.c_str(),  (*header).second.c_str(), 1);
 
-// }
 void createEnv(HttpRequest *request)
 {
   //  std::vector<std::string> envp_vect;

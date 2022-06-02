@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
                    }catch (std::exception &e)
                    {
                        delete s;
-                       throw s;
+                       throw e;
                    }
                }
            }
@@ -71,17 +71,10 @@ int main(int argc, char *argv[]) {
             servlets[i]->start();
         }
     }
-    catch (const char * message)
-    {
-        Logger::log(Logger::LOG_LEVEL_DEBUG, "error while parsing config file");
-         std::cout << message << std::endl;
-       // system("leaks webserv");
-        return 1;
-    }
     catch (std::exception &e) {
-        std::cout << e.what() << std::endl;
-      //  system("leaks webserv");
-        return 1;
+        Logger::log(Logger::LOG_LEVEL_DEBUG, "error while parsing config file");
+
+    exit(1);
     }
     while (true) {
             try {
@@ -103,23 +96,13 @@ int main(int argc, char *argv[]) {
                 delete[] pfds;
                 for (unsigned long i = 0; i < servlets.size(); i++) {
                     servlets[i]->handleRequests();
-                    // perror("step1");
+
                 }
             }
-            catch (const char * message)
-            {
-                std::cout << message << std::endl;
-               // system("leaks webserv");
-                return 1;
-            }
             catch (std::exception &e) {
-                std::cout << e.what() << std::endl;
-               // system("leaks webserv");
+                Logger::log(Logger::LOG_LEVEL_ERROR, "Runtime error");
                 return 1;
             }
         }
-
-
-   system("leaks webserv");
    return 0;
 }
