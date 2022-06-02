@@ -1,0 +1,143 @@
+servers:   # list of servers
+    - server: # server
+      server_name: localhost
+      listen: 80
+      root: ${PWD}/src/root/sites
+      auto_index: true
+      client_max_body_size: 10
+      timeout: 10
+      redirects:
+        - /test-redirect-static:
+            status: 301
+            location: /static
+        - /test-redirect-to-php:
+            status: 301
+            location: /cgi
+        - /test-redirect-to-cookies:
+          status: 301
+          location: /cgi
+      locations:
+        - /:
+            auto_index: true
+            index:
+              - index.html
+            error_page:
+              - code: 40x
+                content: ${PWD}/src/root/sites/errorsPages/404.html
+              - code: 503
+                content: ${PWD}/src/root/sites/errorsPages/503.html
+            allowed_methods:
+              - GET
+        - /static:
+            root: ${PWD}/src/root/roxy
+            auto_index: true
+            strip_prefix: true
+            index:
+              - index.html
+              - index.htm
+              - index.php
+            error_page:
+              - code: 40x
+                content: ${PWD}/src/root/sites/errorsPages/503.html
+              - code: 503
+                content: ${PWD}/src/root/sites/errorsPages/503.html
+            allowed_methods:
+              - GET
+        - /cgi:
+            root: ${PWD}/src/root/sites/php
+            auto_index: true
+            strip_prefix: true
+            index:
+              - index.php
+            error_page:
+              - code: 40x
+                content: ${PWD}/src/root/sites/errorsPages/503.html
+              - code: 503
+                content: ${PWD}/src/root/sites/errorsPages/503.html
+            upload_directory: ${PWD}/src/root/uploads
+            allowed_methods:
+              - POST
+              - GET
+              - DELETE
+            cgi:
+              path: /usr/sbin/php-fpm
+              ext:
+                - .php
+                - .php5
+                - .php7
+                - .php-cgi
+                - .php3
+                - .php4
+                - .php5
+                - .php6
+    - server: # server
+          server_name: 127.0.0.1
+          listen: 80
+          root: ${PWD}/src/root/sites
+          auto_index: true
+          client_max_body_size: 10
+          timeout: 10
+          redirects:
+            - /test-python:
+               status: 307
+               location: /python
+            - /test-redirect-to-cookies:
+              status: 301
+              location: /cgi
+            - /test-redirect-to-session:
+              status: 301
+              location: /session
+          locations:
+            - /:
+                auto_index: false
+                index:
+                  - index.html
+                error_page:
+                  - code: 40x
+                    content: ${PWD}/src/root/sites/errorsPages/404.html
+                  - code: 503
+                    content: ${PWD}/src/root/sites/errorsPages/503.html
+                allowed_methods:
+                  - GET
+            - /python:
+                root: ${PWD}/src/root/python
+                auto_index: true
+                strip_prefix: true
+                index:
+                  - index.py
+                error_page:
+                  - code: 40x
+                    content: ${PWD}/src/root/sites/errorsPages/503.html
+                  - code: 503
+                    content: ${PWD}/src/root/sites/errorsPages/503.html
+                allowed_methods:
+                  - GET
+                  - POST
+                  - DELETE
+            - /session:
+                root: ${PWD}/src/root/sites/cookies-session
+                auto_index: true
+                strip_prefix: true
+                index:
+                  - index.php
+                error_page:
+                  - code: 40x
+                    content: ${PWD}/src/root/sites/errorsPages/503.html
+                  - code: 503
+                    content: ${PWD}/src/root/sites/errorsPages/503.html
+                upload_directory: ${PWD}/src/root/uploads
+                allowed_methods:
+                  - POST
+                  - GET
+                  - DELETE
+                cgi:
+                  path: /usr/sbin/php-fpm
+                  ext:
+                    - .php
+                    - .php5
+                    - .php7
+                    - .php-cgi
+                    - .php3
+                    - .php4
+                    - .php5
+                    - .php6

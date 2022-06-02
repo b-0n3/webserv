@@ -50,7 +50,7 @@ void HttpResponse::writeToFd(int i) {
         size_t writeRet;
         size_t ret = read(this->getBodyFileDescriptor(), buff, readSize);
 
-        if (ret < 0)
+        if (ret < 0 || (this->bodyWrited == 0 && ret == 0)) 
             this->finished = true;
         else {
             body.append(buff, ret);
