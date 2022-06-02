@@ -2,12 +2,10 @@
 #include <unistd.h>
 #include <iostream>
 #include <cstring>
-#include <sstream>
-#include <sys/stat.h>
+
 #include "HttpResponse.h"
 #include "StatusCode.h"
-#include "filesystem"
-#include "../tools/Utils.h"
+
 #include "../tools/Logger.h"
 
 HttpResponse::HttpResponse() {
@@ -28,7 +26,6 @@ void HttpResponse::writeToFd(int i) {
 
 
     if (!writingBody) {
-        this->body = "";
         if (!this->responseBuilted)
             this->buildResponseHeaders();
         std::string toWrite = responseHeadersString.str().substr(headerWrited);
@@ -39,8 +36,11 @@ void HttpResponse::writeToFd(int i) {
             return;
         }
         this->headerWrited += ret;
-        if (this->headerWrited >= responseHeadersString.str().length())
+        if (this->headerWrited >= responseHeadersString.str().length()) {
             writingBody = true;
+            this->body = "";
+        }
+
     }
 
 
@@ -50,10 +50,11 @@ void HttpResponse::writeToFd(int i) {
         size_t writeRet;
         size_t ret = read(this->getBodyFileDescriptor(), buff, readSize);
 
-        if (ret < 0 || (this->bodyWrited == 0 && ret == 0)) 
+        if (ret < 0)
             this->finished = true;
         else {
             body.append(buff, ret);
+
             writeRet = write(i, body.c_str(), body.size());
             if (writeRet < 0) {
                 this->finished = true;
@@ -63,8 +64,9 @@ void HttpResponse::writeToFd(int i) {
             this->bodyWrited += writeRet;
             body = body.substr(writeRet);
 
+
         }
-        if (this->bodyWrited >= this->contentLength)
+        if ((this->bodyWrited + this->bodySkiped) >= contentLength)
             this->finished = true;
     } else
         this->finished = true;
@@ -72,7 +74,7 @@ void HttpResponse::writeToFd(int i) {
 }
 
 void HttpResponse::addHeader(std::string const &key, std::string const &value) {
-    if (key == "Set-Cookie" || key == "set-cookie") {
+    if (strcasecmp(key.c_str(), "Set-cookie") == 0) {
         this->cookies.push_back(value);
 
     } else
@@ -137,11 +139,12 @@ void HttpResponse::readFromCgi() {
     char buf[1024];
     int ret;
     std::string bd;
+
     while ((ret = read(this->getBodyFileDescriptor(), buf, 1024)) > 0) {
         bd.append(buf, ret);
         if (bd.find("\r\n\r\n") != std::string::npos)
             break;
-        write(1, buf, ret);
+        //write(1, buf, ret);
     }
     this->setStatusCode(OK);
     std::string headers = bd.substr(0, bd.find("\r\n\r\n") + 4);
@@ -150,9 +153,7 @@ void HttpResponse::readFromCgi() {
     this->bodySkiped = this->body.size();
     this->cgiHeaderSize = headers.size();
     this->contentLength = countFileSize(this->getTempFile().getFileName().c_str());
-    std::cerr << this->contentLength << " content length" << std::endl;
     this->contentLength -= headers.length();
-    std::cerr << headers.length() << std::endl;
 }
 
 void HttpResponse::parseHeaders(std::string &headers) {
@@ -182,7 +183,6 @@ void HttpResponse::parseHeaders(std::string &headers) {
 
 HttpResponse::~HttpResponse() {
     tempFile.deleteFile();
-
 }
 
 void HttpResponse::buildResponseHeaders() {
@@ -239,10 +239,12 @@ void HttpResponse::buildResponseHeaders() {
 
 std::string HttpResponse::statusCodeToString(int statusCode) {
     std::map<int, std::string> statusCodes;
+    statusCodes[UNAUTHORIZED] = "Unauthorized";
     statusCodes[OK] = "OK";
     statusCodes[NOT_FOUND] = "Not Found";
     statusCodes[BAD_REQUEST] = "Bad Request";
     statusCodes[METHOD_NOT_ALLOWED] = "Method Not Allowed";
+    statusCodes[MAX_BODY_SIZE_EXCEEDED] = "Max body size exceeded";
     statusCodes[INTERNAL_SERVER_ERROR] = "Internal Server Error";
     statusCodes[NOT_IMPLEMENTED] = "Not Implemented";
     statusCodes[BAD_GATEWAY] = "Bad Gateway";

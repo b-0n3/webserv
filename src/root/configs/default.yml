@@ -12,10 +12,10 @@ servers:   # list of servers
             location: /static
         - /test-redirect-to-php:
             status: 301
-            location: /cgi
+            location: /cookie
         - /test-redirect-to-cookies:
           status: 301
-          location: /cgi
+          location: /cookie
       locations:
         - /:
             auto_index: true
@@ -29,13 +29,13 @@ servers:   # list of servers
             allowed_methods:
               - GET
         - /static:
-            root: ${PWD}/src/root/roxy
+            root: ${PWD}/src/root/sites/roxy
             auto_index: true
             strip_prefix: true
             index:
               - index.html
               - index.htm
-              - index.php
+              - test.php
             error_page:
               - code: 40x
                 content: ${PWD}/src/root/sites/errorsPages/503.html
@@ -43,7 +43,7 @@ servers:   # list of servers
                 content: ${PWD}/src/root/sites/errorsPages/503.html
             allowed_methods:
               - GET
-        - /cgi:
+        - /cookie:
             root: ${PWD}/src/root/sites/php
             auto_index: true
             strip_prefix: true
@@ -60,7 +60,7 @@ servers:   # list of servers
               - GET
               - DELETE
             cgi:
-              path: /usr/sbin/php-fpm
+              path: /Users/aait-ham/.brew/bin/php-cgi
               ext:
                 - .php
                 - .php5
@@ -75,7 +75,8 @@ servers:   # list of servers
           listen: 80
           root: ${PWD}/src/root/sites
           auto_index: true
-          client_max_body_size: 10
+          client_max_body_size: 130
+          upload_directory: ${PWD}/src/root/uploads
           timeout: 10
           redirects:
             - /test-python:
@@ -83,7 +84,7 @@ servers:   # list of servers
                location: /python
             - /test-redirect-to-cookies:
               status: 301
-              location: /cgi
+              location: /session
             - /test-redirect-to-session:
               status: 301
               location: /session
@@ -99,8 +100,11 @@ servers:   # list of servers
                     content: ${PWD}/src/root/sites/errorsPages/503.html
                 allowed_methods:
                   - GET
+                  - POST
+                  - DELETE
+                upload_directory: ${PWD}/src/root/sites/uploads
             - /python:
-                root: ${PWD}/src/root/python
+                root: ${PWD}/src/root/sites/python
                 auto_index: true
                 strip_prefix: true
                 index:
@@ -114,12 +118,16 @@ servers:   # list of servers
                   - GET
                   - POST
                   - DELETE
+                cgi:
+                  path: /Users/aait-ham/.brew/bin/python3
+                  ext:
+                    - .py
             - /session:
                 root: ${PWD}/src/root/sites/cookies-session
                 auto_index: true
                 strip_prefix: true
                 index:
-                  - index.php
+                  - test.php
                 error_page:
                   - code: 40x
                     content: ${PWD}/src/root/sites/errorsPages/503.html
@@ -131,7 +139,8 @@ servers:   # list of servers
                   - GET
                   - DELETE
                 cgi:
-                  path: /usr/sbin/php-fpm
+                  path: /Users/aait-ham/.brew/bin/php-cgi
+
                   ext:
                     - .php
                     - .php5

@@ -95,11 +95,12 @@ void createEnv(HttpRequest *request) {
     setenv("DOCUMENT_URI", request->getRealPath().c_str(), 1);                 /* =/cgi-bin/php/hello.php */
     setenv("REQUEST_URI", (request->getRealPath() + "?" + query_string).c_str(),
            1);                                            /* =/cgi-bin/php/hello.php */
-    setenv("SCRIPT_NAME", script_name.c_str(), 1);/* =/cgi-bin/php/hello.php */
-    //  setenv("PATH_INFO=" +request->GetPath().substr(0, request->GetPath().find_last_of('/') + 1));
+    setenv("SCRIPT_NAME", "", 1);/* =/cgi-bin/php/hello.php */
+    setenv("PATH_INFO" , request->getRealPath().c_str(),1);
     setenv("SCRIPT_FILENAME", script_path.c_str(),
            1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
-    setenv("PATH_TRANSLATED", script_path.c_str(),
+    setenv("PATH_TRANSLATED", request->getRealPath().substr(0,
+                                                            request->getRealPath().find_last_of('/')).c_str(),
            1);                                         /* =/APP/examples/cgi-bin/php/hello.php */
     setenv("QUERY_STRING", query_string.c_str(), 1);                                            /* = */
     setenv("SERVER_NAME", request->GetHeadersValueOfKey("Host").c_str(),
@@ -148,8 +149,6 @@ void Cgi::execute(HttpRequest *request, HttpResponse *response) {
         args[1] = path.c_str();
         args[2] = nullptr;
 
-        std::cerr << "CGI: " << this->binaryPath << " " << path << std::endl;
-
         pid_t pid = fork();
         if (pid == -1) {
             response->setStatusCode(INTERNAL_SERVER_ERROR);
@@ -159,6 +158,7 @@ void Cgi::execute(HttpRequest *request, HttpResponse *response) {
         if (pid == 0) {
 
             createEnv(request);
+            close(STDERR_FILENO);
             if (request->IsHasBody()) {
                 dup2(request->GetBodyFd(), STDIN_FILENO);
                 dup2(response->getBodyFileDescriptor(), STDOUT_FILENO);

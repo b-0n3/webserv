@@ -15,7 +15,7 @@ TempFile::TempFile() {
 }
 
 TempFile::~TempFile() {
-
+    close(this->fd);
 }
 
 void TempFile::_close() {

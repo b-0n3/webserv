@@ -197,6 +197,8 @@ void Server::initLocations() {
             this->locations[i]->setMaxBodySize(maxBodySize);
         if (this->locations[i]->getTimeOut() == -1)
             this->locations[i]->setTimeOut(timeOut);
+        if (this->locations[i]->getUploadDir().empty())
+            this->locations[i]->setUploadDir(this->getUploadDir());
         if (!this->locations[i]->isAutoIndexParsed()) {
             this->locations[i]->setAutoIndex(this->autoIndex);
         }

@@ -280,10 +280,8 @@ void Location::handlePost(HttpRequest *req, HttpResponse *res) {
         }
     }
     std::string bodyFilename = req->getBodyFileName().substr(req->getBodyFileName().find_last_of("/") + 1);
-    std::string filename = this->uploadDir
-                           + req->getBodyFileName() +
-                           getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
-    filePath = this->uploadDir + "/" + bodyFilename
+    std::string filename = uploadDir + "/"+ bodyFilename + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
+    filePath = this->getUploadDir() + "/" + bodyFilename
                + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
     if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
 
@@ -329,12 +327,11 @@ void Location::handleDelete(HttpRequest *req, HttpResponse *res) {
         return;
     }
     std::string filename = this->uploadDir + "/" + req->GetPath();
-    if (std::strncmp(req->GetPath().c_str(), this->uploadDir.c_str(), this->uploadDir.length()) != 0)
-        res->setStatusCode(UNAUTHORIZED);
-    else if (unlink(filename.c_str()) > 0) {
+
+    if (unlink(filename.c_str()) == 0) {
         res->setStatusCode(OK);
     } else
-        res->setStatusCode(NOT_FOUND);
+        res->setStatusCode(UNAUTHORIZED);
 }
 
 const std::string &Location::getRoute() const {

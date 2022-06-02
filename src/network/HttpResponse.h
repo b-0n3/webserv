@@ -6,6 +6,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <sstream>
 #include "../tools/TempFile.h"
 #include "../tools/Utils.h"
 

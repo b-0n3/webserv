@@ -97,7 +97,6 @@ int main(int argc, char *argv[]) {
         }
         catch (std::exception &e) {
             Logger::log(Logger::LOG_LEVEL_ERROR, "Runtime error");
-            return 1;
         }
     }
     return 0;
