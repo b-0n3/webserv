@@ -1,6 +1,3 @@
-//
-// Created by Abdelouahad Ait hamd on 4/18/22.
-//
 
 #ifndef WEBSERV_STATUSCODE_H
 #define WEBSERV_STATUSCODE_H

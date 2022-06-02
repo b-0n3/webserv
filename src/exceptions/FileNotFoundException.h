@@ -1,6 +1,3 @@
-//
-// Created by Abdelouahad Ait hamd on 4/7/22.
-//
 
 #ifndef WEBSERV_FILENOTFOUNDEXCEPTION_H
 #define WEBSERV_FILENOTFOUNDEXCEPTION_H

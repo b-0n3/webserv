@@ -1,6 +1,4 @@
-//
-// Created by b0n3 on 4/17/22.
-//
+
 
 #ifndef WEBSERV_HTTPSERVLET_H
 #define WEBSERV_HTTPSERVLET_H

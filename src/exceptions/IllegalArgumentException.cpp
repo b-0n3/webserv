@@ -1,6 +1,4 @@
-//
-// Created by Abdelouahad Ait hamd on 4/7/22.
-//
+
 
 #include "IllegalArgumentException.h"
 #include "../tools/Logger.h"
