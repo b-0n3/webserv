@@ -20,6 +20,15 @@ private:
     void initParseFunctions();
     void parseUrl(Node<Token*> *);
     void parseStatus(Node<Token*> *);
+
+public:
+    void setUrl(const std::string &url);
+
+    void setStatus(int status);
+
+    void setLocation(const std::string &location);
+
+private:
     void parseLocation(Node<Token*> *);
 
 public:

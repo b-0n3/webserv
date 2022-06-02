@@ -41,7 +41,7 @@ void HttpServlet::start() {
     if (listen(sock, 1000) == -1) { // to change to max connection
         throw IllegalStateException("port :" + std::to_string(this->port) + " is already in use");
     }
-    std::cout << "HttpServlet started on port :" << this->port << std::endl;
+    Logger::log(Logger::LOG_LEVEL_INFO, "server started At " + std::to_string(this->port));
     struct pollfd pfd = {};
 
     pfd.fd = sock;
@@ -63,6 +63,7 @@ void HttpServlet::acceptNewClient(struct pollfd pfd) {
     {
         client_sock = accept(sock, (struct sockaddr *) &client, &client_len);
         fcntl(client_sock, F_SETFL, O_NONBLOCK);
+
         //setsockopt(this->sock, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
         if (client_sock == -1) {
             perror("accept");
@@ -72,7 +73,7 @@ void HttpServlet::acceptNewClient(struct pollfd pfd) {
             clientPfd.fd = client_sock;
             clientPfd.events = POLLIN;
             this->pollfd_list.push_back(clientPfd);
-        this->requests[client_sock] = new HttpRequest(client_sock);
+        this->requests[client_sock] = new HttpRequest(client_sock,inet_ntoa(client.sin_addr));
         this->responses[client_sock] = new HttpResponse();
 
     }
@@ -87,9 +88,9 @@ void HttpServlet::handleRequests() {
     std::vector<int> to_delete;
     for (int i = 1; i < size; i++) {
         int fd = this->pollfd_list[i].fd;
-        if (pollfd_list[i].revents & POLLHUP||
-        pollfd_list[i].revents & POLLERR ||
-        pollfd_list[i].revents & POLLNVAL) {
+        if (pollfd_list[i].revents & POLLHUP ||
+            pollfd_list[i].revents & POLLERR ||
+            pollfd_list[i].revents & POLLNVAL) {
             to_delete.push_back(fd);
             continue;
         }
@@ -100,45 +101,40 @@ void HttpServlet::handleRequests() {
                 this->pollfd_list[i].events = POLLOUT;
             continue;
         }
-        if (requests[fd]->isTimeOut())
-        {
-//            if (!requests[fd]->IsHeaderParsed() || responses[fd]->isWritingBody())
-//            {
-//                to_delete.push_back(fd);
-//                continue;
-//            }
+        if (requests[fd]->isTimeOut()) {
+            if (!requests[fd]->IsHeaderParsed() && !responses[fd]->isWritingBody())
+            {
+                to_delete.push_back(fd);
+                continue;
+            }
             responses[fd]->setStatusCode(GATEWAY_TIMEOUT);
             this->pollfd_list[i].events = POLLOUT;
 
         }
         if (pollfd_list[i].revents & POLLIN) {
-            std::cout << "reading" << std::endl;
-//            if (this->requests.find(fd) == this->requests.end()) {
-//
-//                if (this->requests[fd]->IsFinished()) {
-//                    this->handleRequest(this->requests[fd],
-//                                        this->responses[fd]);
-//                    if (!requests[fd]->cgiRunning)
-//                       this->pollfd_list[i].events = POLLOUT;
-//                }
-//                continue;
-//            }
 
-            if (this->requests[fd]->IsFinished()) {
+
+                if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
                                         this->responses[fd]);
-                if (!requests[fd]->cgiRunning)
-                    this->pollfd_list[i].events = POLLOUT;
+                    if (!requests[fd]->cgiRunning)
+                       this->pollfd_list[i].events = POLLOUT;
                     continue;
                 }
 
+
+            if (this->requests[fd]->IsFinished()) {
+                this->handleRequest(this->requests[fd],this->responses[fd]);
+                if (!requests[fd]->cgiRunning)
+                    this->pollfd_list[i].events = POLLOUT;
+                continue;
+            }
+
             if (!this->requests[fd]->IsFinished()) {
-                if (this->requests[fd]->IsHeaderParsed())
-                {
+                if (this->requests[fd]->IsHeaderParsed()) {
                     this->requests[fd]->Parse(this->getMaxBodySize(requests[fd]));
                     this->requests[fd]->setTimeOutAt(this->getTimeOut(requests[fd]));
-                }
-                else
+                } else
                     this->requests[fd]->Parse(-1);
                 if (this->requests[fd]->IsFinished()) {
                     this->handleRequest(this->requests[fd],
@@ -148,50 +144,52 @@ void HttpServlet::handleRequests() {
                     continue;
                 }
             }
-        }
-       else  if (pollfd_list[i].revents & POLLOUT) {
-            std::cout << "writing" << std::endl;
+        } else if (pollfd_list[i].revents & POLLOUT) {
+
             // @ todo check if the request is still not served
             if (!this->responses[fd]->isFinished()) {
                 this->responses[fd]->writeToFd(fd);
                 this->requests[fd]->setLastPacket(time(NULL));
                 pollfd_list[i].events = POLLOUT;
-            } else
+            } else {
                 to_delete.push_back(fd);
+                if (this->responses[fd]->getStatusCode() >= 300 && this->responses[fd]->getStatusCode() <= 399)
+                    Logger::log(Logger::LOG_LEVEL_WARNING, this->requests[fd], this->responses[fd]);
+                else  if (this->responses[fd]->getStatusCode() >= 400 && this->responses[fd]->getStatusCode() <= 499)
+                  Logger::log(Logger::LOG_LEVEL_ERROR, this->requests[fd], this->responses[fd]);
+                else  if (this->responses[fd]->getStatusCode() >= 500 && this->responses[fd]->getStatusCode() <= 599)
+                    Logger::log(Logger::LOG_LEVEL_DEBUG, this->requests[fd], this->responses[fd]);
+                else
+                    Logger::log(Logger::LOG_LEVEL_INFO, this->requests[fd], this->responses[fd]);
+
+            }
 
             //  std::cout << close(fd) << std::endl;
         }
 
     }
-    for (int i = 0; i < to_delete.size(); i++)
-    {
-            for ( int j = 0; j < this->pollfd_list.size(); j++)
-            {
-                if (to_delete[i] == this->pollfd_list[j].fd)
-                {
+    for (unsigned long i = 0; i < to_delete.size(); i++) {
+        for (unsigned long j = 0; j < this->pollfd_list.size(); j++) {
+            if (to_delete[i] == this->pollfd_list[j].fd) {
+                int fd = to_delete[i];
+                HttpResponse *r = this->responses[fd];
+                HttpRequest *rq = this->requests[fd];
+                std::map<int, HttpResponse *>::iterator
+                        response = this->responses.find(fd);
 
-                    int fd = to_delete[i];
-                    HttpResponse *r = this->responses[fd];
-                    HttpRequest *rq = this->requests[fd];
-                    std::map<int , HttpResponse *>::iterator
-                    response = this->responses.find(fd);
-
-                    std::map<int , HttpRequest *>::iterator
-                            req = this->requests.find(fd);
-                    this->requests.erase(req);
-                    this->responses.erase(response);
-                    delete r;
-                    delete rq;
-                    this->pollfd_list.erase(this->pollfd_list.begin() + j);
-                    close(fd);
-                    break;
-                }
+                std::map<int, HttpRequest *>::iterator
+                        req = this->requests.find(fd);
+                this->requests.erase(req);
+                this->responses.erase(response);
+                delete r;
+                delete rq;
+                this->pollfd_list.erase(this->pollfd_list.begin() + j);
+                close(fd);
+                break;
             }
         }
-
+    }
 }
-
-
 
 void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, std::string server) {
 
@@ -245,7 +243,7 @@ void HttpServlet::handleRequest(HttpRequest *request, HttpResponse *response, st
     if (response->getStatusCode() >= 400) {
         Page *p = nullptr;
         int fd = -1;
-        for (int i = 0; i < l->getErrorPages().size(); i++) {
+        for (unsigned long i = 0; i < l->getErrorPages().size(); i++) {
             p = l->getErrorPages()[i]->isInThisPage(response->getStatusCode());
             if (p != nullptr) {
                 fd = p->openFile();

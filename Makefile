@@ -9,7 +9,7 @@ NAME=webserv
 all: $(NAME)
 
 $(NAME): $(SRC)
-	c++  -g  -o $(NAME) $(SRC)
+	c++ -Wall -Wextra -Werror -g  -o $(NAME) $(SRC)
 clean:
 	rm -rf *.o
 debug: fclean

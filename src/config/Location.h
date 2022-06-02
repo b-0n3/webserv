@@ -33,7 +33,7 @@ private:
     std::string rootRir;
     bool autoIndexParsed;
     std::map<std::string, func> parsingMethods;
-    unsigned  long maxBodySize;
+    long   long maxBodySize;
     long timeOut;
 public:
     void setAutoIndex1(bool autoIndex);
@@ -46,9 +46,9 @@ public:
 
     void setParsingMethods(const std::map<std::string, func> &parsingMethods);
 
-    unsigned long getMaxBodySize() const;
+    long long getMaxBodySize() const;
 
-    void setMaxBodySize(unsigned long maxBodySize);
+    void setMaxBodySize(long  long maxBodySize);
 
 
 
@@ -123,7 +123,7 @@ public:
 
     bool is_file(std::string path);
 
-    void redirect(HttpRequest *req, HttpResponse *res, std::string path);
+    void redirect( HttpResponse *res, std::string path);
 };
 
 

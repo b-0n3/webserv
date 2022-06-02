@@ -38,7 +38,7 @@ Redirect *Redirect::fromNode(Node<Token *> *node) {
         if (node->getChildren().empty() || node->getChildren().size() != 2) {
             throw IllegalArgumentException("Redirect node must have 2 children");
         }
-        for (int i = 0; i < node->getChildren().size(); i++) {
+        for (size_t i = 0; i < node->getChildren().size(); i++) {
             value = node->getChildren()[i]->getData()->getValue();
             if (redirect->parseFunctions
                         .find(value) == redirect->parseFunctions.end())
@@ -65,7 +65,7 @@ void Redirect::parseUrl(Node<Token *> *n) {
     std::string value;
     if (!this->url.empty())
         throw IllegalArgumentException("Redirect url already set");
-    std::cout << n->getChildren().size() << std::endl;
+
     if (n->getChildren().size() != 2)
         throw IllegalArgumentException("Redirect url must have 1 child");
     value = n->getData()->getValue();
@@ -100,5 +100,17 @@ void Redirect::parseLocation(Node<Token *> *n) {
     if (value.empty())
         throw IllegalArgumentException("Redirect location empty");
     this->location = value;
+}
+
+void Redirect::setUrl(const std::string &url) {
+    Redirect::url = url;
+}
+
+void Redirect::setStatus(int status) {
+    Redirect::status = status;
+}
+
+void Redirect::setLocation(const std::string &location) {
+    Redirect::location = location;
 }
 

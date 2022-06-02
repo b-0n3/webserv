@@ -7,7 +7,7 @@
 
 
 ConfigParser::ConfigParser(std::string configFilePath) {
-    std::cout << configFilePath << std::endl;
+
     std::ifstream *file = new std::ifstream (configFilePath);
     if (!file->is_open()) {
         throw FileNotFoundException("Config file not found");
@@ -111,7 +111,7 @@ void ConfigParser::tokenizeConfigFiles(Node<Token *> *parent,Node<Token *> *root
  * */
 int ConfigParser::caluclateIndenetation() {
     int indentation = 0;
-    for (int i = 0; i < this->currentLine.size(); i++) {
+    for (unsigned long i = 0; i < this->currentLine.size(); i++) {
         if (this->currentLine[i] == ' ' || this->currentLine[i] == '\t') {
             indentation++;
         } else {
@@ -153,7 +153,7 @@ std::vector<Server *> ConfigParser::validateAst() {
     }
     if (root->getChildren().empty())
         throw IllegalArgumentException("no servers found");
-    for (int i = 0; i < root->getChildren().size(); i++) {
+    for (unsigned long i = 0; i < root->getChildren().size(); i++) {
         Server *s;
         try {
             s = Server::fromNode(root->getChildren()[i]);
@@ -194,9 +194,7 @@ void ConfigParser::replaceEnv() {
         if (last == std::string::npos) {
             break;
         }
-        std::cout << "first "<< first << " last " << last << std::endl;
         std::string env = this->currentLine.substr(first + 2, last - first - 2 );
-        std::cout << "env" << env<< std::endl;
         start = last + 1;
         char *value = std::getenv(env.c_str());
         if (value == nullptr)

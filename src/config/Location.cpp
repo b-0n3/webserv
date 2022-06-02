@@ -121,13 +121,14 @@ Location::Location() {
     this->timeOut = -1;
     this->maxBodySize = -1;
     initParsingMethods();
+
 }
 
 void Location::addAllowedMethod(String method) {
     String methods[] = {"GET", "POST", "DELETE"};
     if (std::find(this->allowedMethods.begin(), this->allowedMethods.end(), method) != this->allowedMethods.end())
         throw IllegalArgumentException(method + "double declaration  of an  allowed method");
-    for (int i = 0; i < methods->size(); i++)
+    for (unsigned long i = 0; i < methods->size(); i++)
     {
         if (method == methods[i]) {
             this->allowedMethods.push_back(method);
@@ -150,7 +151,7 @@ void Location::addErrorPage(Page *page) {
 // @todo : write a function that will execute cgi and return the result
 void Location::handleCgi(HttpRequest *pRequest, HttpResponse *pResponse) {
     std::string realPath = pRequest->GetPath();
-    for (int i = 0; i < this->cgis.size(); i++) {
+    for (unsigned long i = 0; i < this->cgis.size(); i++) {
         if (this->cgis[i]->isCgi(pRequest->GetPath())) {
             if (this->stripPrefix && pRequest->GetPath() == pRequest->getRealPath()) {
                 pRequest->SetPath(pRequest->GetPath().substr(this->route.length()));
@@ -186,7 +187,7 @@ void Location::setRootRir(const std::string &rootRir) {
 }
 
 std::string Location::getIndexFile(String dir) {
-    for (int i = 0; i < this->indexFiles.size(); i++) {
+    for (unsigned long i = 0; i < this->indexFiles.size(); i++) {
         std::string filePath = dir + this->indexFiles[i];
         int fd  = open(filePath.c_str(), O_RDONLY);
         if (fd !=  -1) {
@@ -201,7 +202,7 @@ void Location::handleGet(HttpRequest *req, HttpResponse *res) {
     std::string filePath = this->getRootRir() + req->GetPath();
     if  (is_directory(filePath) ) {
         if (filePath [filePath.size() - 1] != '/')
-            return this->redirect(req, res, req->getRealPath() + "/");
+            return this->redirect( res, req->getRealPath() + "/");
             std::string indexFile = this->getIndexFile(filePath);
             if (!indexFile.empty()) {
                 indexFile = indexFile.substr(this->getRootRir().size());
@@ -260,8 +261,10 @@ bool Location::is_file(std::string path) {
     return false;
 }
 
-void Location::redirect(HttpRequest *req, HttpResponse *res, std::string path) {
+
+void Location::redirect( HttpResponse *res, std::string path) {
     res->setStatusCode(FOUND);
+    // @declare to be used in the future
     res->addHeader("Location", path);
 }
 
@@ -292,9 +295,7 @@ void Location::handlePost(HttpRequest *req, HttpResponse *res) {
             + req->getBodyFileName() + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
         filePath =    this->uploadDir +"/" + bodyFilename
             + getExtensionByContentType(req->GetHeadersValueOfKey("Content-Type"));
-        std::cout << "filename: " << filename << std::endl;
-    std::cout << "filePaht: " << req->getBodyFileName() << std::endl;
-    if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
+        if (std::rename(req->getBodyFileName().c_str(), filePath.c_str()) == 0) {
 
         res->setStatusCode(200);
         res->getTempFile()._close();
@@ -304,8 +305,7 @@ void Location::handlePost(HttpRequest *req, HttpResponse *res) {
         res->getTempFile()._open();
         res->setContentLength(filename.length());
     } else {
-       // std::cout << "Error: " << strerror(errno) << std::endl;
-        res->setStatusCode(UNAUTHORIZED);
+          res->setStatusCode(UNAUTHORIZED);
     }
 
 }
@@ -363,7 +363,7 @@ Location  *Location::fromNode(Node<Token *> *root) {
     l = new Location();
     try {
         l->setRoute(root->getData()->getValue());
-        for (int i = 0; i < root->getChildren().size(); i++) {
+        for (unsigned long i = 0; i < root->getChildren().size(); i++) {
             String value = root->getChildren()[i]->getData()->getValue();
             if (l->parsingMethods.find(value) != l->parsingMethods.end()) {
                 func f = l->parsingMethods[value];
@@ -408,7 +408,7 @@ void Location::parseIndexFiles(Node<Token *> *n) {
     if (n->getChildren().empty())
         throw IllegalArgumentException(
                 n->getData()->getValue() + " : expected array of values");
-    for (int j = 0; j < n->getChildren().size(); j++)
+    for (unsigned long j = 0; j < n->getChildren().size(); j++)
         this->addIndexFile(
                 n->getChildren()[j]->getData()->getValue());
 
@@ -418,7 +418,7 @@ void Location::parseErrorPages(Node<Token *> *n) {
     if (n->getChildren().empty())
         throw IllegalArgumentException(
                 n->getData()->getValue() + " : expected array of values");
-    for (int j = 0; j < n->getChildren().size(); j++)
+    for (unsigned long j = 0; j < n->getChildren().size(); j++)
         this->addErrorPage(Page::fromNode(n->getChildren()[j]));
 
 }
@@ -438,7 +438,7 @@ void Location::parseAllowedMethods(Node<Token *> *node) {
     if (childs.size() == 0)
         throw IllegalArgumentException(
                 node->getData()->getValue() + " : expected array of values");
-    for (int j = 0; j < childs.size(); j++) {
+    for (unsigned long j = 0; j < childs.size(); j++) {
         this->addAllowedMethod(childs[j]->getData()->getValue());
     }
 }
@@ -514,20 +514,20 @@ void Location::setParsingMethods(const std::map<std::string, func> &parsingMetho
     Location::parsingMethods = parsingMethods;
 }
 
-unsigned long Location::getMaxBodySize() const {
+long  long Location::getMaxBodySize() const {
     return maxBodySize;
 }
 
-void Location::setMaxBodySize(unsigned long maxBodySize) {
+void Location::setMaxBodySize(long long maxBodySize) {
     Location::maxBodySize = maxBodySize;
 }
 
 Location::~Location() {
-    for (int i = 0; i < this->getErrorPages().size(); i++) {
+    for (unsigned long i = 0; i < this->getErrorPages().size(); i++) {
         delete this->getErrorPages()[i];
     }
 
-    for (int i = 0; i < this->getCgis().size(); i++) {
+    for (unsigned long i = 0; i < this->getCgis().size(); i++) {
         delete this->getCgis()[i];
     }
 

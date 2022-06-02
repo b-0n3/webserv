@@ -10,9 +10,8 @@
 std::set<int> getPorts(std::vector<Server *> servers) {
 
     std::set<int> ports;
-    for (int i = 0; i < servers.size(); i++) {
-        std::cout << "port " << servers[i]->getPort() << std::endl;
-        ports.insert(servers[i]->getPort());
+    for (unsigned long i = 0; i < servers.size(); i++) {
+         ports.insert(servers[i]->getPort());
     }
     return ports;
 }
@@ -33,8 +32,7 @@ void initTmpDir()
 int main(int argc, char *argv[]) {
     if (argc != 2)
     {
-        std::cout<< "Usage: " << argv[0] << " configFile Path" << std::endl;
-
+         Logger::log(Logger::LOG_LEVEL_ERROR, "Usage: " + std::string (argv[0]) + " configFile Path");
         exit(1);
     }
 
@@ -55,7 +53,7 @@ int main(int argc, char *argv[]) {
                  it++) {
            HttpServlet *s = new HttpServlet(*it);
 
-           for (int j = 0; j < servers.size(); j++) {
+           for (unsigned long j = 0; j < servers.size(); j++) {
                if (servers[j]->getPort() == *it) {
                    try {
                        s->addServer(servers[j]->getHost(),
@@ -69,14 +67,14 @@ int main(int argc, char *argv[]) {
            }
            servlets.push_back(s);
         }
-        for (int i = 0; i < servlets.size(); i++) {
+        for (unsigned long i = 0; i < servlets.size(); i++) {
             servlets[i]->start();
         }
     }
     catch (const char * message)
     {
-        std::cout << "Error: while parsing config file "  << std::endl;
-        std::cout << message << std::endl;
+        Logger::log(Logger::LOG_LEVEL_DEBUG, "error while parsing config file");
+         std::cout << message << std::endl;
        // system("leaks webserv");
         return 1;
     }
@@ -89,21 +87,21 @@ int main(int argc, char *argv[]) {
             try {
                 // @Todo : use poll here to handle the requests
                 std::vector<struct pollfd> pList;
-                for (int i = 0; i < servlets.size(); i++)
-                    for (int j = 0; j < servlets[i]->pollfd_list.size(); j++)
+                for (unsigned long i = 0; i < servlets.size(); i++)
+                    for (unsigned long j = 0; j < servlets[i]->pollfd_list.size(); j++)
                         pList.push_back(servlets[i]->pollfd_list[j]);
                 struct pollfd *pfds = convertToArray(pList);
-                int nfds = poll(pfds, pList.size(), 10);
-                for (int i = 0; i < pList.size(); i++)
-                    for (int j = 0; j < servlets.size(); j++)
-                        for (int k = 0; k < servlets[j]->pollfd_list.size(); k++) {
+                poll(pfds, pList.size(), 10);
+                for (unsigned long i = 0; i < pList.size(); i++)
+                    for (unsigned long j = 0; j < servlets.size(); j++)
+                        for (unsigned long k = 0; k < servlets[j]->pollfd_list.size(); k++) {
                             if (pfds[i].fd == servlets[j]->pollfd_list[k].fd) {
                                 servlets[j]->pollfd_list[k].revents = pfds[i].revents;
                                 break;
                             }
                         }
                 delete[] pfds;
-                for (int i = 0; i < servlets.size(); i++) {
+                for (unsigned long i = 0; i < servlets.size(); i++) {
                     servlets[i]->handleRequests();
                     // perror("step1");
                 }

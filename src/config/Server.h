@@ -32,7 +32,7 @@ private:
     std::vector<Redirect *> redirects;
     typedef  void (Server::*func)(Node<Token *> *);
     std::map<std::string, func> parsingMethods;
-    unsigned  long long maxBodySize;
+      long long maxBodySize;
     long timeOut;
 public:
     long getTimeOut() const;
@@ -73,7 +73,7 @@ public:
     void addAllowedMethod(String method);
 
     void addCgi(Cgi *cgi);
-    unsigned  long long getMaxBodySize(HttpRequest *request);
+      long long getMaxBodySize(HttpRequest *request);
     void addErrorPage(Page *page);
     void setHost(const std::string &host);
 
@@ -107,9 +107,9 @@ public:
 
     void setRootRir(const std::string &rootRir);
 
-    unsigned long getMaxBodySize() const;
+    long long getMaxBodySize() const;
 
-    void setMaxBodySize(unsigned long maxBodySize);
+    void setMaxBodySize(long long maxBodySize);
 
     long getTimeOutAt(HttpRequest *request);
 };

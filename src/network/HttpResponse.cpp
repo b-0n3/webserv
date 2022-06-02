@@ -11,10 +11,17 @@
 #include "StatusCode.h"
 #include "filesystem"
 #include "../tools/Utils.h"
+#include "../tools/Logger.h"
 
-HttpResponse::HttpResponse() :finished(false) , headerWrited(0), writingBody(false),bodySkiped(0),chunked(false) {
+HttpResponse::HttpResponse()  {
     this->statusCode = 200;
     this->contentLength = 0;
+    headerWrited  = 0;
+    this->bodyWrited = 0;
+    finished = false;
+    writingBody = false;
+    bodySkiped = 0;
+    chunked = false;
     this->cgiHeaderSize = 0;
     this->responseBuilted = false;
     this->contentType = "text/html";
@@ -24,15 +31,14 @@ void HttpResponse::writeToFd(int i) {
 
 
     if (!writingBody) {
+        this->body = "";
         if (!this->responseBuilted)
             this->buildResponseHeaders();
-    std::cout << "writing headers" << std::endl;
-    std::cout << this->responseHeadersString.str() << std::endl;
-    std::string toWrite = responseHeadersString.str().substr(headerWrited);
+     std::string toWrite = responseHeadersString.str().substr(headerWrited);
 
            int ret = write(i, toWrite.c_str(), toWrite.size());
            if (ret == -1) {
-               std::cout << "Error writing to socket" << std::endl; // todo : log warning
+               Logger::log(Logger::LOG_LEVEL_WARNING, " can not write  from socket");
                return;
            }
            this->headerWrited += ret;
@@ -40,58 +46,41 @@ void HttpResponse::writeToFd(int i) {
                 writingBody = true;
          }
 
-    // if (!writingBody) {
-    //     write(i, "HTTP/1.1 ", 9);
-    //     write(i, std::to_string(this->statusCode).c_str(), std::to_string(this->statusCode).length());
-    //     write(i, " OK\r\n", 5); // todo add custum message
-    //     write(i, "Content-Length: ", 16);
-    //     write(i, std::to_string(this->contentLength).c_str(), std::to_string(this->contentLength).length());
-    //     write(i, "\r\n", 2);
-    //     write(i, "Connection: close", strlen("Connection: close"));
-    //     write(i, "\r\n", 2);
-    //     for (int j  = 0; j < this->cookies.size(); j++)
-    //     {
-    //      //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
-    //         write(i, "Set-Cookie: ",12);
-    //         write(i, this->cookies[j].c_str(),this->cookies[j].length());
-    //         write(i, "\r\n",2);
-    //     }
-    //     for (std::map<std::string, std::string>::iterator it = this->headers.begin();
-    //          it != this->headers.end(); ++it) {
-    //         write(i, it->first.c_str(),
-    //               it->first.length());
-    //         write(i, ": ", 2);
-    //         write(i, it->second.c_str(),
-    //               it->second.length());
-    //         write(i, "\r\n", 2);
-    //     }
-    //     write(i, "\r\n", 2);
-    //     if (this->bodySkiped > 0) {
-    //         write(i, body.c_str(), body.length());
-    //     }
-    //     writingBody = true;
-    // }
-    if (this->contentLength > 0) {
-        int BUFFER_SIZE = 20000;
-        char buff[BUFFER_SIZE];
-        int ret = read(this->getBodyFileDescriptor(), buff, BUFFER_SIZE);
 
-        if (ret <= 0)
+    if (this->contentLength > 0) {
+        size_t readSize = 25000;
+        char buff[readSize];
+        size_t writeRet;
+        size_t ret = read(this->getBodyFileDescriptor(), buff, readSize);
+
+        if (ret < 0)
             this->finished = true;
-        else
-            write(i, buff, ret);
-        if (ret < BUFFER_SIZE && ret <= this->contentLength)
+        else {
+            body.append(buff, ret);
+           writeRet = write(i, body.c_str(), body.size());
+           if (writeRet < 0)
+           {
+               this->finished = true;
+               Logger::log(Logger::LOG_LEVEL_ERROR, std::string ("could not write  to socket"));
+               return;
+           }
+           this->bodyWrited += writeRet;
+           body = body.substr(writeRet );
+
+        }
+        if ( this->bodyWrited >= this->contentLength)
             this->finished = true;
+      //  std::cout << "Wrote to fd size => " << this->bodyWrited  <<"contentLe :" << this->contentLength<< std::endl;
     }
     else
         this->finished = true;
-  //  std::cout << "Wrote to fd size => " << ret  <<"contentLe :" << this->contentLength<< std::endl;
+
 }
 
 void HttpResponse::addHeader(std::string const &key, std::string const  &value) {
     if (key == "Set-Cookie" || key == "set-cookie") {
         this->cookies.push_back(value);
-        std::cout <<value<< std::endl;
+
     }
     else
         this->headers[key]  =  value;
@@ -117,9 +106,7 @@ std::map<std::string, std::string,compareStringIgnoreCase> HttpResponse::getHead
     return headers;
 }
 
-void HttpResponse::setStatusMessage(std::string statusMessage) {
 
-}
 
 void HttpResponse::setHeaders(std::map<std::string, std::string,compareStringIgnoreCase> headers) {
     this->headers = headers;
@@ -203,12 +190,12 @@ void HttpResponse::parseHeaders(std::string &headers) {
 
 HttpResponse::~HttpResponse() {
     tempFile.deleteFile();
-    std::cout << "deleted" << std::endl;
+
 }
 
 void HttpResponse::buildResponseHeaders() {
 
-    std::cout << "build response headers" << std::endl;
+
 
     responseHeadersString << "HTTP/1.1 ";
 
@@ -230,14 +217,17 @@ void HttpResponse::buildResponseHeaders() {
     //write(i, "\r\n", 2);
     
                     //responseHeadersString << "Content-Type: text/html\r\n"; // ADDED IN DEBUGGING
+    if (this->contentLength  < 20000)
 
-    responseHeadersString << "Connection: close"; // @todo add keep alive
+        responseHeadersString << "Connection: close"; // @todo add keep alive
+     else
+        responseHeadersString << "Connection: keep-alive";
     //write(i, "Connection: close", strlen("Connection: close"));
 
     responseHeadersString << "\r\n";
     //write(i, "\r\n", 2);
 
-    for (int j  = 0; j < this->cookies.size(); j++)
+    for (unsigned long j  = 0; j < this->cookies.size(); j++)
     {
         //   std::cout << "writing cookie = "<< this->cookies[j] << std::endl;
 
@@ -305,6 +295,17 @@ std::string HttpResponse::statusCodeToString(int statusCode) {
         return statusCodes[statusCode];
     }
     return "Unknown";
+}
+
+std::string HttpResponse::log() {
+    std::stringstream ss;
+
+    ss<< " ";
+    ss << this->statusCode;
+    if (this->statusCode >= 300 && this->statusCode <= 399 && this->headers.count("Location") > 0)
+        ss << " " + headers["location"];
+
+    return ss.str();
 }
 
 

@@ -53,7 +53,7 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
    std::vector<std::string> ext;
     if (root->getChildren().size() != 2)
         throw IllegalArgumentException("cgi node must have 2 children");
-    for (int i = 0; i < root->getChildren().size(); i++)
+    for (unsigned long i = 0; i < root->getChildren().size(); i++)
     {
         if (root->getChildren()[i]->getData()->getValue() == "path") {
             if (root->getChildren()[i]->getChildren().size() != 1)
@@ -63,7 +63,7 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
        else if (root->getChildren()[i]->getData()->getValue() == "ext") {
             if (root->getChildren()[i]->getChildren().empty())
                 throw IllegalArgumentException("ext node must have at least 1 child");
-            for (int j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {
+            for (unsigned long j = 0; j < root->getChildren()[i]->getChildren().size(); j++) {
                 ext.push_back(root->getChildren()[i]->getChildren()[j]->getData()->getValue());
             }
         }
@@ -81,7 +81,7 @@ Cgi *Cgi::fromNode(Node<Token *> *root) {
 void headerToEnv(std::string key, std::string value)
 {
     std::string env = "HTTP_";
-    for (int i = 0; i < key.size(); i++) {
+    for (unsigned long i = 0; i < key.size(); i++) {
         if (key[i] == '-')
             env += '_';
         else
@@ -190,11 +190,10 @@ void Cgi::execute(HttpRequest *request, HttpResponse *response) {
 
         if (pid == 0) {
 
-            std::cout << "methode =" << request->GetMethod() << std::endl;
-            // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
+          // std::cout << "Cgi::execute: " << args[0] << " " << args[1] << std::endl;
              createEnv(request);
          //   std::cout << "execve" << std::endl;
-            std::cout << this->binaryPath<< std::endl;
+
             if (request->IsHasBody()) {
                 dup2(request->GetBodyFd(), STDIN_FILENO);
                 dup2(response->getBodyFileDescriptor() , STDOUT_FILENO);
@@ -217,7 +216,6 @@ void Cgi::execute(HttpRequest *request, HttpResponse *response) {
             if (request->IsHasBody()) {
                // close(writePipe[0]);
                     close(request->GetBodyFd());
-                   std::cout << "writing body to cgi" << std::endl;
                    // @Todo: change this to nonBlocking
 //                char buff[1056];
 //                int ret;

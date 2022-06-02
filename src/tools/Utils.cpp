@@ -138,7 +138,7 @@ std::string getExtensionByContentType(std::string type)
 
 struct pollfd *convertToArray(std::vector< struct pollfd>  vec) {
     struct  pollfd *array = new struct pollfd[vec.size()];
-    for (int i = 0; i < vec.size(); i++) {
+    for (unsigned long i = 0; i < vec.size(); i++) {
         struct pollfd pfd;
         pfd.fd = vec[i].fd;
         pfd.events = vec[i].events;
@@ -157,7 +157,7 @@ size_t countFileSize(const char *filename) {
 std::string toUpper(std::string &str)
 {
     std::string result = str;
-    for (int i = 0; i < result.size(); i++) {
+    for (unsigned long i = 0; i < result.size(); i++) {
         result[i] = toupper(result[i]);
     }
     return result;

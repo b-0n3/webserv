@@ -18,12 +18,12 @@ private:
     std::string configFilePath;
     std::ifstream *configFile;
     std::string currentLine;
-    int lastCursor;
-    int cursor;
-    int currentIndentation;
-    int lastIndentation;
+
+
+
+
     std::stack<int> indentationStack;
-    Node<Token *> *currentToken;
+
     BinaryTree<Token*> ast;
     // Abstract Syntax Tree
 public:

@@ -4,28 +4,28 @@
 #include "HttpRequest.h"
 #include "StatusCode.h"
 #include "../tools/Utils.h"
-
 #include <sys/stat.h>
 #include <sys/types.h>
 
-HttpRequest::HttpRequest(int fd) : Socketfd(fd),
-                                   buffer(new char[BUFFER_SIZE]),
-                                   bodyRemainingFromHeaders(""),
+HttpRequest::HttpRequest(int fd,char *address) : Socketfd(fd),
                                    request(""),
+                                   buffer(new char[BUFFER_SIZE]),
                                    Method(""),
                                    Path(""),
-                                   port(80),
                                    Version(""),
                                    StartedAt(time(NULL)),
                                    lastPacket(time(NULL)),
-                                   cgiRunning(false),
                                    HeaderParsed(false),
                                    BodyParsed(false),
                                    StatusCode(200) {
 
     Headers.clear(), Params.clear();
     this->setTimeOutAt(10L );
+    this->startTimestamp = time(NULL);
+    this->remoteAddress = address;
 	srand(StartedAt);
+    this->cgiRunning =false;
+    this->bodyRemainingFromHeaders = "";
     std::string tmpDir = getenv("PWD");
     tmpDir += "/.tmp/";
 	this->BodyFileName = tmpDir + std::to_string(rand());
@@ -78,7 +78,7 @@ size_t  HttpRequest::ParseHexaLine()
 	while (1)
 	{
 		TmpBodyFd.read(&c, 1);
-		std::cout << c << std::endl;
+
 		if (c == '\r')
 			break;
 		buffer[count++] = c;
@@ -108,14 +108,12 @@ void HttpRequest::ProcessChunkedBody()
 void  HttpRequest::ParseFirstLine(std::string FirstLine)
 {
 	Method = FirstLine.substr(0, FirstLine.find(' '));
-    std::cout << "method =- "  << Method << std::endl;
     Path = FirstLine.substr(FirstLine.find(' ') + 1);
     Path = Path.substr(0, Path.find(' '));
 
 	//std::cout << "Method: " << Method << std::endl;
     //std::cout << FirstLine<<std::endl;
 	//Path = FirstLine.substr(FirstLine.find(' '), FirstLine.find("HTTP/") - 5 );
-	std::cout << "Path: " << Path << std::endl;
 
     //If there is Host with path "GET http://wwww.1337.ma/index.html HTTP/1.1"
     if (Path.find("http://") != std::string::npos) {
@@ -154,8 +152,6 @@ void  HttpRequest::ParseFirstLine(std::string FirstLine)
 void  HttpRequest::ParseHeaders(std::string HeadersLine)
 {
 	std::stringstream ss(HeadersLine);
-	
-
 	while (1)
 	{
 		std::string token;
@@ -184,13 +180,10 @@ void  HttpRequest::ParseHeaders(std::string HeadersLine)
 	// 	std::cout << it->first << " => " << it->second << std::endl;
 	// 	std::cout << headersss["Transfer-Encoding"] << "====" << std::endl;
 	// 		print_memory(headersss["Transfer-Encoding"]);
-
 }
 
-void    HttpRequest::Parse(unsigned  long long maxBodySize)
+void    HttpRequest::Parse(  long long maxBodySize)
 {
-
-    
     int ret = 0;
     // To Check if this correct
     if ((ret = read(Socketfd, buffer, BUFFER_SIZE - 1)) < 0  || this->isTimeOut())
@@ -207,12 +200,11 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
     	this->request.append(buffer, ret);
 	else
 		request  = std::string(buffer, ret);
-    std::cout << "request: " << request << std::endl;
+
     //if header is finished and not parsed
     if (IsHeaderFinished() && !IsHeaderParsed()) {
 		// Parse the first line
-        std::cout << "First Line: " << " somthing " << std::endl;
-		ParseFirstLine(request.substr(0, request.find("\r\n")));
+       	ParseFirstLine(request.substr(0, request.find("\r\n")));
 
         // Parse headers
 		ParseHeaders(request.substr(request.find("\r\n") + 2, request.find("\r\n\r\n")));
@@ -231,14 +223,13 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
     this->lastPacket = time(NULL);
     //Use form data postman
     //if has body and header parsed and body not parsed yet
-    std::cout << "bodyRemainingFromHeaders: " << bodyRemainingFromHeaders << std::endl;
-    if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed() ) {
+     if (IsHeaderParsed() && IsHasBody() && !IsBodyParsed() ) {
 		//change compare of the map
         if (Headers.count("Content-Length") == 0) {
             SetBodyParsed(true);
             return;
         }
-        unsigned long long contentLength = std::stoull(Headers["Content-Length"]);
+         long long contentLength = std::stoull(Headers["Content-Length"]);
 
         if (contentLength > maxBodySize && maxBodySize != -1) {
             StatusCode = MAX_BODY_SIZE_EXCEEDED;
@@ -259,12 +250,11 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
              fileSize = CountFileSize(BodyFileName.c_str());
 			if (IsChunkedBodyFinished()) {
                 ProcessChunkedBody();
-                if (fileSize == contentLength)
+                if (fileSize == (size_t)contentLength)
                     SetBodyParsed(true);
-                if (fileSize > contentLength) {
+                if (fileSize > (size_t)contentLength) {
                     StatusCode = BAD_REQUEST;
-                    std::cout << fileSize << " " << contentLength << std::endl;
-                    SetBodyParsed(true);
+                     SetBodyParsed(true);
                 }
               //  std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght " << contentLength<< std::endl;
 			}
@@ -281,13 +271,12 @@ void    HttpRequest::Parse(unsigned  long long maxBodySize)
 			BodyFd.write(request.c_str() , request.size());
 			BodyFd.close();
              fileSize = CountFileSize(BodyFileName.c_str());
-			if (fileSize == contentLength)
+			if (fileSize == (size_t)contentLength)
 				SetBodyParsed(true);
-            if (fileSize > contentLength) {
+            if (fileSize > (size_t)contentLength) {
                 StatusCode = BAD_REQUEST;
                 SetBodyParsed(true);
-                std::cout << fileSize << " " << contentLength << std::endl;
-            }
+             }
              //   std::cout << CountFileSize(BodyFileName.c_str())  << "contentLenght unchenked " << contentLength<< std::endl;
 		}
     }
@@ -302,7 +291,6 @@ void HttpRequest::setRealPath(const std::string &realPath) {
 }
 
 HttpRequest::~HttpRequest() {
-    std::cout << "HttpRequest Destructor" << std::endl;
     if (TmpBodyFd.is_open())
         TmpBodyFd.close();
     if (BodyFd.is_open())
@@ -319,8 +307,6 @@ HttpRequest::~HttpRequest() {
        close(fd);
        remove(BodyFileName.c_str());
    }
-
-
         delete [] buffer;
 }
 
@@ -339,4 +325,22 @@ long HttpRequest::getLastPacket() const {
 
 void HttpRequest::setLastPacket(long lastPacket) {
     HttpRequest::lastPacket = lastPacket;
+}
+
+std::string HttpRequest::log() {
+    std::stringstream  ss;
+    char buff[20];
+    strftime(buff, 20, "%Y-%m-%d %H:%M:%S", localtime(&this->startTimestamp));
+    std::string host = "";
+    if (this->Headers.count("host") != 0)
+        host = GetHeadersValueOfKey("host") + " ";
+    ss << buff;
+    ss << " ";
+    ss << this->remoteAddress;
+    ss << " ";
+    ss << host;
+    ss << this->GetMethod();
+    ss << " ";
+    ss << this->getRealPath();
+    return ss.str();
 }

@@ -43,7 +43,7 @@ public:
         if (root == nullptr) {
             return;
         }
-        for (int i = 0; i < root->getChildren().size(); i++) {
+        for (unsigned long i = 0; i < root->getChildren().size(); i++) {
             deleteTree(root->getChildren()[i]);
         }
         if (root->getParent() != nullptr)

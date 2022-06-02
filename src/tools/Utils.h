@@ -30,7 +30,7 @@ struct compareStringIgnoreCase {
     std::string *toUpper( std::string  const &str)const
     {
         std::string *s = new std::string (str);
-        for (int i = 0; i < str.size(); i++) {
+        for ( size_t i = 0; i < str.size(); i++) {
             (*s)[i] = toupper(str[i]);
         }
         return s;

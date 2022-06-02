@@ -18,6 +18,7 @@ private:
     std::string body;
     bool chunked;
     bool writingBody;
+    size_t  bodyWrited;
     TempFile tempFile;
     bool finished;
     std::stringstream  responseHeadersString;
@@ -33,6 +34,7 @@ public:
     void setContentLength(unsigned long contentLength);
     int getCgiReadFd() const;
     void setCgiReadFd(int cgiReadFd);
+    std::string log();
 
 public:
     HttpResponse();

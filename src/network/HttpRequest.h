@@ -39,12 +39,13 @@ private:
     time_t          StartedAt;
     std::string     realPath;
     long          timeOutAt;
-    long          startTimestamp;
+    time_t         startTimestamp;
     long lastPacket;
     
     public:
         long getLastPacket() const;
         void setLastPacket(long lastPacket);
+        std::string log();
 
 private:
     // change this
@@ -58,9 +59,7 @@ private:
     HttpRequest();
 
     void SetHeaderParsed(bool parsed) { HeaderParsed = parsed; }
-
     void SetBodyParsed(bool parsed) { BodyParsed = parsed; }
-
     void SetMethod(int method) { Method = method; }
     void SetVersion(std::string version) { Version = version; }
 
@@ -71,20 +70,18 @@ private:
         Params.insert(std::pair<std::string, std::string>(key, value));
     }
 public:
-	HttpRequest(int fd);
+	HttpRequest(int fd, char *address);
     ~HttpRequest();
     
     const std::string   &getRealPath() const;
     void                setRealPath(const std::string &realPath);
     void                SetPath(std::string path){Path = path;}
 
-    
-    
     typedef std::map<std::string, std::string, compareStringIgnoreCase> HeadersMap;
 	std::map<std::string, std::string, compareStringIgnoreCase> Headers;
     //std::map<std::string, std::string> Headers;
 
-    void Parse(unsigned long long maxBodySize);
+    void Parse( long long maxBodySize);
     void setTimeOutAt( long timeOutAt);
 
   	//Getters
@@ -107,8 +104,7 @@ public:
             return Params[key];
         return Nothing(std::string); 
     }
-    
-    
+
     HeadersMap &GetHeaders(){ return Headers; }
     //std::map<std::string, std::string> &GetHeaders() { return Params; }
     std::map<std::string, std::string> &GetParams() { return Params; }
